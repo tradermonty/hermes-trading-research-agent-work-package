@@ -1,6 +1,6 @@
 # Package Manifest
 
-This repository started life as a coding-agent handoff package and is now published as the **v0.1.0 MVP Hermes Profile Distribution** for `trading-research-assistant`.
+This repository started life as a coding-agent handoff package and is now published as the **Hermes Profile Distribution** for `trading-research-assistant` (initial MVP: v0.1.0, current release: see GitHub Releases below).
 
 For current installation, validation, and operational status, see:
 

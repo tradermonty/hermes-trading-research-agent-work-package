@@ -150,14 +150,14 @@ Hermes v0.14.0 の `cron create` には **`--tz` フラグが存在しません*
 
 ## バージョニングと再現可能なインストール
 
-Hermes Profile Distribution の install (`hermes profile install github.com/<owner>/<repo>`) は現状、リポジトリの **default branch** を追跡する仕様で、特定タグの pinning には対応していません。`v0.1.0` の GitHub Release は changelog 用ですが、`github.com/...#v0.1.0` のような ref 指定はまだ Hermes installer には未実装です。
+Hermes Profile Distribution の install (`hermes profile install github.com/<owner>/<repo>`) は現状、リポジトリの **default branch** を追跡する仕様で、特定タグの pinning には対応していません。GitHub Releases は changelog 用で、最新版は https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases を参照してください。`github.com/...#<tag>` のような ref 指定はまだ Hermes installer には未実装です。
 
-v0.1.0 を再現可能な形で install したい場合は、ローカル clone → tag checkout → ディレクトリから install してください:
+特定の release を再現可能な形で install したい場合は、ローカル clone → tag checkout → ディレクトリから install してください:
 
 ```bash
 git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
 cd hermes-trading-research-agent-work-package
-git checkout v0.1.0
+git checkout v0.1.1   # または `git tag -l` で得られる任意の tag
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
 ```
 

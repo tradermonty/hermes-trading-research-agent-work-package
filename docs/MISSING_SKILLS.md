@@ -8,8 +8,9 @@ even though the skill is not present in `claude-trading-skills/skills-index.yaml
 
 ## Current status
 
-No accepted missing skills. The v0.1.0 release resolves all 9 bundle / mapping
-references against the upstream index (55 skills + 3 profile-local skills).
+No accepted missing skills. The current release resolves all 9 bundle / mapping
+references against the upstream index (55 skills + 3 profile-local skills as of
+v0.1.x — re-run `make validate-upstream` to confirm against the live upstream).
 
 ## Format
 

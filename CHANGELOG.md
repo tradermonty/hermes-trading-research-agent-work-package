@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `pyproject.toml`: sync `project.version` to `0.1.1` (matched `distribution.yaml:version` which had been bumped, but the Python package metadata used by `pip install -e ".[dev]"` was still showing `0.1.0`).
+
+### Documentation
+
+- `README.md` / `README.ja.md`: generalize the reproducible-install recipe from a hard-coded `git checkout v0.1.0` to `git checkout v0.1.1   # or any tag from \`git tag -l\``, with a link to the GitHub Releases page for the current latest.
+- `PACKAGE_MANIFEST.md`: drop the hard-coded "v0.1.0 MVP" framing; describe the repo as the Hermes Profile Distribution with initial MVP at v0.1.0 and current release tracked in GitHub Releases.
+- `docs/MISSING_SKILLS.md`: rephrase "The v0.1.0 release resolves..." as "The current release resolves..." so the doc does not need editing on each tag bump.
+
 ## [0.1.1] - 2026-05-20
 
 Post-release polish on top of v0.1.0. No profile-distribution behavior changes; this release is CI + docs + validator polish only.

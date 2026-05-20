@@ -150,14 +150,14 @@ See `cron/README.md` and `docs/03-hermes-compatibility-notes.md`.
 
 ## Versioning and reproducible installs
 
-Hermes Profile Distribution install (`hermes profile install github.com/<owner>/<repo>`) currently tracks the repository's **default branch**, not a specific tag. The `v0.1.0` GitHub Release exists for changelog and reference, but a `github.com/...#v0.1.0` ref pin is not (yet) supported by Hermes' installer.
+Hermes Profile Distribution install (`hermes profile install github.com/<owner>/<repo>`) currently tracks the repository's **default branch**, not a specific tag. GitHub Releases exist for changelog and reference (latest: see https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases), but `github.com/...#<tag>` ref pinning is not (yet) supported by Hermes' installer.
 
-For a reproducible v0.1.0 install — pinned, no surprise updates — clone locally, check out the tag, and install from the directory:
+For a reproducible install of a specific release — pinned, no surprise updates — clone locally, check out the tag, and install from the directory:
 
 ```bash
 git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
 cd hermes-trading-research-agent-work-package
-git checkout v0.1.0
+git checkout v0.1.1   # or any tag from `git tag -l`
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
 ```
 
