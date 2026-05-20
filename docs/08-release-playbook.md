@@ -29,7 +29,10 @@ git log --oneline -5                            # verify HEAD is the release com
 git tag -a v0.1.0 -m "v0.1.0 MVP — see CHANGELOG.md"
 git push origin v0.1.0                          # push the tag (not main --tags)
 
+# Minimal:
 gh release create v0.1.0 --notes-file CHANGELOG.md
+# Or with an explicit title (preferred for readability on the Releases page):
+# gh release create v0.1.0 --title "v0.1.0 MVP" --notes-file CHANGELOG.md
 ```
 
 If you also need to push `main` (e.g. the release commit hasn't been pushed yet):
@@ -42,24 +45,64 @@ Avoid `git push origin main --tags` in one shot — it bundles unrelated tag ref
 
 ## Post-release verification
 
+Acceptance test in an isolated HOME so the public install path is exercised end-to-end without touching the real user environment. **This calls a paid LLM**, so run it deliberately.
+
+### Anthropic-key path (matches the default Quick Start)
+
 ```bash
-# Fresh test home so the public install path is exercised end-to-end.
+# Preflight: API key must already be exported in the caller env. A fresh
+# HOME starts without one, so check before isolating.
+: "${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY must be exported before acceptance test}"
+
+# Isolation
+TEST_PROFILE_NAME="trading-research-acceptance"
+ORIG_HOME="$HOME"; ORIG_PATH="$PATH"
 export TEST_HOME="$(mktemp -d /tmp/hermes-trading-release-test.XXXXXX)"
 export HOME="$TEST_HOME"; export HERMES_HOME="$TEST_HOME/.hermes"
 export PATH="$HOME/.local/bin:$PATH"
+trap '
+  hermes profile alias "$TEST_PROFILE_NAME" --remove 2>/dev/null || true
+  hermes profile delete "$TEST_PROFILE_NAME" -y 2>/dev/null || true
+  rm -rf "$TEST_HOME"
+  export HOME="$ORIG_HOME"; export PATH="$ORIG_PATH"; unset HERMES_HOME
+' EXIT
 
+# Public install path
 hermes profile install github.com/tradermonty/hermes-trading-research-agent-work-package \
-  --name trading-research-assistant --alias -y
-trading-research-assistant config set model    claude-opus-4-7
-trading-research-assistant config set provider anthropic
-trading-research-assistant chat
-trading-research-assistant bundles list
+  --name "$TEST_PROFILE_NAME" --alias -y
+"$TEST_PROFILE_NAME" config set model    claude-opus-4-7
+"$TEST_PROFILE_NAME" config set provider anthropic
+"$TEST_PROFILE_NAME" config show
 
-# Cleanup
-hermes profile alias trading-research-assistant --remove
-hermes profile delete trading-research-assistant -y
-rm -rf "$TEST_HOME"
+# Runtime dep for trader-memory-core (upstream skill imports jsonschema directly)
+python3 -m pip install jsonschema
+
+# Sanity
+"$TEST_PROFILE_NAME" bundles list                  # 9 entries
+python3 "$HOME/.hermes/profiles/$TEST_PROFILE_NAME/scripts/validate_package.py" \
+  --profile-root "$HOME/.hermes/profiles/$TEST_PROFILE_NAME"
+
+# Cron dogfood
+HERMES_PROFILE_CMD="$TEST_PROFILE_NAME" \
+  bash "$HOME/.hermes/profiles/$TEST_PROFILE_NAME/cron/create_cron_jobs.sh"
+hermes -p "$TEST_PROFILE_NAME" cron list           # 4 jobs, capture job_ids
+hermes -p "$TEST_PROFILE_NAME" cron run <pre_market_job_id>  --accept-hooks
+hermes -p "$TEST_PROFILE_NAME" cron tick --accept-hooks
+ls "$HERMES_HOME/profiles/$TEST_PROFILE_NAME/cron/output/"
 ```
+
+### OAuth-based providers (openai-codex etc.)
+
+Fresh `HOME`/`HERMES_HOME` starts with **no auth state**, so OAuth-based providers need an explicit login inside the isolated environment:
+
+```bash
+hermes login --provider openai-codex   # opens browser, writes auth to $HERMES_HOME
+"$TEST_PROFILE_NAME" config set provider     openai-codex
+"$TEST_PROFILE_NAME" config set model        gpt-5.5
+"$TEST_PROFILE_NAME" config set model.base_url https://chatgpt.com/backend-api/codex
+```
+
+For the Anthropic-key path above no `hermes login` is needed — the key is read from the env var on each invocation.
 
 ## Release notes template
 
