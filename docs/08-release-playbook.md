@@ -18,15 +18,27 @@
 - [ ] Update `CHANGELOG.md` (move `[Unreleased]` items into the new version, add release date).
 - [ ] Update `distribution.yaml` `version` field.
 
-## Tagging
+## Tagging and release
+
+Pre-release commits (CHANGELOG fold, `distribution.yaml:version` bump, etc.) should already be on `main`. Use annotated tags so `git describe` and GitHub Releases show a meaningful message, and push the tag separately from `main` so a tag-only re-push is possible later.
 
 ```bash
-git status
-git add .
-git commit -m "v0.1.0: Hermes trading research assistant MVP"
-git tag v0.1.0
-git push origin main --tags
+git status                                      # working tree clean
+git log --oneline -5                            # verify HEAD is the release commit
+
+git tag -a v0.1.0 -m "v0.1.0 MVP — see CHANGELOG.md"
+git push origin v0.1.0                          # push the tag (not main --tags)
+
+gh release create v0.1.0 --notes-file CHANGELOG.md
 ```
+
+If you also need to push `main` (e.g. the release commit hasn't been pushed yet):
+
+```bash
+git push origin main
+```
+
+Avoid `git push origin main --tags` in one shot — it bundles unrelated tag refs and is harder to reason about during release.
 
 ## Post-release verification
 
