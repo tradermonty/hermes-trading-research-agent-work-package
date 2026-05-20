@@ -100,23 +100,32 @@ Expected:
 - Thesis and invalidation captured.
 - Review plan created.
 
-### Test 5: Cron creation
+### Test 5: Cron creation and dogfood
 
 ```bash
 export HERMES_CRON_DELIVER=local
 HERMES_PROFILE_CMD="$TEST_PROFILE_NAME" bash cron/create_cron_jobs.sh
 hermes -p "$TEST_PROFILE_NAME" cron list
-# Pick a job_id (12-char hex) from the output and run manually:
-hermes -p "$TEST_PROFILE_NAME" cron run <pre_market_job_id>
-hermes -p "$TEST_PROFILE_NAME" cron run <after_close_job_id>
+# Pick the 12-char hex job_ids from the output, then dogfood both
+# pre-market and after-close jobs end-to-end:
+hermes -p "$TEST_PROFILE_NAME" cron run <pre_market_job_id>  --accept-hooks
+hermes -p "$TEST_PROFILE_NAME" cron tick --accept-hooks
+hermes -p "$TEST_PROFILE_NAME" cron run <after_close_job_id> --accept-hooks
+hermes -p "$TEST_PROFILE_NAME" cron tick --accept-hooks
+# Inspect generated briefs:
+ls "$HERMES_HOME/profiles/$TEST_PROFILE_NAME/cron/output/"
 ```
 
 Expected:
 
 - Four jobs are listed.
-- Manual run produces output files for pre-market and after-close, each containing the required sections (data freshness, thesis, invalidation, risk, human decision gate).
+- Both `cron run` invocations end with `Last run: ok`.
+- `cron/output/<job_id>/<timestamp>.md` exists for both jobs and contains the required sections (data freshness, thesis, invalidation, risk, human decision gate).
+- Missing API keys (e.g. `FMP_API_KEY`) cause affected sections to be explicitly marked as degraded mode rather than fabricated.
 
-Note: cron prompts in `prompts/` are written in positive form to avoid Hermes' `deception_hide` threat scanner blocking them at submission time. See `docs/03-hermes-compatibility-notes.md`.
+Notes:
+- Cron jobs do not fire automatically until `gateway install && gateway start` (or `gateway run`). Tests that rely on auto-fire must start the gateway or pause the jobs and trigger them via `cron run` + `cron tick` as shown above.
+- Cron prompts in `prompts/` are written in positive form to avoid Hermes' `deception_hide` threat scanner blocking them at submission time. See `docs/03-hermes-compatibility-notes.md`.
 
 ## Release acceptance
 

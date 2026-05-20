@@ -49,6 +49,11 @@ cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
    ~/.hermes/profiles/trading-research-assistant/.env
 # (open the .env in your editor and fill in keys)
 
+# 6b. Install runtime Python deps that some skills import directly.
+#     `trader-memory-core` (upstream) imports `jsonschema` and degrades without it:
+python3 -m pip install jsonschema
+# (or: uv pip install jsonschema)
+
 # 7. Use it.
 trading-research-assistant chat
 # Then in the chat session:

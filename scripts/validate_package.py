@@ -43,9 +43,12 @@ def validate_distribution(root: Path) -> None:
             fail(f"distribution.yaml missing required key: {key}")
     if data["name"] != "trading-research-assistant":
         warn("distribution.yaml name is not trading-research-assistant")
-    owned = data.get("distribution_owned", [])
-    for rel in ["SOUL.md", "config.yaml", "skills/", "skill-bundles/", "cron/"]:
-        if rel not in owned:
+    # Normalize trailing slashes before comparing: Hermes' installed copy
+    # strips them, so the source-side `skills/` and the installed-side
+    # `skills` should both pass.
+    owned_norm = {entry.rstrip("/") for entry in data.get("distribution_owned", [])}
+    for rel in ["SOUL.md", "config.yaml", "skills", "skill-bundles", "cron"]:
+        if rel not in owned_norm:
             warn(f"distribution_owned does not include {rel}")
 
 

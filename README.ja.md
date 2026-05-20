@@ -49,6 +49,11 @@ cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
    ~/.hermes/profiles/trading-research-assistant/.env
 # .env をエディタで開き、必要なキーを記入
 
+# 6b. 一部 skill が直接 import する Python deps をインストール
+#     trader-memory-core (上流) は jsonschema を import するため、未導入だと degraded mode:
+python3 -m pip install jsonschema
+# (または: uv pip install jsonschema)
+
 # 7. 起動
 trading-research-assistant chat
 # チャットセッション内で:

@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/validate_package.py`: trailing-slash-insensitive check for `distribution_owned`. Hermes' installed copy strips trailing slashes from `skills/` / `skill-bundles/` / `cron/`, so running the validator inside an installed profile no longer emits spurious WARNs.
+
 ### Documentation
 
+- README.md / README.ja.md: add `python3 -m pip install jsonschema` to Quick Start so `trader-memory-core` runs in full mode, not degraded.
+- docs/07 Test 5: align cron dogfood with the verified path (`cron run --accept-hooks` + `cron tick --accept-hooks`, then inspect `cron/output/<job_id>/`).
+- docs/08 pre-release checklist: explicit step for `hermes profile update` so installed users pick up doc fixes (e.g. corrected repo name) after publish.
 - README.md / README.ja.md / cron/README.md: document that cron jobs require `gateway install && gateway start` (or per-job `cron pause`) to fire automatically; profile install alone does not start the scheduler.
 - README.md / README.ja.md / docs/07 / docs/08: dogfood path is `cron run <job_id> --accept-hooks` + `cron tick --accept-hooks` then inspect `cron/output/<job_id>/<timestamp>.md`. `chat -q '/bundle-name'` in v0.14.0 only returns a session_id and is **not** sufficient for end-to-end verification.
 - README.md / README.ja.md: added provider-switch examples (`openai-codex` with `model.base_url`) and note that dotted keys (`model.default`, `model.provider`) also work.
