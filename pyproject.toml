@@ -13,6 +13,16 @@ dev = [
   "jsonschema>=4.22.0",
 ]
 
+# This repo is a Hermes profile distribution, not a Python package. We keep a
+# pyproject.toml only to declare dev deps (`pip install -e ".[dev]"`) and to
+# configure pytest. Tell setuptools explicitly that there are no importable
+# packages or modules so it stops trying to auto-discover top-level dirs like
+# `cron/`, `data/`, `skills/`, `schemas/`, `prompts/` (which would otherwise
+# break flat-layout auto-discovery and abort the install).
+[tool.setuptools]
+packages = []
+py-modules = []
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

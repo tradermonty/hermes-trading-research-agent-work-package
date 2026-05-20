@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `.github/workflows/ci.yml`: GitHub Actions CI that runs `make validate`, `make validate-upstream` (against a checked-out `tradermonty/claude-trading-skills`), and `make test` on push, PR, tag, and manual dispatch.
+- `.github/workflows/ci.yml`: GitHub Actions CI that runs `make validate`, `make validate-upstream` (against a checked-out `tradermonty/claude-trading-skills`), and `make test`. Triggers: push to `main`, push of `v*` tags, pull requests (any branch), and manual `workflow_dispatch`.
 - `docs/MISSING_SKILLS.md`: empty template documenting the validator's degraded-mode-acceptance format. Current status notes that no skills are accepted-missing in v0.1.0.
+
+### Fixed
+
+- `pyproject.toml`: explicitly set `[tool.setuptools] packages = []` and `py-modules = []`. Without this, setuptools' automatic flat-layout discovery picks up top-level dirs like `cron/`, `data/`, `skills/`, `schemas/`, `prompts/` and aborts `pip install -e ".[dev]"` with `Multiple top-level packages discovered in a flat-layout`. This broke the new GitHub Actions CI; verified locally via fresh venv (`pip install -e ".[dev]"` succeeds, 87 tests pass).
 
 ### Changed
 

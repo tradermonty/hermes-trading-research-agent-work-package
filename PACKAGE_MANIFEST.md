@@ -11,4 +11,4 @@ For current installation, validation, and operational status, see:
 - `docs/08-release-playbook.md` — pre-release checklist and post-release isolated-HOME acceptance test.
 - GitHub Releases: https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases
 
-The original "scaffolding for a coding agent" notes live in earlier commits (pre-`Initial commit`) for context only.
+The original "scaffolding for a coding agent" framing remains available in earlier commits via `git log` / `git show` for historical context.
