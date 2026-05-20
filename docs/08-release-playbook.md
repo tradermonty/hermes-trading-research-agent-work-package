@@ -6,8 +6,10 @@
 - [ ] Run `make validate` (= `python3 scripts/validate_package.py --profile-root .`).
 - [ ] Run `make test` (= `python3 -m pytest -q`). All 87+ tests must pass.
 - [ ] Run `make validate-upstream` (requires `CLAUDE_TRADING_SKILLS_REPO`). Confirm zero unresolved missing skills, or that every miss is documented in `docs/MISSING_SKILLS.md` as degraded-mode accepted.
-- [ ] In an isolated temp HOME (see `docs/07-testing-acceptance-criteria.md` Test 1), run at least one manual `/pre-market-routine` and one `/after-close-review`.
-- [ ] In the same isolated HOME, create cron jobs and manually trigger both pre-market and after-close `cron run <job_id>`; confirm output files contain required sections.
+- [ ] In an isolated temp HOME (see `docs/07-testing-acceptance-criteria.md` Test 1), exercise both `/pre-market-routine` and `/after-close-review` via `cron run <job_id> --accept-hooks` + `cron tick --accept-hooks` (do **not** rely on `chat -q '/bundle'` — in v0.14.0 it only returns a session_id, not the bundle output).
+- [ ] Confirm the generated `cron/output/<job_id>/<timestamp>.md` for each contains every required section (risk posture, regime, watchlist, human next actions, data freshness with as-of timestamps) and explicitly marks any missing-API-key section as degraded.
+- [ ] If `trader-memory-core` is in scope for the release, confirm the host has `jsonschema` installed (`python3 -m pip install jsonschema` or `uv pip install jsonschema`); without it the skill enters degraded mode.
+- [ ] Decide gateway mode for the release: documented "managed" (`gateway install && gateway start`) for production, or "manual-only" (pause every cron job) for dry-runs.
 - [ ] Confirm `cron/create_cron_jobs.sh` runs cleanly with `HERMES_PROFILE_CMD="$TEST_PROFILE_NAME"` and no prompt is rejected by the `deception_hide` threat scanner.
 - [ ] Inspect `mcp.json` and ensure no unverified MCP servers are enabled.
 - [ ] Confirm `.env` is not committed (`.gitignore` covers it; `.env.EXAMPLE` is the user-facing template and IS shipped via `distribution_owned`).
@@ -33,7 +35,7 @@ export TEST_HOME="$(mktemp -d /tmp/hermes-trading-release-test.XXXXXX)"
 export HOME="$TEST_HOME"; export HERMES_HOME="$TEST_HOME/.hermes"
 export PATH="$HOME/.local/bin:$PATH"
 
-hermes profile install github.com/tradermonty/hermes-trading-research-agent \
+hermes profile install github.com/tradermonty/hermes-trading-research-agent-work-package \
   --name trading-research-assistant --alias -y
 trading-research-assistant config set model    claude-opus-4-7
 trading-research-assistant config set provider anthropic

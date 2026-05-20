@@ -47,6 +47,7 @@ This repo should not rewrite all trading skills for Hermes. Instead, it adds:
 | `FINVIZ_API_KEY` | Use Finviz URLs/manual flow rather than API-backed results. |
 | Alpaca keys | Skip holdings/portfolio fetch; ask for manual snapshot or CSV. |
 | Chart image | Ask user to upload screenshot or skip chart interpretation. |
+| `jsonschema` Python module missing | `trader-memory-core` CLI degrades. Install via `python3 -m pip install jsonschema` (or `uv pip install jsonschema`). Skill output continues with reduced validation. |
 
 ## Vendoring rules
 

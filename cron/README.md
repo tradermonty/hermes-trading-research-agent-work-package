@@ -32,13 +32,41 @@ bash cron/create_cron_jobs.sh
 
 For isolated smoke testing, override `HERMES_PROFILE_CMD` to a test alias (e.g. `trading-research-test-tmp`) — see `docs/07-testing-acceptance-criteria.md`.
 
-## Verify
+## Verify (dogfood without waiting for the schedule)
+
+`chat -q '/pre-market-routine'` exits 0 in v0.14.0 but returns only a `session_id`, so it is **not** sufficient for end-to-end dogfood. Use `cron run` + `cron tick` instead:
 
 ```bash
 trading-research-assistant cron list
-# Pick a job_id from the output (12-char hex), then:
-hermes -p trading-research-assistant cron run <job_id>
-# Note: cron run requires job_id, not job name.
+# Pick a job_id (12-char hex) from the output, then:
+trading-research-assistant cron run <job_id> --accept-hooks
+trading-research-assistant cron tick --accept-hooks
+# Inspect the generated brief:
+ls ~/.hermes/profiles/trading-research-assistant/cron/output/<job_id>/
+```
+
+## Automatic firing requires the gateway
+
+`hermes profile install` registers cron jobs as `active`, but **they do not fire automatically until the gateway is running**. After enabling, you will see:
+
+```
+⚠ Gateway is not running — jobs won't fire automatically.
+```
+
+Choose one of:
+
+```bash
+# A) Run the gateway as a managed background service (recommended for prod use).
+trading-research-assistant gateway install
+trading-research-assistant gateway start
+
+# B) Run the gateway in the foreground (useful for local testing).
+trading-research-assistant gateway run
+
+# C) Manual-only mode — pause every job, run them only via `cron run`.
+for jid in $(trading-research-assistant cron list | awk '/^  [a-f0-9]{12}/ {print $1}'); do
+  trading-research-assistant cron pause "$jid"
+done
 ```
 
 ## Notes

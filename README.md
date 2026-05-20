@@ -29,10 +29,20 @@ make test              # 87 tests pass
 python3 scripts/validate_upstream_index.py \
   --source "$CLAUDE_TRADING_SKILLS_REPO" --profile-root .
 
-# 5. Install the profile.
+# 5. Install the profile (or install from GitHub directly).
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+# Or:
+#   hermes profile install github.com/tradermonty/hermes-trading-research-agent-work-package \
+#     --name trading-research-assistant --alias -y
+
+# Configure model + provider. Pick whichever your Hermes setup supports:
 trading-research-assistant config set model    claude-opus-4-7
 trading-research-assistant config set provider anthropic
+# Examples for other providers:
+#   trading-research-assistant config set provider     openai-codex
+#   trading-research-assistant config set model        gpt-5.5
+#   trading-research-assistant config set model.base_url https://chatgpt.com/backend-api/codex
+# (Dotted keys like `model.default` / `model.provider` also work.)
 
 # 6. Configure API keys (copy and edit).
 cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
@@ -96,6 +106,29 @@ export HERMES_PROFILE_CMD=trading-research-assistant
 export HERMES_CRON_DELIVER=local   # or telegram / discord / slack / origin
 bash cron/create_cron_jobs.sh
 trading-research-assistant cron list
+```
+
+Cron jobs register as `active` but **do not fire automatically until the Hermes gateway is running**. After `cron list` shows the four jobs, choose:
+
+```bash
+# Managed background service (recommended for prod use):
+trading-research-assistant gateway install
+trading-research-assistant gateway start
+
+# Manual-only mode (no auto-fire, run each job by hand):
+for jid in $(trading-research-assistant cron list | awk '/^  [a-f0-9]{12}/ {print $1}'); do
+  trading-research-assistant cron pause "$jid"
+done
+```
+
+To verify a job end-to-end without waiting for the schedule:
+
+```bash
+# `chat -q '/pre-market-routine'` only returns a session_id in v0.14.0,
+# so use cron run + cron tick for dogfood instead:
+trading-research-assistant cron run <pre_market_job_id> --accept-hooks
+trading-research-assistant cron tick --accept-hooks
+ls ~/.hermes/profiles/trading-research-assistant/cron/output/<pre_market_job_id>/
 ```
 
 ### Timezone semantics (IMPORTANT)

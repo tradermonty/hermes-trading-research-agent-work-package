@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- README.md / README.ja.md / cron/README.md: document that cron jobs require `gateway install && gateway start` (or per-job `cron pause`) to fire automatically; profile install alone does not start the scheduler.
+- README.md / README.ja.md / docs/07 / docs/08: dogfood path is `cron run <job_id> --accept-hooks` + `cron tick --accept-hooks` then inspect `cron/output/<job_id>/<timestamp>.md`. `chat -q '/bundle-name'` in v0.14.0 only returns a session_id and is **not** sufficient for end-to-end verification.
+- README.md / README.ja.md: added provider-switch examples (`openai-codex` with `model.base_url`) and note that dotted keys (`model.default`, `model.provider`) also work.
+- docs/04-skill-integration-strategy.md: list `jsonschema` Python module as a known degraded-mode trigger for `trader-memory-core`, with install hint.
+- docs/03-hermes-compatibility-notes.md: capture gateway-required-for-auto-fire and `chat -q` limitation as v0.14.0 operational findings; record `trader-memory-core` jsonschema dependency.
+- docs/00-executive-brief.ja.md / docs/08-release-playbook.md / docs/10-user-facing-readme-draft.ja.md: corrected stale GitHub repo name to `hermes-trading-research-agent-work-package`.
+
+
 ## [0.1.0] - 2026-05-20
 
 Initial Hermes Profile Distribution MVP. Verified against Hermes Agent v0.14.0.

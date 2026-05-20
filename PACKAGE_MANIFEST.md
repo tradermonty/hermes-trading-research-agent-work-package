@@ -1,6 +1,6 @@
 # Package Manifest
 
-Generated starter package for `hermes-trading-research-agent`.
+Generated starter package for `hermes-trading-research-agent-work-package`.
 
 Created for coding-agent handoff. This package contains repository scaffolding, not a fully validated final release.
 

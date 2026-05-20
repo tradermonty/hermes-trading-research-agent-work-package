@@ -29,10 +29,20 @@ make test    # 87 tests pass
 python3 scripts/validate_upstream_index.py \
   --source "$CLAUDE_TRADING_SKILLS_REPO" --profile-root .
 
-# 5. profile install
+# 5. profile install (or GitHub から直接)
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+# あるいは:
+#   hermes profile install github.com/tradermonty/hermes-trading-research-agent-work-package \
+#     --name trading-research-assistant --alias -y
+
+# model/provider 設定 (Hermes setup に合わせる)
 trading-research-assistant config set model    claude-opus-4-7
 trading-research-assistant config set provider anthropic
+# 他 provider 例:
+#   trading-research-assistant config set provider     openai-codex
+#   trading-research-assistant config set model        gpt-5.5
+#   trading-research-assistant config set model.base_url https://chatgpt.com/backend-api/codex
+# (dotted key `model.default` / `model.provider` でも動作)
 
 # 6. APIキーを設定
 cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
@@ -96,6 +106,29 @@ export HERMES_PROFILE_CMD=trading-research-assistant
 export HERMES_CRON_DELIVER=local   # または telegram / discord / slack / origin
 bash cron/create_cron_jobs.sh
 trading-research-assistant cron list
+```
+
+cron ジョブは `active` として登録されますが、**Hermes gateway が起動していないと自動発火しません**。`cron list` で4ジョブ確認後にどちらかを選択:
+
+```bash
+# A) 常駐サービスとして起動 (本番運用向け推奨)
+trading-research-assistant gateway install
+trading-research-assistant gateway start
+
+# B) 手動実行のみ (auto-fire させず、cron run で個別実行)
+for jid in $(trading-research-assistant cron list | awk '/^  [a-f0-9]{12}/ {print $1}'); do
+  trading-research-assistant cron pause "$jid"
+done
+```
+
+スケジュール待ちせずジョブをドッグフードする:
+
+```bash
+# v0.14.0 では `chat -q '/pre-market-routine'` は session_id しか返さないため
+# 実出力確認には cron run + cron tick を使う:
+trading-research-assistant cron run <pre_market_job_id> --accept-hooks
+trading-research-assistant cron tick --accept-hooks
+ls ~/.hermes/profiles/trading-research-assistant/cron/output/<pre_market_job_id>/
 ```
 
 ### タイムゾーンの扱い (重要)
