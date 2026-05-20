@@ -1,0 +1,28 @@
+name: weekly-portfolio-review
+description: Weekly core portfolio review for dividend, ETF, and long-term holdings.
+skills:
+- trading-research-orchestrator
+- portfolio-manager
+- kanchi-dividend-review-monitor
+- kanchi-dividend-sop
+- value-dividend-screener
+- dividend-growth-pullback-screener
+- kanchi-dividend-us-tax-accounting
+- trader-memory-core
+instruction: |
+  Run a weekly core portfolio review.
+
+  Output:
+  1. Allocation and concentration risks.
+  2. Dividend review queue and forced-review triggers.
+  3. Watchlist additions/removals for manual review.
+  4. Tax/account-location notes when relevant.
+  5. Actions requiring human confirmation.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

@@ -1,0 +1,34 @@
+# Hermes Trading Research Assistant config draft.
+# Verify exact supported keys against the installed Hermes version before release.
+
+skills:
+  # External-linked mode. The user should set this in .env or shell:
+  # CLAUDE_TRADING_SKILLS_REPO=/absolute/path/to/claude-trading-skills
+  external_dirs:
+    - ${CLAUDE_TRADING_SKILLS_REPO}/skills
+
+terminal:
+  # Default local for development. A coding agent may switch to docker/modal after verifying Hermes support.
+  backend: local
+  env_passthrough:
+    - CLAUDE_TRADING_SKILLS_REPO
+    - FMP_API_KEY
+    - FINVIZ_API_KEY
+    - ALPACA_API_KEY
+    - ALPACA_SECRET_KEY
+    - ALPACA_PAPER
+    - HERMES_TRADING_REPORT_DIR
+    - HERMES_TRADING_TIMEZONE
+
+cron:
+  # Cleaner Telegram/Slack output for routine reports.
+  wrap_response: false
+  script_timeout_seconds: 300
+
+trading_research:
+  timezone: America/Los_Angeles
+  default_delivery: ${HERMES_CRON_DELIVER}
+  report_dir: ${HERMES_TRADING_REPORT_DIR}
+  brokerage_mode: paper_read_only
+  enable_live_order_language: false
+  canonical_skills_repo: ${CLAUDE_TRADING_SKILLS_REPO}

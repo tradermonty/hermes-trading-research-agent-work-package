@@ -1,0 +1,143 @@
+# Hermes Trading Research Agent (日本語版)
+
+Hermes Agent上で動作する、米国株個人投資家向けのリサーチ・プロセス支援アシスタントです。`tradermonty/claude-trading-skills` のスキル群を、寄り付き前チェック / 引け後レビュー / 決算銘柄トリアージ / トレード記録などのプリセット (スラッシュコマンド) として呼び出せるようにします。
+
+**これは自動売買システムではありません。** リサーチ・記録・リスクレビューの支援ツールであり、最終的な売買判断は常に人間 (利用者) が行います。注文発注も、シグナル配信も、隠しジョブもありません。
+
+- Hermes alias: `trading-research-assistant`
+- 動作確認済み Hermes バージョン: **v0.14.0** (2026.5.16)
+- デフォルトスケジュール timezone: `America/Los_Angeles` ([タイムゾーンの扱い](#タイムゾーンの扱い重要) 参照)
+
+---
+
+## クイックスタート (5分)
+
+```bash
+# 1. このリポジトリと上流のスキルリポジトリを clone
+git clone <this-repo-url> hermes-trading-research-agent
+git clone https://github.com/tradermonty/claude-trading-skills.git
+cd hermes-trading-research-agent
+
+# 2. 上流スキルの場所を指定
+export CLAUDE_TRADING_SKILLS_REPO="$(realpath ../claude-trading-skills)"
+
+# 3. スケルトン検証
+make validate
+make test    # 87 tests pass
+
+# 4. 全 skill 参照が上流に存在するか確認
+python3 scripts/validate_upstream_index.py \
+  --source "$CLAUDE_TRADING_SKILLS_REPO" --profile-root .
+
+# 5. profile install
+hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+trading-research-assistant config set model    claude-opus-4-7
+trading-research-assistant config set provider anthropic
+
+# 6. APIキーを設定
+cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
+   ~/.hermes/profiles/trading-research-assistant/.env
+# .env をエディタで開き、必要なキーを記入
+
+# 7. 起動
+trading-research-assistant chat
+# チャットセッション内で:
+#   /pre-market-routine
+#   /after-close-review
+#   /trade-journal
+```
+
+---
+
+## 前提条件
+
+| 必要なもの | 備考 |
+|---|---|
+| Hermes Agent CLI v0.12.0以上 (v0.14.0 で動作確認済み) | https://hermes-agent.nousresearch.com/ |
+| Python 3.11 以上 | 検証スクリプト・テスト用 |
+| `tradermonty/claude-trading-skills` を local に clone | external-linked mode で `CLAUDE_TRADING_SKILLS_REPO` から参照 |
+
+### APIキー
+
+全てのキーは install 時点では **任意** です (`distribution.yaml` で `required: false`)。キーが無い場合、該当する skill は **degraded mode** で動作し、出力にその旨が記載されます。
+
+- **推奨** (無いと一部 skill が degraded mode に):
+  - `FMP_API_KEY` — Financial Modeling Prep。決算・経済指標・財務・OHLCV を扱うスキルで使用。
+  - `FINVIZ_API_KEY` — FINVIZ Elite。スクリーナー系スキルで使用。
+- **いずれか1つ必要** (chat / cron の LLM 呼び出し用):
+  - `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `OPENROUTER_API_KEY` (`config set provider` で指定した値と一致させる)。
+- **任意**:
+  - `ALPACA_API_KEY` / `ALPACA_SECRET_KEY` — デフォルトで paper / read-only (`ALPACA_PAPER=true`)。
+
+---
+
+## スラッシュコマンド (9個)
+
+| スラッシュコマンド | デフォルト cron | 用途 |
+|---|---|---|
+| `/pre-market-routine` | 平日 06:00 PT | マクロカレンダー、相場環境、決算銘柄、ブレッド、ウォッチリスト候補、リスクゲート |
+| `/after-close-review` | 平日 13:15 PT | 今日の変化、セクターローテ、保有銘柄レビュー、ジャーナル素材、明日の準備 |
+| `/market-regime-daily` | 手動 / 随時 | 15分の相場環境チェック (ブレッド、上昇銘柄比率、エクスポージャー上限) |
+| `/swing-opportunity-daily` | リスクゲート許可時のみ手動 | 規律あるスイング候補発掘 (仮説 / 否定条件 / ポジションサイズ前提) |
+| `/earnings-movers-triage` | イベント駆動 | 決算ギャップ銘柄と PEAD 候補の分類 |
+| `/portfolio-risk-check` | 手動 | エクスポージャー、集中度、ポートフォリオヒート、保有仮説の有効性 |
+| `/trade-journal` | 手動 | トレードメモを仮説 / 否定条件 / リスク記録付きの構造化ジャーナルへ |
+| `/weekly-portfolio-review` | 土曜 09:00 PT | 長期保有・配当・アロケーションドリフト・要レビュー銘柄 |
+| `/monthly-performance-review` | 月初 09:00 PT | プロセスレビュー、シグナル postmortem、来月の運用ルール |
+
+すべての bundle の instruction は **データ鮮度 / 出典 (どの skill / data source か) / 仮説 / 否定条件 / リスク考察 / 人間の最終判断ゲート** を出力に含めることを強制します (`tests/test_required_sections.py`)。
+
+---
+
+## cron ジョブの有効化
+
+```bash
+export HERMES_PROFILE_CMD=trading-research-assistant
+export HERMES_CRON_DELIVER=local   # または telegram / discord / slack / origin
+bash cron/create_cron_jobs.sh
+trading-research-assistant cron list
+```
+
+### タイムゾーンの扱い (重要)
+
+Hermes v0.14.0 の `cron create` には **`--tz` フラグが存在しません**。cron expression は **実行ホストのローカル timezone** で解釈されます。`HERMES_TRADING_TIMEZONE` 環境変数はレポート本文用のラベルで、cron の発火時刻には影響しません。
+
+デフォルトスケジュール (PT 想定) を意図通り発火させるには:
+- ホスト OS の timezone を `America/Los_Angeles` に揃える、または
+- `cron/create_cron_jobs.sh` の cron expression をホスト timezone に再計算する
+
+詳細は `cron/README.md` と `docs/03-hermes-compatibility-notes.md`。
+
+---
+
+## できないこと
+
+- 自動発注は一切しません。
+- 利益保証はしません。
+- シグナル配信サービスではありません。
+- ユーザーが明示的に paper / read-only Alpaca キーを設定する以外、live ブローカー資格情報を扱いません。
+- 隠し cron ジョブはありません。すべて `cron/create_cron_jobs.sh` に明記され、明示的な実行が必要です。
+
+---
+
+## 重要な受け入れ基準
+
+新規ユーザーが profile install と `.env` 設定だけ済ませて以下を実行できれば成功です:
+
+```text
+/pre-market-routine
+```
+
+アシスタントは、ユーザーが個別 skill を覚えなくても、必要な Claude Trading Skills を組み合わせて構造化されたリサーチブリーフを出力します。すべての出力セクションは明示的な「人間の最終判断ゲート」で締めくくられます。
+
+---
+
+## 詳細ドキュメント
+
+- `docs/01-architecture.md` — システム構成と責任分担
+- `docs/03-hermes-compatibility-notes.md` — Hermes v0.14.0 検証結果 (threat scanner `deception_hide` 回避、timezone 仕様)
+- `docs/04-skill-integration-strategy.md` — degraded mode 規則、bundle 命名
+- `docs/07-testing-acceptance-criteria.md` — 各テスト層が保証する内容
+- `docs/08-release-playbook.md` — リリース前チェックリスト
+- `CHANGELOG.md` — バージョン履歴
+- `README.md` — English version

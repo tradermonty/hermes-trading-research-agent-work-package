@@ -1,0 +1,30 @@
+name: market-regime-daily
+description: Daily market-regime assessment using breadth, uptrend participation,
+  top risk, distribution days, and exposure posture.
+skills:
+- trading-research-orchestrator
+- market-breadth-analyzer
+- uptrend-analyzer
+- market-top-detector
+- ibd-distribution-day-monitor
+- ftd-detector
+- macro-regime-detector
+- exposure-coach
+instruction: |
+  Assess the current US equity market regime.
+
+  Output:
+  - Regime label.
+  - Net exposure ceiling.
+  - New-entry permission: allowed / selective / blocked.
+  - Main positive evidence.
+  - Main negative evidence.
+  - Data freshness.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

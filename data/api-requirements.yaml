@@ -1,0 +1,48 @@
+schema_version: 1
+
+providers:
+  fmp:
+    env_var: FMP_API_KEY
+    label: Financial Modeling Prep
+    requirement_level: optional_global_required_for_many_skills
+    skills:
+      - earnings-calendar
+      - earnings-trade-analyzer
+      - economic-calendar-fetcher
+      - ftd-detector
+      - ibd-distribution-day-monitor
+      - pead-screener
+      - vcp-screener
+      - canslim-screener
+      - value-dividend-screener
+      - pair-trade-screener
+      - institutional-flow-tracker
+  finviz:
+    env_var: FINVIZ_API_KEY
+    label: FINVIZ Elite
+    requirement_level: optional_recommended_for_screeners
+    skills:
+      - finviz-screener
+      - theme-detector
+      - dividend-growth-pullback-screener
+      - value-dividend-screener
+  alpaca:
+    env_vars:
+      - ALPACA_API_KEY
+      - ALPACA_SECRET_KEY
+      - ALPACA_PAPER
+    label: Alpaca paper/read-only
+    requirement_level: optional_portfolio_and_account_context
+    default_mode: paper_read_only
+    skills:
+      - portfolio-manager
+      - parabolic-short-trade-planner
+
+no_key_or_local_data:
+  - market-breadth-analyzer
+  - uptrend-analyzer
+  - exposure-coach
+  - position-sizer
+  - signal-postmortem
+  - trader-memory-core
+  - trading-skills-navigator

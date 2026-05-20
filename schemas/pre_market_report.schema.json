@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PreMarketReport",
+  "type": "object",
+  "required": ["date", "risk_posture", "market_regime", "earnings_movers", "watchlist", "data_freshness", "human_next_actions"],
+  "properties": {
+    "date": {"type": "string"},
+    "risk_posture": {"type": "string", "enum": ["risk_on", "neutral", "risk_off", "research_only", "unknown"]},
+    "primary_reason": {"type": "string"},
+    "market_regime": {"type": "object"},
+    "macro_calendar": {"type": "array", "items": {"type": "object"}},
+    "earnings_movers": {"type": "array", "items": {"type": "object"}},
+    "watchlist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ticker", "setup", "thesis", "invalidation", "risk_notes", "follow_up"],
+        "properties": {
+          "ticker": {"type": "string"},
+          "setup": {"type": "string"},
+          "thesis": {"type": "string"},
+          "invalidation": {"type": "string"},
+          "risk_notes": {"type": "string"},
+          "follow_up": {"type": "string"}
+        }
+      }
+    },
+    "data_freshness": {"type": "array", "items": {"type": "string"}},
+    "human_next_actions": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,205 @@
+schema_version: 1
+source_repo: tradermonty/claude-trading-skills
+source_index: skills-index.yaml
+source_workflows_dir: workflows
+
+generation:
+  default_mode: external
+  external_skills_env: CLAUDE_TRADING_SKILLS_REPO
+  bundle_output_dir: skill-bundles
+  preserve_manual_bundles: true
+
+workflows:
+  pre-market-routine:
+    title: Pre-market routine
+    category: routine
+    cadence: weekdays_pre_market
+    canonical_source: custom-hermes-preset
+    base_workflows:
+      - market-regime-daily
+      - swing-opportunity-daily
+    skills:
+      - trading-research-orchestrator
+      - trading-cron-brief-writer
+      - trading-skills-navigator
+      - economic-calendar-fetcher
+      - earnings-calendar
+      - market-breadth-analyzer
+      - uptrend-analyzer
+      - market-top-detector
+      - ibd-distribution-day-monitor
+      - exposure-coach
+      - earnings-trade-analyzer
+      - pead-screener
+      - theme-detector
+    required_outputs:
+      - market_posture
+      - macro_calendar
+      - earnings_movers
+      - breadth_status
+      - watchlist_candidates
+      - human_next_actions
+      - data_freshness
+
+  after-close-review:
+    title: After-close review
+    category: routine
+    cadence: weekdays_after_close
+    canonical_source: custom-hermes-preset
+    base_workflows:
+      - market-regime-daily
+      - trade-memory-loop
+    skills:
+      - trading-research-orchestrator
+      - trading-cron-brief-writer
+      - market-breadth-analyzer
+      - uptrend-analyzer
+      - market-top-detector
+      - ibd-distribution-day-monitor
+      - sector-analyst
+      - market-news-analyst
+      - earnings-trade-analyzer
+      - trader-memory-core
+      - signal-postmortem
+    required_outputs:
+      - market_action_summary
+      - regime_changes
+      - earnings_reactions
+      - open_trade_review
+      - journal_prompts
+      - tomorrow_preparation
+      - data_freshness
+
+  market-regime-daily:
+    title: 15-minute daily market check
+    category: market-regime
+    cadence: daily
+    canonical_source: claude-trading-skills-workflow
+    skills:
+      - market-breadth-analyzer
+      - uptrend-analyzer
+      - market-top-detector
+      - ibd-distribution-day-monitor
+      - ftd-detector
+      - macro-regime-detector
+      - exposure-coach
+    required_outputs:
+      - regime_label
+      - exposure_ceiling
+      - new_entry_permission
+      - positive_evidence
+      - negative_evidence
+
+  swing-opportunity-daily:
+    title: Swing opportunity daily
+    category: swing-opportunity
+    cadence: daily_when_risk_allows
+    canonical_source: claude-trading-skills-workflow
+    skills:
+      - exposure-coach
+      - vcp-screener
+      - canslim-screener
+      - theme-detector
+      - technical-analyst
+      - position-sizer
+      - breakout-trade-planner
+      - trader-memory-core
+    required_outputs:
+      - risk_gate_status
+      - candidate_table
+      - thesis
+      - invalidation
+      - risk_assumptions
+      - follow_up_required
+
+  earnings-movers-triage:
+    title: Earnings movers triage
+    category: advanced-satellite
+    cadence: event-driven
+    canonical_source: custom-hermes-preset
+    skills:
+      - earnings-calendar
+      - earnings-trade-analyzer
+      - pead-screener
+      - market-news-analyst
+      - technical-analyst
+      - position-sizer
+      - trader-memory-core
+    required_outputs:
+      - mover_list
+      - classification
+      - pead_candidates
+      - manual_chart_review_queue
+      - data_freshness
+
+  trade-journal:
+    title: Trade journal assistant
+    category: trade-memory
+    cadence: manual
+    canonical_source: custom-hermes-preset
+    skills:
+      - trader-memory-core
+      - signal-postmortem
+      - position-sizer
+      - trade-hypothesis-ideator
+    required_outputs:
+      - journal_entry
+      - thesis_record
+      - invalidation
+      - postmortem_trigger
+      - missing_fields
+
+  portfolio-risk-check:
+    title: Portfolio risk check
+    category: core-portfolio
+    cadence: manual
+    canonical_source: custom-hermes-preset
+    skills:
+      - trading-research-orchestrator
+      - exposure-coach
+      - portfolio-manager
+      - position-sizer
+      - trader-memory-core
+    required_outputs:
+      - exposure_summary
+      - concentration_risks
+      - portfolio_heat
+      - open_thesis_validity
+      - human_review_queue
+      - data_freshness
+
+  weekly-portfolio-review:
+    title: Weekly core portfolio review
+    category: core-portfolio
+    cadence: weekly
+    canonical_source: claude-trading-skills-workflow
+    skills:
+      - portfolio-manager
+      - kanchi-dividend-review-monitor
+      - kanchi-dividend-sop
+      - value-dividend-screener
+      - dividend-growth-pullback-screener
+      - kanchi-dividend-us-tax-accounting
+      - trader-memory-core
+    required_outputs:
+      - allocation_report
+      - concentration_risks
+      - dividend_review_queue
+      - human_actions
+
+  monthly-performance-review:
+    title: Monthly performance review
+    category: trade-memory
+    cadence: monthly
+    canonical_source: claude-trading-skills-workflow
+    skills:
+      - trader-memory-core
+      - signal-postmortem
+      - trade-hypothesis-ideator
+      - backtest-expert
+      - dual-axis-skill-reviewer
+    required_outputs:
+      - performance_patterns
+      - process_mistakes
+      - acceptable_losses
+      - next_month_rules

@@ -1,0 +1,28 @@
+name: monthly-performance-review
+description: Monthly trading process review, signal postmortems, workflow quality
+  checks, and next-month improvements.
+skills:
+- trading-research-orchestrator
+- trader-memory-core
+- signal-postmortem
+- trade-hypothesis-ideator
+- backtest-expert
+- dual-axis-skill-reviewer
+instruction: |
+  Run a monthly performance and process review.
+
+  Output:
+  1. What worked and what failed.
+  2. Setup-level performance patterns.
+  3. Process mistakes versus acceptable losses.
+  4. Hypotheses to test next month.
+  5. Skills/workflows needing improvement.
+  6. Concrete next-month operating rules.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

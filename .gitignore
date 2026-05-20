@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.EXAMPLE
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+reports/
+*.log
+.DS_Store
+vendor-manifest.json
+skills/vendor/

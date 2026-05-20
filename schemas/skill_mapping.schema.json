@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillMapping",
+  "type": "object",
+  "required": ["schema_version", "workflows"],
+  "properties": {
+    "schema_version": {"type": "integer"},
+    "source_repo": {"type": "string"},
+    "source_index": {"type": "string"},
+    "workflows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["title", "skills"],
+        "properties": {
+          "title": {"type": "string"},
+          "category": {"type": "string"},
+          "cadence": {"type": "string"},
+          "canonical_source": {"type": "string"},
+          "skills": {"type": "array", "items": {"type": "string"}},
+          "required_outputs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+name: swing-opportunity-daily
+description: Find swing-trading research candidates only when market-risk gate allows
+  it.
+skills:
+- trading-research-orchestrator
+- exposure-coach
+- vcp-screener
+- canslim-screener
+- theme-detector
+- technical-analyst
+- position-sizer
+- breakout-trade-planner
+- trader-memory-core
+instruction: |
+  Search for disciplined swing-trading research candidates only if the risk gate allows new entries.
+
+  Required output:
+  - Risk gate status first.
+  - Candidate table with setup, thesis, invalidation, position-sizing assumptions, and chart-review requirements.
+  - If risk gate is blocked, provide only education/review tasks and do not generate new trade candidates.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

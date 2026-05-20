@@ -1,0 +1,39 @@
+name: pre-market-routine
+description: 'US equity pre-market brief: macro calendar, earnings movers, breadth,
+  regime, themes, candidates, and risk gate.'
+skills:
+- trading-research-orchestrator
+- trading-cron-brief-writer
+- trading-skills-navigator
+- economic-calendar-fetcher
+- earnings-calendar
+- market-breadth-analyzer
+- uptrend-analyzer
+- market-top-detector
+- ibd-distribution-day-monitor
+- exposure-coach
+- earnings-trade-analyzer
+- pead-screener
+- theme-detector
+instruction: |
+  Run the pre-market routine for US equities.
+
+  Produce a concise research brief in watchlist and research language; entries and exits remain with the human reviewer (see SOUL.md).
+
+  Required sections:
+  1. Market posture: risk-on / neutral / risk-off, with reason.
+  2. Macro calendar: high-impact events today and this week.
+  3. Earnings movers: large reactions and PEAD/watchlist candidates.
+  4. Breadth and uptrend participation.
+  5. Sectors/themes worth watching.
+  6. Watchlist candidates with thesis, invalidation, and required follow-up.
+  7. Risk gate: full risk / reduced risk / no new trades.
+  8. Data freshness and missing-data warnings.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

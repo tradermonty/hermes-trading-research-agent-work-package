@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "finviz": {
+      "description": "Optional FINVIZ MCP server. Verify package name and command before enabling.",
+      "command": "uvx",
+      "args": ["finviz-mcp-server"],
+      "env": {
+        "FINVIZ_API_KEY": "${FINVIZ_API_KEY}"
+      }
+    },
+    "alpaca-paper-readonly": {
+      "description": "Optional Alpaca MCP/API bridge. Keep paper/read-only by default.",
+      "command": "python",
+      "args": ["-m", "your_alpaca_mcp_server"],
+      "env": {
+        "ALPACA_API_KEY": "${ALPACA_API_KEY}",
+        "ALPACA_SECRET_KEY": "${ALPACA_SECRET_KEY}",
+        "ALPACA_PAPER": "true"
+      }
+    }
+  }
+}

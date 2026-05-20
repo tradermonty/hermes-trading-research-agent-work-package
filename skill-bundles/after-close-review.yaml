@@ -1,0 +1,35 @@
+name: after-close-review
+description: After-close market review, breadth change, earnings reactions, open-trade
+  checklist, journal prompts, and tomorrow prep.
+skills:
+- trading-research-orchestrator
+- trading-cron-brief-writer
+- market-breadth-analyzer
+- uptrend-analyzer
+- market-top-detector
+- ibd-distribution-day-monitor
+- sector-analyst
+- market-news-analyst
+- earnings-trade-analyzer
+- trader-memory-core
+- signal-postmortem
+instruction: |
+  Run the after-close review for US equities.
+
+  Required sections:
+  1. What changed today in indices, breadth, sectors, and themes.
+  2. Breadth/uptrend improvement or deterioration.
+  3. Earnings reactions worth tracking.
+  4. Signals that improved, degraded, or invalidated.
+  5. Open trade review checklist.
+  6. Journal prompts for today's decisions.
+  7. Tomorrow preparation list.
+  8. Data freshness and missing-data warnings.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

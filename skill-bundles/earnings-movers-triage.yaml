@@ -1,0 +1,32 @@
+name: earnings-movers-triage
+description: Triage earnings gap movers, PEAD candidates, and post-earnings trade
+  research candidates.
+skills:
+- trading-research-orchestrator
+- earnings-calendar
+- earnings-trade-analyzer
+- pead-screener
+- market-news-analyst
+- technical-analyst
+- position-sizer
+- trader-memory-core
+instruction: |
+  Triage recent and upcoming earnings movers.
+
+  Classify each symbol as:
+  - Ignore / insufficient data
+  - Watchlist only
+  - PEAD research candidate
+  - Pullback-after-gap candidate
+  - Needs manual chart review
+
+  For each candidate, include thesis, invalidation, risk notes, and follow-up data.
+  Frame all candidates as research observations and review queues; trade actions remain with the human reviewer (see SOUL.md).
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

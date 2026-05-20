@@ -1,0 +1,22 @@
+name: portfolio-risk-check
+description: Fast risk check for exposure, concentration, open thesis validity, and
+  portfolio heat.
+skills:
+- trading-research-orchestrator
+- exposure-coach
+- portfolio-manager
+- position-sizer
+- trader-memory-core
+instruction: |
+  Perform a fast portfolio risk check.
+
+  Focus on exposure, concentration, risk per trade, portfolio heat, and open-thesis invalidation.
+  Frame everything as risk observations and review prompts; trade actions remain with the human reviewer (see SOUL.md).
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

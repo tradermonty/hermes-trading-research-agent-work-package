@@ -1,0 +1,69 @@
+schema_version: 1
+timezone: America/Los_Angeles
+
+presets:
+  pre-market-routine:
+    schedule: "0 6 * * 1-5"
+    local_time_description: "Weekdays 06:00 America/Los_Angeles, 30 minutes before US equity market open"
+    prompt_file: prompts/pre-market-routine.md
+    skills:
+      - trading-research-orchestrator
+      - trading-cron-brief-writer
+      - trading-skills-navigator
+      - economic-calendar-fetcher
+      - earnings-calendar
+      - market-breadth-analyzer
+      - uptrend-analyzer
+      - market-top-detector
+      - ibd-distribution-day-monitor
+      - exposure-coach
+      - earnings-trade-analyzer
+      - pead-screener
+      - theme-detector
+    deliver_env: HERMES_CRON_DELIVER
+
+  after-close-review:
+    schedule: "15 13 * * 1-5"
+    local_time_description: "Weekdays 13:15 America/Los_Angeles, shortly after US equity market close"
+    prompt_file: prompts/after-close-review.md
+    skills:
+      - trading-research-orchestrator
+      - trading-cron-brief-writer
+      - market-breadth-analyzer
+      - uptrend-analyzer
+      - market-top-detector
+      - ibd-distribution-day-monitor
+      - sector-analyst
+      - market-news-analyst
+      - earnings-trade-analyzer
+      - trader-memory-core
+      - signal-postmortem
+    deliver_env: HERMES_CRON_DELIVER
+
+  weekly-portfolio-review:
+    schedule: "0 9 * * 6"
+    local_time_description: "Saturday 09:00 America/Los_Angeles"
+    prompt_file: prompts/weekly-portfolio-review.md
+    skills:
+      - trading-research-orchestrator
+      - portfolio-manager
+      - kanchi-dividend-review-monitor
+      - kanchi-dividend-sop
+      - value-dividend-screener
+      - dividend-growth-pullback-screener
+      - kanchi-dividend-us-tax-accounting
+      - trader-memory-core
+    deliver_env: HERMES_CRON_DELIVER
+
+  monthly-performance-review:
+    schedule: "0 9 1 * *"
+    local_time_description: "First day of month 09:00 America/Los_Angeles"
+    prompt_file: prompts/monthly-performance-review.md
+    skills:
+      - trading-research-orchestrator
+      - trader-memory-core
+      - signal-postmortem
+      - trade-hypothesis-ideator
+      - backtest-expert
+      - dual-axis-skill-reviewer
+    deliver_env: HERMES_CRON_DELIVER

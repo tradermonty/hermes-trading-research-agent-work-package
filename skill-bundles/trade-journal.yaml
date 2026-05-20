@@ -1,0 +1,29 @@
+name: trade-journal
+description: Convert user trade notes into structured journal entries, thesis records,
+  and postmortem triggers.
+skills:
+- trading-research-orchestrator
+- trader-memory-core
+- signal-postmortem
+- position-sizer
+- trade-hypothesis-ideator
+instruction: |
+  Convert the user's trade note into a structured trading journal entry.
+
+  Capture:
+  - ticker, direction, entry, stop, target, size, and risk percentage if available.
+  - setup type and source skill.
+  - thesis and invalidation condition.
+  - market regime at entry.
+  - emotional/process notes.
+  - review date and postmortem trigger.
+
+  If information is missing, ask for the smallest set of missing fields required to create the entry.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; this bundle does not place orders

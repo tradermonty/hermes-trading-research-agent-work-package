@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TradeJournalEntry",
+  "type": "object",
+  "required": ["ticker", "direction", "setup", "thesis", "invalidation", "review_plan"],
+  "properties": {
+    "timestamp": {"type": "string"},
+    "ticker": {"type": "string"},
+    "direction": {"type": "string"},
+    "entry": {"type": ["number", "string", "null"]},
+    "stop": {"type": ["number", "string", "null"]},
+    "target": {"type": ["number", "string", "null"]},
+    "risk_amount": {"type": ["number", "string", "null"]},
+    "setup": {"type": "string"},
+    "thesis": {"type": "string"},
+    "invalidation": {"type": "string"},
+    "market_regime": {"type": ["string", "null"]},
+    "process_notes": {"type": "array", "items": {"type": "string"}},
+    "review_plan": {"type": "string"},
+    "postmortem_trigger": {"type": ["string", "null"]}
+  }
+}

@@ -1,0 +1,31 @@
+schema_version: 1
+
+guardrails:
+  no_direct_execution:
+    enabled: true
+    description: "The profile must not place broker orders or produce imperative trade instructions by default."
+    forbidden_phrases_as_recommendation:
+      - "buy now"
+      - "sell now"
+      - "short now"
+      - "place this order"
+      - "enter immediately"
+  human_decision_gate:
+    enabled: true
+    required_sections:
+      - thesis
+      - invalidation
+      - risk_notes
+      - next_human_action
+  broker_mode:
+    default: paper_read_only
+    allow_live: false
+  data_integrity:
+    require_data_freshness_section: true
+    prohibit_fabricated_market_data: true
+  degraded_mode:
+    required_when:
+      - missing_api_key
+      - missing_external_skills_repo
+      - missing_required_skill
+      - stale_or_unavailable_market_data

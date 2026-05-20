@@ -1,0 +1,71 @@
+name: trading-research-assistant
+version: 0.1.0
+description: "Hermes profile distribution for US equity market research, routine briefs, earnings mover triage, and trade journaling using Claude Trading Skills."
+hermes_requires: ">=0.12.0"
+author: "TradeMonty"
+license: "MIT"
+
+# These are checked during profile install/update. Keep market-data keys optional so
+# users can start in degraded/offline mode and add keys later.
+env_requires:
+  - name: ANTHROPIC_API_KEY
+    description: "Optional model provider key. Use whichever provider your Hermes setup supports."
+    required: false
+    default: ""
+  - name: OPENAI_API_KEY
+    description: "Optional model provider key. Use whichever provider your Hermes setup supports."
+    required: false
+    default: ""
+  - name: OPENROUTER_API_KEY
+    description: "Optional model provider key. Use whichever provider your Hermes setup supports."
+    required: false
+    default: ""
+  - name: CLAUDE_TRADING_SKILLS_REPO
+    description: "Absolute path to local tradermonty/claude-trading-skills checkout for external-linked mode."
+    required: false
+    default: ""
+  - name: FMP_API_KEY
+    description: "Financial Modeling Prep key for earnings, economics, fundamentals, and OHLCV-backed skills."
+    required: false
+    default: ""
+  - name: FINVIZ_API_KEY
+    description: "FINVIZ Elite key for optional screener-backed skills where supported."
+    required: false
+    default: ""
+  - name: ALPACA_API_KEY
+    description: "Optional Alpaca key. Use paper/read-only configuration by default."
+    required: false
+    default: ""
+  - name: ALPACA_SECRET_KEY
+    description: "Optional Alpaca secret. Use paper/read-only configuration by default."
+    required: false
+    default: ""
+  - name: ALPACA_PAPER
+    description: "Default true; do not use live brokerage mode for this profile unless intentionally changed."
+    required: false
+    default: "true"
+  - name: HERMES_CRON_DELIVER
+    description: "Cron delivery target such as local, telegram, discord, slack, or origin. Defaults to local."
+    required: false
+    default: "local"
+
+# Include skill-bundles and project docs in addition to the Hermes defaults.
+# Installer-owned runtime state, memories, sessions, .env, logs, and auth files must never be overwritten.
+distribution_owned:
+  - SOUL.md
+  - config.yaml
+  - mcp.json
+  - skills/
+  - skill-bundles/
+  - cron/
+  - prompts/
+  - data/
+  - scripts/
+  - schemas/
+  - docs/
+  - README.md
+  - README.ja.md
+  - CHANGELOG.md
+  - AGENTS.md
+  - distribution.yaml
+  - .env.EXAMPLE
