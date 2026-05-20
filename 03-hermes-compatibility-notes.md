@@ -33,6 +33,43 @@ This file is updated by the coding agent against the installed Hermes version.
 
 ## Operational findings (v0.14.0 smoke test)
 
+### Cron jobs require the gateway to fire automatically
+
+`cron create` registers jobs as `active`, but they do not run on schedule until the gateway is up. Profile install does not start the gateway. Observed banner:
+
+```
+⚠ Gateway is not running — jobs won't fire automatically.
+```
+
+Workaround documented in `cron/README.md`:
+- managed service: `trading-research-assistant gateway install && trading-research-assistant gateway start`
+- foreground: `trading-research-assistant gateway run`
+- manual-only: `trading-research-assistant cron pause <job_id>` per job and trigger via `cron run` + `cron tick`.
+
+### `chat -q '/bundle-name'` is not a useful dogfood path
+
+In v0.14.0, `trading-research-assistant chat -Q --yolo -q '/pre-market-routine'` exits 0 but only emits a session_id, not the bundle output. End-to-end dogfood should go through `cron run <job_id> --accept-hooks` followed by `cron tick --accept-hooks`, then inspect `cron/output/<job_id>/<timestamp>.md`. Updated in `docs/07-testing-acceptance-criteria.md` and `cron/README.md`.
+
+### `trader-memory-core` needs `jsonschema` at runtime
+
+Observed in `after-close-review` cron output:
+
+```
+trader-memory-core CLI failed because jsonschema is not installed
+```
+
+The skill itself ships under `claude-trading-skills` and resolves Python deps at the upstream level — this profile cannot fix it directly. Workarounds for users:
+
+```bash
+python3 -m pip install jsonschema
+# or, if the skill is run via uv:
+uv pip install jsonschema
+```
+
+A skill-side fix is to wrap the entry-point with `uv run --with jsonschema`. Tracked as an upstream issue rather than a TICKET in this repo. Listed in `docs/04-skill-integration-strategy.md` degraded-mode notes.
+
+
+
 ### Threat scanner blocks negative-form cron prompts
 
 `hermes cron create` runs each prompt through a threat scanner. Prompt phrases that combine **conditional + negation + "do not fabricate / hide"** semantics can match the `deception_hide` pattern and be rejected at submission time. Symptoms observed:

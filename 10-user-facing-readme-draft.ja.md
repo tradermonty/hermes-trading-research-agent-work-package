@@ -24,7 +24,7 @@
 ## インストール例
 
 ```bash
-hermes profile install github.com/tradermonty/hermes-trading-research-agent --alias
+hermes profile install github.com/tradermonty/hermes-trading-research-agent-work-package --name trading-research-assistant --alias -y
 trading-research-assistant chat
 ```
 

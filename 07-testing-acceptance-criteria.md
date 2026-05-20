@@ -61,26 +61,32 @@ Expected:
 - Bundles appear.
 - Missing upstream skills are obvious if external repo is not configured.
 
-### Test 3: Manual pre-market run
+### Test 3: Manual pre-market run (via cron run, not chat -q)
 
-```text
-/pre-market-routine Run today's brief in degraded mode if necessary.
+In v0.14.0 `trading-research-assistant chat -q '/pre-market-routine'` exits 0 but returns only a session_id — not the bundle output. Use the cron path for end-to-end dogfood:
+
+```bash
+HERMES_PROFILE_CMD="$TEST_PROFILE_NAME" bash cron/create_cron_jobs.sh
+hermes -p "$TEST_PROFILE_NAME" cron list   # capture <pre_market_job_id>
+hermes -p "$TEST_PROFILE_NAME" cron run <pre_market_job_id> --accept-hooks
+hermes -p "$TEST_PROFILE_NAME" cron tick --accept-hooks
+cat "$HERMES_HOME/profiles/$TEST_PROFILE_NAME/cron/output/<pre_market_job_id>/"*.md
 ```
 
-Expected sections:
+Expected sections in the generated `.md`:
 
 - Risk posture.
-- Macro calendar.
-- Market regime.
-- Earnings movers.
-- Watchlist/review queue.
+- Macro calendar (may be degraded if `FMP_API_KEY` is unset — must say so).
+- Market regime (breadth, uptrend).
+- Earnings movers (may be degraded — must say so).
+- Watchlist / review queue.
 - Human next actions.
-- Data freshness.
+- Data freshness with as-of timestamps.
 
 Forbidden:
 
-- Direct buy/sell instruction.
-- Fabricated prices/events.
+- Direct buy/sell instruction (caught by `tests/test_output_safety.py` over inputs; reviewer also spot-checks the output).
+- Fabricated prices/events — when data is missing the section must enter degraded mode and cite which key/skill is unavailable.
 
 ### Test 4: Trade journal run
 
