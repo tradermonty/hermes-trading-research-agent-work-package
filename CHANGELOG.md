@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-20
+
+Post-release polish on top of v0.1.0. No profile-distribution behavior changes; this release is CI + docs + validator polish only.
+
 ### Added
 
-- `.github/workflows/ci.yml`: GitHub Actions CI that runs `make validate`, `make validate-upstream` (against a checked-out `tradermonty/claude-trading-skills`), and `make test`. Triggers: push to `main`, push of `v*` tags, pull requests (any branch), and manual `workflow_dispatch`.
+- `.github/workflows/ci.yml`: GitHub Actions CI that runs `make validate`, `make validate-upstream` (against a checked-out `tradermonty/claude-trading-skills`), and `make test`. Triggers: push to `main`, push of `v*` tags, pull requests (any branch), and manual `workflow_dispatch`. Uses `actions/checkout@v6` and `actions/setup-python@v6` (Node 24 runtime, no deprecation warnings).
 - `docs/MISSING_SKILLS.md`: empty template documenting the validator's degraded-mode-acceptance format. Current status notes that no skills are accepted-missing in v0.1.0.
 
 ### Fixed

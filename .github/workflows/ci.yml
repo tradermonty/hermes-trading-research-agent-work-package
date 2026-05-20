@@ -13,19 +13,19 @@ jobs:
 
     steps:
       - name: Checkout profile repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Upstream skills repo cloned into the workspace (GitHub Actions does not
       # allow writes outside $GITHUB_WORKSPACE). The validator only reads
       # `skills-index.yaml` and `skills/*/SKILL.md`, so no auth is required.
       - name: Checkout claude-trading-skills (default branch)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: tradermonty/claude-trading-skills
           path: claude-trading-skills
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 

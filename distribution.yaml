@@ -1,5 +1,5 @@
 name: trading-research-assistant
-version: 0.1.0
+version: 0.1.1
 description: "Hermes profile distribution for US equity market research, routine briefs, earnings mover triage, and trade journaling using Claude Trading Skills."
 hermes_requires: ">=0.12.0"
 author: "TradeMonty"
