@@ -148,6 +148,27 @@ See `cron/README.md` and `docs/03-hermes-compatibility-notes.md`.
 
 ---
 
+## Versioning and reproducible installs
+
+Hermes Profile Distribution install (`hermes profile install github.com/<owner>/<repo>`) currently tracks the repository's **default branch**, not a specific tag. The `v0.1.0` GitHub Release exists for changelog and reference, but a `github.com/...#v0.1.0` ref pin is not (yet) supported by Hermes' installer.
+
+For a reproducible v0.1.0 install — pinned, no surprise updates — clone locally, check out the tag, and install from the directory:
+
+```bash
+git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
+cd hermes-trading-research-agent-work-package
+git checkout v0.1.0
+hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+```
+
+When Hermes adds Git-ref pinning to its installer, this section will be replaced with the direct GitHub-ref-pinned form.
+
+## MCP servers
+
+`mcp.json` ships **empty by default**. The example file `mcp.example.json` contains placeholder entries (`finviz-mcp-server`, `your_alpaca_mcp_server`, etc.) that are **not verified** — package names, command invocations, and permissions all need to be checked against the actual MCP server you intend to run before enabling. The MCP config schema itself is also still listed as TODO in `docs/03-hermes-compatibility-notes.md`.
+
+Recommended: leave `mcp.json` empty until you have validated your chosen MCP servers and decided which tool surfaces to expose.
+
 ## Repository layout
 
 ```text

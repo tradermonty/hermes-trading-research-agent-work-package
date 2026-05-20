@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `.github/workflows/ci.yml`: GitHub Actions CI that runs `make validate`, `make validate-upstream` (against a checked-out `tradermonty/claude-trading-skills`), and `make test` on push, PR, tag, and manual dispatch.
+- `docs/MISSING_SKILLS.md`: empty template documenting the validator's degraded-mode-acceptance format. Current status notes that no skills are accepted-missing in v0.1.0.
+
+### Changed
+
+- `PACKAGE_MANIFEST.md`: rewritten as a pointer file — the original "coding-agent handoff scaffolding" framing was stale once the v0.1.0 MVP shipped.
+- `README.md` / `README.ja.md`: added a "Versioning and reproducible installs" section explaining that `hermes profile install github.com/...` tracks the default branch (no Git-ref pinning yet), with a clone + `git checkout v0.1.0` + local install recipe for reproducible pinned installs.
+- `README.md` / `README.ja.md`: added an "MCP servers" section warning that `mcp.example.json` placeholders (`finviz-mcp-server`, etc.) are unverified.
+
+
 ## [0.1.0] - 2026-05-20
 
 Initial Hermes Profile Distribution MVP. Verified against Hermes Agent v0.14.0, including live-install dogfood (`hermes profile install` from GitHub → `cron run` + `cron tick` with output files generated for pre-market and after-close routines).

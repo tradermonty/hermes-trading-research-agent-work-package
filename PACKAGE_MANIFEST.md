@@ -1,15 +1,14 @@
 # Package Manifest
 
-Generated starter package for `hermes-trading-research-agent-work-package`.
+This repository started life as a coding-agent handoff package and is now published as the **v0.1.0 MVP Hermes Profile Distribution** for `trading-research-assistant`.
 
-Created for coding-agent handoff. This package contains repository scaffolding, not a fully validated final release.
+For current installation, validation, and operational status, see:
 
-Files to verify against live Hermes before publishing:
+- `README.md` / `README.ja.md` — Quick Start, prerequisites, bundle list.
+- `CHANGELOG.md` — version history.
+- `docs/03-hermes-compatibility-notes.md` — Hermes v0.14.0 verification results and operational findings (gateway, threat-scanner, jsonschema, timezone).
+- `docs/07-testing-acceptance-criteria.md` — automated tests + manual smoke-test recipes.
+- `docs/08-release-playbook.md` — pre-release checklist and post-release isolated-HOME acceptance test.
+- GitHub Releases: https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases
 
-- `config.yaml`
-- `distribution.yaml`
-- `cron/create_cron_jobs.sh`
-- `mcp.json` / `mcp.example.json`
-- `skill-bundles/*.yaml` path behavior
-
-The coding agent should treat `docs/03-hermes-compatibility-notes.md` as a TODO checklist.
+The original "scaffolding for a coding agent" notes live in earlier commits (pre-`Initial commit`) for context only.

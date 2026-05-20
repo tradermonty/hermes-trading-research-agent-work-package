@@ -148,6 +148,27 @@ Hermes v0.14.0 の `cron create` には **`--tz` フラグが存在しません*
 
 ---
 
+## バージョニングと再現可能なインストール
+
+Hermes Profile Distribution の install (`hermes profile install github.com/<owner>/<repo>`) は現状、リポジトリの **default branch** を追跡する仕様で、特定タグの pinning には対応していません。`v0.1.0` の GitHub Release は changelog 用ですが、`github.com/...#v0.1.0` のような ref 指定はまだ Hermes installer には未実装です。
+
+v0.1.0 を再現可能な形で install したい場合は、ローカル clone → tag checkout → ディレクトリから install してください:
+
+```bash
+git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
+cd hermes-trading-research-agent-work-package
+git checkout v0.1.0
+hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+```
+
+Hermes 側で Git-ref pinning が追加されたら、このセクションは GitHub ref 直指定の形に置き換えます。
+
+## MCP サーバ
+
+`mcp.json` はデフォルトで **空** です。例示用の `mcp.example.json` には `finviz-mcp-server`、`your_alpaca_mcp_server` 等のプレースホルダーが入っていますが **未検証** で、パッケージ名 / 実行コマンド / 権限はすべて、実際に使う MCP server に対して確認が必要です。MCP config schema 自体も `docs/03-hermes-compatibility-notes.md` で TODO 扱いのままです。
+
+推奨: 使う MCP server を検証 + 露出する tool surface を決めてから `mcp.json` を埋めること。それまでは空のままで構いません。
+
 ## できないこと
 
 - 自動発注は一切しません。
