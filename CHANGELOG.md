@@ -7,26 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- `scripts/validate_package.py`: trailing-slash-insensitive check for `distribution_owned`. Hermes' installed copy strips trailing slashes from `skills/` / `skill-bundles/` / `cron/`, so running the validator inside an installed profile no longer emits spurious WARNs.
-
-### Documentation
-
-- README.md / README.ja.md: add `python3 -m pip install jsonschema` to Quick Start so `trader-memory-core` runs in full mode, not degraded.
-- docs/07 Test 5: align cron dogfood with the verified path (`cron run --accept-hooks` + `cron tick --accept-hooks`, then inspect `cron/output/<job_id>/`).
-- docs/08 pre-release checklist: explicit step for `hermes profile update` so installed users pick up doc fixes (e.g. corrected repo name) after publish.
-- README.md / README.ja.md / cron/README.md: document that cron jobs require `gateway install && gateway start` (or per-job `cron pause`) to fire automatically; profile install alone does not start the scheduler.
-- README.md / README.ja.md / docs/07 / docs/08: dogfood path is `cron run <job_id> --accept-hooks` + `cron tick --accept-hooks` then inspect `cron/output/<job_id>/<timestamp>.md`. `chat -q '/bundle-name'` in v0.14.0 only returns a session_id and is **not** sufficient for end-to-end verification.
-- README.md / README.ja.md: added provider-switch examples (`openai-codex` with `model.base_url`) and note that dotted keys (`model.default`, `model.provider`) also work.
-- docs/04-skill-integration-strategy.md: list `jsonschema` Python module as a known degraded-mode trigger for `trader-memory-core`, with install hint.
-- docs/03-hermes-compatibility-notes.md: capture gateway-required-for-auto-fire and `chat -q` limitation as v0.14.0 operational findings; record `trader-memory-core` jsonschema dependency.
-- docs/00-executive-brief.ja.md / docs/08-release-playbook.md / docs/10-user-facing-readme-draft.ja.md: corrected stale GitHub repo name to `hermes-trading-research-agent-work-package`.
-
-
 ## [0.1.0] - 2026-05-20
 
-Initial Hermes Profile Distribution MVP. Verified against Hermes Agent v0.14.0.
+Initial Hermes Profile Distribution MVP. Verified against Hermes Agent v0.14.0, including live-install dogfood (`hermes profile install` from GitHub → `cron run` + `cron tick` with output files generated for pre-market and after-close routines).
 
 ### Added
 
@@ -56,6 +39,20 @@ Initial Hermes Profile Distribution MVP. Verified against Hermes Agent v0.14.0.
 - `dump_yaml()` now preserves block-scalar (`|`) style for `instruction:` fields so bundles remain human-editable after regeneration.
 - All existing bundles re-saved with block-scalar formatting; remaining `Do not ...` clauses in bundle instructions rephrased to reference SOUL.md instead.
 - `distribution.yaml:distribution_owned` now includes `.env.EXAMPLE`, `README.ja.md`, and `CHANGELOG.md` so the Quick Start (which copies `.env.EXAMPLE`) works after profile install.
+
+### Fixed
+
+- `scripts/validate_package.py`: trailing-slash-insensitive check for `distribution_owned`. Hermes' installed copy strips trailing slashes from `skills/` / `skill-bundles/` / `cron/`, so running the validator inside an installed profile no longer emits spurious WARNs.
+
+### Documentation
+
+- README.md / README.ja.md: Quick Start now includes `python3 -m pip install jsonschema` so `trader-memory-core` (upstream skill that imports `jsonschema` directly) runs in full mode rather than degraded; also added provider-switch examples (`openai-codex` with `model.base_url`) and the note that dotted config keys (`model.default`, `model.provider`) work alongside the root-level forms.
+- README.md / README.ja.md / cron/README.md / docs/03 / docs/08: cron jobs register as `active` but **do not fire automatically until the Hermes gateway is running**; documented `gateway install && gateway start` (managed) and `cron pause` (manual-only) flows.
+- README.md / README.ja.md / docs/07 Test 5 / docs/08: the verified dogfood path is `cron run <job_id> --accept-hooks` followed by `cron tick --accept-hooks`, then inspect `cron/output/<job_id>/<timestamp>.md`. `chat -q '/bundle-name'` in v0.14.0 returns only a session_id and is **not** sufficient for end-to-end verification.
+- docs/03-hermes-compatibility-notes.md: captured the above as operational findings; recorded `trader-memory-core` jsonschema dependency.
+- docs/04-skill-integration-strategy.md: added `jsonschema` to the degraded-mode trigger table with install hint.
+- docs/08 pre-release checklist: explicit step for `hermes profile update` so installed users pick up doc fixes (e.g. corrected repo name) after publish.
+- docs/00-executive-brief.ja.md / docs/08-release-playbook.md / docs/10-user-facing-readme-draft.ja.md / PACKAGE_MANIFEST.md: corrected stale GitHub repo name to `hermes-trading-research-agent-work-package`.
 
 ### Notes
 
