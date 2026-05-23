@@ -145,7 +145,7 @@ Hermes v0.14.0 has **no `--tz` flag** on `cron create`. Cron expressions are int
 
 To run the default schedules at `America/Los_Angeles` local times, either:
 - set the host OS timezone to `America/Los_Angeles`, **or**
-- recompute each cron expression in `cron/create_cron_jobs.sh` for your host timezone.
+- recompute each cron expression in `data/schedule-presets.yaml` for your host timezone (the runtime reads it directly; no script edit is needed).
 
 See `cron/README.md` and `docs/03-hermes-compatibility-notes.md`.
 
@@ -202,7 +202,7 @@ Recommended: leave `mcp.json` empty until you have validated your chosen MCP ser
 - No promise of profitability.
 - No signal-service UX.
 - No collection of live account credentials beyond the user-configured paper / read-only Alpaca keys.
-- No hidden cron jobs. Any schedule must be visible in `cron/create_cron_jobs.sh` and explicitly enabled.
+- No hidden cron jobs. Every schedule is declared in `data/schedule-presets.yaml` and only created when you explicitly run `cron/create_cron_jobs.sh` (a thin wrapper around `cron/create_cron_jobs.py`).
 
 ---
 

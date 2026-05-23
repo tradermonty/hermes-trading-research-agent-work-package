@@ -145,7 +145,7 @@ Hermes v0.14.0 の `cron create` には **`--tz` フラグが存在しません*
 
 デフォルトスケジュール (PT 想定) を意図通り発火させるには:
 - ホスト OS の timezone を `America/Los_Angeles` に揃える、または
-- `cron/create_cron_jobs.sh` の cron expression をホスト timezone に再計算する
+- `data/schedule-presets.yaml` の cron expression をホスト timezone に再計算する (runtime が直接読み込むため、スクリプトの編集は不要)
 
 詳細は `cron/README.md` と `docs/03-hermes-compatibility-notes.md`。
 
@@ -178,7 +178,7 @@ Hermes 側で Git-ref pinning が追加されたら、このセクションは G
 - 利益保証はしません。
 - シグナル配信サービスではありません。
 - ユーザーが明示的に paper / read-only Alpaca キーを設定する以外、live ブローカー資格情報を扱いません。
-- 隠し cron ジョブはありません。すべて `cron/create_cron_jobs.sh` に明記され、明示的な実行が必要です。
+- 隠し cron ジョブはありません。すべて `data/schedule-presets.yaml` に明記され、`cron/create_cron_jobs.sh` (`cron/create_cron_jobs.py` の thin wrapper) を明示的に実行した時のみ作成されます。
 
 ---
 
