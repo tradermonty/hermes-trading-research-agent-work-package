@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-23
+
+Cron timezone polish + post-v0.1.1 doc generalization. No profile-distribution behavior change for callers who keep the default schedule — only when a host is **not** in the preset timezone, the new runtime now emits a stderr WARNING (non-blocking).
+
 ### Added
 
 - `cron/create_cron_jobs.py` (new): YAML-driven runtime for cron job creation. Reads `data/schedule-presets.yaml` as the single source of truth (schedule, name, prompt_file, skills, timezone) instead of hard-coding them in the shell script. Supports `--dry-run` to preview Hermes CLI invocations without executing.
@@ -18,15 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `cron/create_cron_jobs.sh`: collapsed from ~73 lines of hard-coded schedules + `--skill` flags to a 6-line wrapper that `exec`s the Python entry point. The documented `bash cron/create_cron_jobs.sh` invocation and `HERMES_PROFILE_CMD` / `HERMES_CRON_DELIVER` env var contract are preserved.
 - `scripts/validate_package.py:validate_prompts_and_schedules`: now also requires the top-level `timezone:` and a non-empty `name`/`skills` for each preset.
-- `cron/README.md` / `docs/03-hermes-compatibility-notes.md` / `README.md` / `README.ja.md`: documented the new source-of-truth model, the IANA-name TZ comparison (vs. offset-only), the runtime WARNING semantics, and the additional `pyyaml` runtime dependency added to the Quick Start install line alongside `jsonschema`.
+- `cron/README.md` / `docs/03-hermes-compatibility-notes.md` / `README.md` / `README.ja.md`: documented the new source-of-truth model, the IANA-name TZ comparison (vs. offset-only), the runtime WARNING semantics, and the additional `pyyaml` runtime dependency added to the Quick Start install line alongside `jsonschema`. The "rewrite cron expressions for your host timezone" recipe and the no-hidden-cron-jobs non-goal now point at `data/schedule-presets.yaml` instead of the wrapper script.
 
 ### Fixed
 
-- `pyproject.toml`: sync `project.version` to `0.1.1` (matched `distribution.yaml:version` which had been bumped, but the Python package metadata used by `pip install -e ".[dev]"` was still showing `0.1.0`).
+- `pyproject.toml`: sync `project.version` to `0.1.2` (kept in step with `distribution.yaml:version`, since `pip install -e ".[dev]"` is on the CI install path and a stale package version is otherwise visibly drift-prone).
 
 ### Documentation
 
-- `README.md` / `README.ja.md`: generalize the reproducible-install recipe from a hard-coded `git checkout v0.1.0` to `git checkout v0.1.1   # or any tag from \`git tag -l\``, with a link to the GitHub Releases page for the current latest.
+- `README.md` / `README.ja.md`: generalize the reproducible-install recipe from a hard-coded `git checkout v0.1.0` to `git checkout v0.1.2   # or any tag from \`git tag -l\``, with a link to the GitHub Releases page for the current latest.
 - `PACKAGE_MANIFEST.md`: drop the hard-coded "v0.1.0 MVP" framing; describe the repo as the Hermes Profile Distribution with initial MVP at v0.1.0 and current release tracked in GitHub Releases.
 - `docs/MISSING_SKILLS.md`: rephrase "The v0.1.0 release resolves..." as "The current release resolves..." so the doc does not need editing on each tag bump.
 
