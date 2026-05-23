@@ -114,13 +114,21 @@ This applies to both `chat` and `cron` runs. `HERMES_INFERENCE_MODEL` / `HERMES_
 
 ### Cron timezone interpretation
 
-`hermes cron create --help` shows **no timezone flag** in v0.14.0. Cron expressions are interpreted in the **host OS local timezone**. The `HERMES_TRADING_TIMEZONE: America/Los_Angeles` value in `config.yaml` is a **report-body label only** consumed by skills — it does not affect scheduler firing times.
+`hermes cron create --help` shows **no timezone flag** in v0.14.0. Cron expressions are interpreted in the **host OS local timezone**. The `HERMES_TRADING_TIMEZONE: America/Los_Angeles` value in `config.yaml` is a **report-body label only** consumed by skills — it does not affect scheduler firing times, and the runtime cron script intentionally does **not** read it for the host-TZ check.
+
+Runtime behaviour (`cron/create_cron_jobs.py`, invoked via the `bash cron/create_cron_jobs.sh` wrapper):
+
+- The expected timezone comes from `data/schedule-presets.yaml:timezone` (the YAML is the single source of truth for schedule, name, prompt_file, skills, and timezone).
+- On startup the script resolves the host IANA zone: (1) `TZ` env var when set — accept any value `zoneinfo.ZoneInfo` can resolve; (2) otherwise `os.readlink("/etc/localtime")` then fallback to `Path.resolve()`, splitting on `/zoneinfo/` to extract the IANA suffix; (3) otherwise unknown.
+- It emits a `WARNING` on stderr in two cases and continues regardless:
+  - Host zone resolved but differs from the preset zone — compared **by IANA name**, so `America/Phoenix` is still flagged against `America/Los_Angeles` in summer even though both are UTC-7 (DST rules differ).
+  - Host zone could not be verified (e.g. `TZ=Etc/NotAZone`, or `/etc/localtime` is missing) — the message says the host TZ is unknown and names the expected zone.
 
 Deployment guidance:
-- Run the host in `America/Los_Angeles` (or whichever timezone matches the cron expressions in `cron/create_cron_jobs.sh`).
-- If running in a different timezone, recompute each cron expression to the host's local time.
+- Run the host in `America/Los_Angeles` (or whichever timezone matches the cron expressions in `data/schedule-presets.yaml`).
+- If running in a different timezone, rewrite the cron expressions in `data/schedule-presets.yaml` for your host. The runtime will pick the new values up automatically.
 
-If a future Hermes release adds a `--tz` flag, update `cron/create_cron_jobs.sh` and `cron/README.md` accordingly.
+If a future Hermes release adds a `--tz` flag, update `cron/create_cron_jobs.py` and `cron/README.md` accordingly.
 
 ## Known conservative choices
 

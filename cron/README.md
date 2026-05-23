@@ -2,14 +2,20 @@
 
 Hermes cron jobs are enabled explicitly by the installer. This directory contains scripts and prompt files for creating the default routines.
 
+## Source of truth
+
+`data/schedule-presets.yaml` defines the four cron jobs: top-level `timezone`, plus a `name` / `schedule` / `prompt_file` / `skills` per preset. The runtime (`cron/create_cron_jobs.py`, invoked via the `bash cron/create_cron_jobs.sh` wrapper) reads everything from that file — schedules and skill lists are no longer duplicated in the shell script.
+
 ## Timezone semantics (IMPORTANT)
 
-Cron expressions below are written assuming `America/Los_Angeles`. Hermes Agent v0.14.0 **does not have a per-job timezone flag** on `cron create`; cron expressions are interpreted in the **host OS local timezone**. The `HERMES_TRADING_TIMEZONE` env var (`config.yaml`) is a **report-body label only**, consumed by skills — it does not affect scheduler firing times.
+Cron expressions in `data/schedule-presets.yaml` are written assuming `America/Los_Angeles`. Hermes Agent v0.14.0 **does not have a per-job timezone flag** on `cron create`; cron expressions are interpreted in the **host OS local timezone**. The `HERMES_TRADING_TIMEZONE` env var (`config.yaml`) is a **report-body label only**, consumed by skills — it does not affect scheduler firing times, and the runtime does **not** consult it for the host-TZ check below.
+
+On startup the runtime resolves the host IANA zone (via `TZ` env, then `/etc/localtime`) and compares it to the preset `timezone` **by IANA name**, not by UTC offset alone. So `America/Phoenix` is still flagged against `America/Los_Angeles` in summer even though both are UTC-7 — because the DST rules differ. The check emits a `WARNING` on stderr but continues; it never blocks job creation. PyYAML is required at runtime (`python3 -m pip install pyyaml`).
 
 To run these schedules at the intended local times:
 
 - Run the host in `America/Los_Angeles`, **or**
-- Recompute each cron expression to the host's local timezone before enabling.
+- Recompute each cron expression in `data/schedule-presets.yaml` to the host's local timezone before enabling.
 
 See `docs/03-hermes-compatibility-notes.md` for verification details.
 
@@ -31,6 +37,12 @@ bash cron/create_cron_jobs.sh
 ```
 
 For isolated smoke testing, override `HERMES_PROFILE_CMD` to a test alias (e.g. `trading-research-test-tmp`) — see `docs/07-testing-acceptance-criteria.md`.
+
+Preview the commands without touching Hermes:
+
+```bash
+HERMES_PROFILE_CMD=true python3 cron/create_cron_jobs.py --dry-run
+```
 
 ## Verify (dogfood without waiting for the schedule)
 
@@ -74,4 +86,5 @@ done
 - Delivery defaults to `local` for safety.
 - Prompts are stored under `prompts/` to avoid fragile shell quoting and to let `tests/test_output_safety.py` lint them.
 - Hermes' cron submission runs each prompt through a threat scanner; prompts with conditional+negation+"do not fabricate" semantics can match the `deception_hide` pattern and be rejected. Keep prompts in **positive** form and put hard prohibitions in `SOUL.md` instead. See `docs/03-hermes-compatibility-notes.md`.
-- If Hermes CLI syntax changes, update `cron/create_cron_jobs.sh` and `docs/03-hermes-compatibility-notes.md`.
+- If Hermes CLI syntax changes, update `cron/create_cron_jobs.py` (the body, not the shell wrapper) and `docs/03-hermes-compatibility-notes.md`.
+- Tests in `tests/test_schedule_drift.py` guard the preset-vs-runtime contract: schedule values, skill names, and the host-TZ warning matrix.

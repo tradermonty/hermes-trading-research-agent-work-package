@@ -49,10 +49,11 @@ cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
    ~/.hermes/profiles/trading-research-assistant/.env
 # (open the .env in your editor and fill in keys)
 
-# 6b. Install runtime Python deps that some skills import directly.
-#     `trader-memory-core` (upstream) imports `jsonschema` and degrades without it:
-python3 -m pip install jsonschema
-# (or: uv pip install jsonschema)
+# 6b. Install runtime Python deps that some skills / scripts import directly.
+#     - `trader-memory-core` (upstream) imports `jsonschema`.
+#     - `cron/create_cron_jobs.py` imports `pyyaml` to read schedule presets.
+python3 -m pip install jsonschema pyyaml
+# (or: uv pip install jsonschema pyyaml)
 
 # 7. Use it.
 trading-research-assistant chat
@@ -112,6 +113,8 @@ export HERMES_CRON_DELIVER=local   # or telegram / discord / slack / origin
 bash cron/create_cron_jobs.sh
 trading-research-assistant cron list
 ```
+
+`data/schedule-presets.yaml` is the **single source of truth** for the four cron jobs (schedule + name + skills + prompt file + expected timezone). The shell script is a thin wrapper around `cron/create_cron_jobs.py`, which reads the YAML, runs each `cron create` invocation in preset order, and **emits a WARNING on stderr** when the host's IANA timezone differs from the preset (IANA-name comparison, not just UTC offset — so e.g. `America/Phoenix` is flagged against `America/Los_Angeles` even when offsets coincide). Pass `--dry-run` to `cron/create_cron_jobs.py` to preview the commands without executing.
 
 Cron jobs register as `active` but **do not fire automatically until the Hermes gateway is running**. After `cron list` shows the four jobs, choose:
 

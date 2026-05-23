@@ -102,12 +102,19 @@ def validate_json_files(root: Path) -> None:
 
 def validate_prompts_and_schedules(root: Path) -> None:
     schedules = load_yaml(root / "data" / "schedule-presets.yaml")
+    if not schedules.get("timezone"):
+        fail("schedule-presets.yaml is missing the top-level `timezone:` field")
     for slug, preset in (schedules.get("presets") or {}).items():
         prompt_file = root / preset.get("prompt_file", "")
         if not prompt_file.exists():
             fail(f"Schedule preset {slug} references missing prompt: {prompt_file}")
         if not preset.get("schedule"):
             fail(f"Schedule preset {slug} missing schedule")
+        if not preset.get("name"):
+            fail(f"Schedule preset {slug} missing human-readable `name:`")
+        skills = preset.get("skills")
+        if not isinstance(skills, list) or not skills:
+            fail(f"Schedule preset {slug} missing non-empty `skills:` list")
 
 
 def main() -> None:

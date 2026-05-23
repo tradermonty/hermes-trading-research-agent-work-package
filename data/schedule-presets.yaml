@@ -3,6 +3,7 @@ timezone: America/Los_Angeles
 
 presets:
   pre-market-routine:
+    name: "Pre-market routine"
     schedule: "0 6 * * 1-5"
     local_time_description: "Weekdays 06:00 America/Los_Angeles, 30 minutes before US equity market open"
     prompt_file: prompts/pre-market-routine.md
@@ -23,6 +24,7 @@ presets:
     deliver_env: HERMES_CRON_DELIVER
 
   after-close-review:
+    name: "After-close review"
     schedule: "15 13 * * 1-5"
     local_time_description: "Weekdays 13:15 America/Los_Angeles, shortly after US equity market close"
     prompt_file: prompts/after-close-review.md
@@ -41,6 +43,7 @@ presets:
     deliver_env: HERMES_CRON_DELIVER
 
   weekly-portfolio-review:
+    name: "Weekly portfolio review"
     schedule: "0 9 * * 6"
     local_time_description: "Saturday 09:00 America/Los_Angeles"
     prompt_file: prompts/weekly-portfolio-review.md
@@ -56,6 +59,7 @@ presets:
     deliver_env: HERMES_CRON_DELIVER
 
   monthly-performance-review:
+    name: "Monthly performance review"
     schedule: "0 9 1 * *"
     local_time_description: "First day of month 09:00 America/Los_Angeles"
     prompt_file: prompts/monthly-performance-review.md

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `cron/create_cron_jobs.py` (new): YAML-driven runtime for cron job creation. Reads `data/schedule-presets.yaml` as the single source of truth (schedule, name, prompt_file, skills, timezone) instead of hard-coding them in the shell script. Supports `--dry-run` to preview Hermes CLI invocations without executing.
+- **Host-TZ warning**: the runtime resolves the host IANA timezone (`TZ` env, then `/etc/localtime` via `readlink` / `resolve()` + `/zoneinfo/` split) and compares it to the preset timezone by IANA name. Emits a `WARNING` on stderr — but continues — when the names differ (so `America/Phoenix` is flagged against `America/Los_Angeles` even when offsets coincide), or when the host zone cannot be verified. `HERMES_TRADING_TIMEZONE` is intentionally not consulted: it remains a report-body label per the existing docs.
+- `tests/test_schedule_drift.py` (new): pytest suite that locks in the preset shape (4 jobs, required fields, prompt files exist, top-level timezone), the no-hard-code contract for the runtime script, the dry-run ordering, the host-TZ warning matrix (silent / offset-mismatch / same-offset-different-zone / unknown), and the documentation parity check for the "host OS local timezone" caveat.
+- `data/schedule-presets.yaml`: added a human-readable `name:` field per preset so it (not the shell script) is the source of the job name passed to Hermes via `--name`.
+
+### Changed
+
+- `cron/create_cron_jobs.sh`: collapsed from ~73 lines of hard-coded schedules + `--skill` flags to a 6-line wrapper that `exec`s the Python entry point. The documented `bash cron/create_cron_jobs.sh` invocation and `HERMES_PROFILE_CMD` / `HERMES_CRON_DELIVER` env var contract are preserved.
+- `scripts/validate_package.py:validate_prompts_and_schedules`: now also requires the top-level `timezone:` and a non-empty `name`/`skills` for each preset.
+- `cron/README.md` / `docs/03-hermes-compatibility-notes.md` / `README.md` / `README.ja.md`: documented the new source-of-truth model, the IANA-name TZ comparison (vs. offset-only), the runtime WARNING semantics, and the additional `pyyaml` runtime dependency added to the Quick Start install line alongside `jsonschema`.
+
 ### Fixed
 
 - `pyproject.toml`: sync `project.version` to `0.1.1` (matched `distribution.yaml:version` which had been bumped, but the Python package metadata used by `pip install -e ".[dev]"` was still showing `0.1.0`).

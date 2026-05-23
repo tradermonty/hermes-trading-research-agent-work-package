@@ -49,10 +49,11 @@ cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
    ~/.hermes/profiles/trading-research-assistant/.env
 # .env をエディタで開き、必要なキーを記入
 
-# 6b. 一部 skill が直接 import する Python deps をインストール
-#     trader-memory-core (上流) は jsonschema を import するため、未導入だと degraded mode:
-python3 -m pip install jsonschema
-# (または: uv pip install jsonschema)
+# 6b. 一部 skill / script が直接 import する Python deps をインストール
+#     - trader-memory-core (上流) は jsonschema を import
+#     - cron/create_cron_jobs.py は schedule preset 読み込みで pyyaml を import
+python3 -m pip install jsonschema pyyaml
+# (または: uv pip install jsonschema pyyaml)
 
 # 7. 起動
 trading-research-assistant chat
@@ -112,6 +113,8 @@ export HERMES_CRON_DELIVER=local   # または telegram / discord / slack / orig
 bash cron/create_cron_jobs.sh
 trading-research-assistant cron list
 ```
+
+`data/schedule-presets.yaml` が4つの cron job の **単一の source of truth** です (schedule + name + skills + prompt file + 期待 timezone)。シェルスクリプトは `cron/create_cron_jobs.py` の thin wrapper で、YAML を読んで preset 順に `cron create` を発行し、host の IANA timezone が preset と異なる場合は **stderr に WARNING** を出力します (IANA 名比較のため、UTC offset が一致しても `America/Phoenix` vs `America/Los_Angeles` のような mismatch は検出されます)。`cron/create_cron_jobs.py --dry-run` で実行せずに発行コマンドを確認可能。
 
 cron ジョブは `active` として登録されますが、**Hermes gateway が起動していないと自動発火しません**。`cron list` で4ジョブ確認後にどちらかを選択:
 
