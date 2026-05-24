@@ -27,9 +27,9 @@ This file is updated by the coding agent against the installed Hermes version.
 | CLI for `profile install` | ✓ verified | `hermes profile install <source> [--name <name>] [--alias] [--force] [-y]`. `--alias` is **boolean** (no value). `<source>` accepts local directory; `file://` prefix is **not** required. `-y` skips manifest preview confirmation. |
 | CLI for `profile delete` | ✓ verified | `hermes profile delete <name> [-y]`. There is **no** `hermes profile uninstall` in v0.14.0. |
 | CLI for `cron delete` | ✓ verified, no `-y` | `hermes cron delete <job_id>`. The `-y`/`--yes` flag is **not** supported on `cron delete` in v0.14.0 (unlike `profile delete`). |
-| `bundles reload` CLI syntax | TODO | Did not exercise in smoke test. |
-| MCP config schema | TODO | Keep `mcp.json` empty until verified. |
-| Toolset restrictions for cron | TODO | Optionally set web/file/browser toolsets. |
+| `bundles reload` CLI syntax | ✓ verified | `hermes bundles reload` takes no arguments. Profile aliases such as `trading-research-assistant bundles reload` scan that profile's `skill-bundles/`; the default profile scanned 0 bundles, while this profile reported `No changes. 9 bundle(s) loaded.` |
+| MCP config schema | ✓ verified, keep `mcp.json` empty | In v0.14.0, `hermes mcp add/list/test/configure` read and write `config.yaml` under the `mcp_servers:` key, not this distribution's `mcp.json`. `mcp.json` remains an empty distribution-owned placeholder; do not put unverified servers there. |
+| Toolset restrictions for cron | ✓ verified | `cron create` has no `--toolsets` flag. Cron uses per-job `enabled_toolsets` when created/updated by the cronjob tool/API, otherwise the profile's `platform_toolsets.cron` from `hermes tools enable/disable --platform cron ...`. Scheduler still hard-disables `cronjob`, `messaging`, and `clarify` for cron agent runs. |
 
 ## Operational findings (v0.14.0 smoke test)
 
@@ -130,9 +130,53 @@ Deployment guidance:
 
 If a future Hermes release adds a `--tz` flag, update `cron/create_cron_jobs.py` and `cron/README.md` accordingly.
 
+
+### Bundle reload syntax
+
+`hermes bundles reload` has no positional arguments or options beyond `-h/--help`. It re-scans the active profile's bundle directory and reports added/removed bundles. Verified examples:
+
+```bash
+trading-research-assistant bundles reload
+# No changes. 9 bundle(s) loaded.
+
+hermes bundles reload
+# No changes. 0 bundle(s) loaded.  # default profile has no bundles
+```
+
+### MCP config location
+
+The active MCP configuration path in Hermes v0.14.0 is `config.yaml` under `mcp_servers:`, managed by `hermes mcp add/remove/list/test/configure`. A stdio server added with:
+
+```bash
+hermes mcp add demo-stdio --command true --args hello world
+```
+
+is persisted as:
+
+```yaml
+mcp_servers:
+  demo-stdio:
+    command: "true"
+    args:
+      - hello
+      - world
+    enabled: false
+```
+
+The `--env KEY=VALUE` option is supported for stdio MCP servers (`--command` or stdio presets), but not HTTP/SSE URL servers. `mcp.json` is distribution-owned by Hermes profile installs/updates, but the v0.14.0 `hermes mcp` CLI did not read it during verification. Keep this package's `mcp.json` empty and use `hermes mcp add ...` or profile `config.yaml` for real server enablement after validating the server package and permissions.
+
+### Cron toolset restrictions
+
+`hermes cron create --help` exposes `--skill`, `--script`, `--no-agent`, `--workdir`, and `--profile`, but no toolset flag. Cron tool restrictions are available through two lower-level paths:
+
+- Per-job `enabled_toolsets`, created/updated by the Hermes cronjob tool/API, has first priority.
+- Profile-wide platform settings are stored in `config.yaml` under `platform_toolsets.cron` and can be edited non-interactively with commands such as `hermes tools disable --platform cron browser image_gen tts`.
+
+If neither is configured, the scheduler resolves the default cron platform toolset. In the scheduler, `cronjob`, `messaging`, and `clarify` are still passed as disabled toolsets for cron agent runs, even if they appear enabled in `hermes tools list --platform cron`.
+
 ## Known conservative choices
 
-- `mcp.json` is empty by default; examples are in `mcp.example.json`.
+- `mcp.json` is empty by default; active MCP servers should be configured via `hermes mcp add ...` / `config.yaml:mcp_servers` after validation.
 - Cron creation is a script (`cron/create_cron_jobs.sh`), not committed active jobs, to keep user consent explicit.
 - Default cron delivery is `local`.
 - External-linked mode is preferred until vendored mode has drift detection.
