@@ -108,7 +108,7 @@ For the Anthropic-key path above no `hermes login` is needed — the key is read
 
 The Post-release verification above runs in an isolated temp HOME and triggers cron jobs by hand (`cron run <job_id>`). That validates the install path and the prompt body. It does **not** validate that the Hermes scheduler actually fires a job at its scheduled time, and it does not exercise the production `trading-research-assistant` alias on the real `~/.hermes`.
 
-This section is a separate soak procedure for that. It is **not** part of the per-release pre-flight — run it once per significant gateway / cron change (currently: v0.1.4 + the next time anything in `cron/` or `scripts/sync_claude_trading_skills.py` shifts), then re-run any time a real-user incident points back at the scheduler.
+This section is a separate soak procedure for that. It is **not** part of the per-release pre-flight — run it once per significant gateway / cron change (currently: v0.1.4 + the next time anything in `cron/` or `scripts/sync_claude_trading_skills.py` shifts; v0.1.5 added `/trade-ticket` but that bundle is manual-only, so it does not change the cron / gateway surface and does not retrigger this procedure), then re-run any time a real-user incident points back at the scheduler.
 
 **Cost / time note:** the soak waits for at least one scheduled cron firing in wall-clock time and produces a real LLM-backed brief. Budget at least one trading-day window plus a small per-firing LLM cost.
 
