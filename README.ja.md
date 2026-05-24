@@ -162,7 +162,7 @@ Hermes Profile Distribution の install (`hermes profile install github.com/<own
 ```bash
 git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
 cd hermes-trading-research-agent-work-package
-git checkout v0.1.3   # または `git tag -l` で得られる任意の tag
+git checkout v0.1.4   # または `git tag -l` で得られる任意の tag
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
 ```
 

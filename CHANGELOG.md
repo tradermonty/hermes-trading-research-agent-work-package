@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-24
+
+Generator ownership + determinism (B-2a / TICKET-004a). `make sync-external-write` is now a no-op against the shipped tip — `x-generated: false` (or missing) bundles are skipped with a stderr WARN, `x-generated: true` bundles are write-if-changed, and `config.yaml` is touched only when the env entry is actually missing. A new `--force-overwrite` flag (gated by the `sync-external-write-force` make target requiring `REQUIRE_SYNC_WRITE=1` **and** `REQUIRE_FORCE_OVERWRITE=1`) is the only way to rewrite protected bundles.
+
 ### Added
 
 - `tests/test_sync_determinism.py` (new, 7 tests): locks in the B-2a generator-ownership contract — `x-generated: false` and missing-key bundles are skipped with stderr WARN, `--force-overwrite` is the only way to rewrite them, `x-generated: true` bundles use write-if-changed (no spurious mtime), `update_external_config()` is idempotent, and a real-repo second-run-noop test asserts the shipped tip is byte- and mtime-identical after two consecutive `sync(write=True)` calls (for both `skill-bundles/*.yaml` and `config.yaml`). Real-repo case skips when `CLAUDE_TRADING_SKILLS_REPO` is unset.
