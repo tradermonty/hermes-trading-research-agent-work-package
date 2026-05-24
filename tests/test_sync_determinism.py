@@ -321,6 +321,37 @@ def test_update_external_config_writes_when_entry_missing(
     assert config.stat().st_mtime_ns == mtime_after_first
 
 
+def test_sync_result_reports_config_written_flag(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    syncmod,
+):
+    """sync(...) must surface whether config.yaml was rewritten via
+    SyncResult.config_written so the CLI summary stays accurate. The
+    summary is `config_written=0/1` in main(); SyncResult.config_written
+    is the canonical bool."""
+    profile, source, slug, skills = mapping_one_helper(tmp_path)
+    _stub_discover(monkeypatch, syncmod, skills)
+    # First run: no config.yaml yet, so update_external_config WRITES.
+    first = syncmod.sync(
+        source=source,
+        profile_root=profile,
+        mode="external",
+        write=True,
+        force_overwrite=False,
+    )
+    assert first.config_written is True
+    # Second run: entry already present, must short-circuit.
+    second = syncmod.sync(
+        source=source,
+        profile_root=profile,
+        mode="external",
+        write=True,
+        force_overwrite=False,
+    )
+    assert second.config_written is False
+
+
 # --- real-repo second-run-noop (TICKET-004a Done condition) ----------------
 
 

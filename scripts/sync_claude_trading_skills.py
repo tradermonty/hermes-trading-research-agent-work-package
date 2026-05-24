@@ -37,6 +37,7 @@ class SyncResult:
     skipped_legacy: list[Path] = field(default_factory=list)
     skipped_unchanged: list[Path] = field(default_factory=list)
     forced: list[Path] = field(default_factory=list)
+    config_written: bool = False
 
 
 def load_yaml(path: Path) -> Any:
@@ -258,8 +259,9 @@ def sync(
         forced.append(out)
 
     vendored: list[str] = []
+    config_written = False
     if mode == "external":
-        update_external_config(profile_root, source, write)
+        config_written = update_external_config(profile_root, source, write)
     elif mode == "vendor":
         vendored = copy_vendor_skills(profile_root, source, selected, write)
     else:
@@ -274,6 +276,7 @@ def sync(
         skipped_legacy=skipped_legacy,
         skipped_unchanged=skipped_unchanged,
         forced=forced,
+        config_written=config_written,
     )
 
 
@@ -331,7 +334,8 @@ def main() -> None:
             f"skipped_protected={len(result.skipped_protected)} "
             f"skipped_legacy={len(result.skipped_legacy)} "
             f"skipped_unchanged={len(result.skipped_unchanged)} "
-            f"forced={len(result.forced)}"
+            f"forced={len(result.forced)} "
+            f"config_written={1 if result.config_written else 0}"
         )
     else:
         print("Dry run only. Re-run with --write to update files.")

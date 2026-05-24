@@ -54,7 +54,9 @@ sync-vendor:
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode vendor
 
 sync-vendor-write:
-	@echo "WARNING: --write copies upstream skills into skills/vendor/ and overwrites bundles."
+	@echo "WARNING: --write copies upstream skills into skills/vendor/ and (re)writes vendor-manifest.json."
+	@echo "         Bundle-side writes still honor B-2a ownership: x-generated: false / legacy bundles are SKIPPED;"
+	@echo "         use sync-external-write-force (or pass --force-overwrite) to bypass bundle protection."
 	@test -n "$${REQUIRE_SYNC_WRITE}" || \
 	  (echo "Refusing to run sync-vendor-write without REQUIRE_SYNC_WRITE=1" >&2; exit 2)
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode vendor --write

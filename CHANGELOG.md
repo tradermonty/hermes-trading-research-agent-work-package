@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/09-coding-tickets.md`: TICKET-004 split into TICKET-004a (done in this round) and TICKET-004b (upstream workflows adapter, open).
 - `AGENTS.md`: Status table Phase 2 entry updated — B-2a done, B-2b open, with file pointers. TICKET-004 row split into 004a (done) and 004b (open).
 
+### Polish (B-2a follow-up)
+
+- `scripts/sync_claude_trading_skills.py`: `SyncResult.config_written: bool` surfaces whether `update_external_config()` actually wrote `config.yaml`. The CLI summary line on `--write` now ends `... config_written=0/1` so a future `config.yaml` edit shows up in the run output instead of being silently absorbed into `wrote=0`. New `tests/test_sync_determinism.py::test_sync_result_reports_config_written_flag` covers both branches.
+- `Makefile sync-vendor-write`: the WARNING block was still saying "overwrites bundles". After B-2a, bundle-side writes through `sync()` honor the `x-generated:` contract (protected / legacy bundles are skipped), so the warning now correctly says vendored skills + manifest are (re)written while bundle protection still applies. Functional behavior unchanged; comment-only fix until TICKET-008 revisits vendored mode.
+
 ## [0.1.3] - 2026-05-24
 
 Prompt timezone label envsubst (`{{TIMEZONE}}`) + verified Hermes v0.14.0 docs for `bundles reload`, MCP config location, and cron toolset restriction paths. No scheduler behavior change.
