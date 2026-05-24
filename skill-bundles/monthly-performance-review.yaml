@@ -1,6 +1,7 @@
 name: monthly-performance-review
 description: Monthly trading process review, signal postmortems, workflow quality
   checks, and next-month improvements.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - trader-memory-core

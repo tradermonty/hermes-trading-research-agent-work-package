@@ -1,4 +1,4 @@
-.PHONY: validate validate-upstream validate-all test sync-external sync-external-write sync-vendor sync-vendor-write
+.PHONY: validate validate-upstream validate-all test sync-external sync-external-write sync-external-write-force sync-vendor sync-vendor-write
 
 PYTHON ?= python3
 SYNC_SCRIPT := scripts/sync_claude_trading_skills.py
@@ -24,18 +24,29 @@ test:
 sync-external:
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode external
 
-# DANGEROUS: regenerates bundle instructions from data/skill-mapping.yaml.
-# Manual instruction edits in skill-bundles/*.yaml will be overwritten.
-# Phase 3b prompts/ were rewritten to pass Hermes' deception_hide threat scanner;
-# build_instruction() now uses positive-form required-concepts wording, so the
-# regenerated output should still satisfy tests/test_required_sections.py and
-# tests/test_output_safety.py — but always re-run `make test` after this target.
+# Safe writer (post-B-2a): only writes new bundles or `x-generated: true` bundles
+# whose rendered content actually differs from disk. Bundles marked
+# `x-generated: false` (or missing the key entirely) are SKIPPED with a stderr
+# WARNING. Against the shipped tip, this target is a no-op: nine SKIP lines and
+# zero rewrites. Use sync-external-write-force to bypass protection.
 sync-external-write:
-	@echo "WARNING: --write regenerates bundle instructions from data/skill-mapping.yaml."
-	@echo "         Manual instruction edits will be lost. Run 'make test' after this."
 	@test -n "$${REQUIRE_SYNC_WRITE}" || \
 	  (echo "Refusing to run sync-external-write without REQUIRE_SYNC_WRITE=1" >&2; exit 2)
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode external --write
+	@echo "Re-running safety + required-concepts tests in case anything was rewritten..."
+	$(PYTHON) -m pytest -q tests/test_output_safety.py tests/test_required_sections.py
+
+# DANGEROUS: --force-overwrite ignores `x-generated: false` and the missing-key
+# legacy guard. Every bundle the mapping references will be rewritten. Hand
+# edits will be lost. Double-gated to make a accidental run virtually impossible.
+sync-external-write-force:
+	@echo "WARNING: --force-overwrite ignores x-generated: false and bypasses legacy-unknown protection."
+	@echo "         All matching bundles will be rewritten and lose hand edits."
+	@test -n "$${REQUIRE_SYNC_WRITE}" || \
+	  (echo "Refusing to run sync-external-write-force without REQUIRE_SYNC_WRITE=1" >&2; exit 2)
+	@test -n "$${REQUIRE_FORCE_OVERWRITE}" || \
+	  (echo "Refusing to run sync-external-write-force without REQUIRE_FORCE_OVERWRITE=1" >&2; exit 2)
+	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode external --write --force-overwrite
 	@echo "Re-running safety + required-concepts tests against regenerated bundles..."
 	$(PYTHON) -m pytest -q tests/test_output_safety.py tests/test_required_sections.py
 

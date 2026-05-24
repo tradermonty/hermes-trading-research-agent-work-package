@@ -1,6 +1,7 @@
 name: earnings-movers-triage
 description: Triage earnings gap movers, PEAD candidates, and post-earnings trade
   research candidates.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - earnings-calendar

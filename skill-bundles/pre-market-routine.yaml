@@ -1,6 +1,7 @@
 name: pre-market-routine
 description: 'US equity pre-market brief: macro calendar, earnings movers, breadth,
   regime, themes, candidates, and risk gate.'
+x-generated: false
 skills:
 - trading-research-orchestrator
 - trading-cron-brief-writer

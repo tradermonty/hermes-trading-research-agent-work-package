@@ -1,6 +1,7 @@
 name: portfolio-risk-check
 description: Fast risk check for exposure, concentration, open thesis validity, and
   portfolio heat.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - exposure-coach

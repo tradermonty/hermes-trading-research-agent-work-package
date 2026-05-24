@@ -1,6 +1,7 @@
 name: swing-opportunity-daily
 description: Find swing-trading research candidates only when market-risk gate allows
   it.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - exposure-coach

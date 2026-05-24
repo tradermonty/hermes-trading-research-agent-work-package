@@ -1,5 +1,6 @@
 name: weekly-portfolio-review
 description: Weekly core portfolio review for dividend, ETF, and long-term holdings.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - portfolio-manager

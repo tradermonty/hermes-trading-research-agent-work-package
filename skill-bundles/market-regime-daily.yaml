@@ -1,6 +1,7 @@
 name: market-regime-daily
 description: Daily market-regime assessment using breadth, uptrend participation,
   top risk, distribution days, and exposure posture.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - market-breadth-analyzer

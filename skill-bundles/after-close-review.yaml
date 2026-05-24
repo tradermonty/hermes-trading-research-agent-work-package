@@ -1,6 +1,7 @@
 name: after-close-review
 description: After-close market review, breadth change, earnings reactions, open-trade
   checklist, journal prompts, and tomorrow prep.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - trading-cron-brief-writer

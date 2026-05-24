@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `tests/test_sync_determinism.py` (new, 7 tests): locks in the B-2a generator-ownership contract — `x-generated: false` and missing-key bundles are skipped with stderr WARN, `--force-overwrite` is the only way to rewrite them, `x-generated: true` bundles use write-if-changed (no spurious mtime), `update_external_config()` is idempotent, and a real-repo second-run-noop test asserts the shipped tip is byte- and mtime-identical after two consecutive `sync(write=True)` calls (for both `skill-bundles/*.yaml` and `config.yaml`). Real-repo case skips when `CLAUDE_TRADING_SKILLS_REPO` is unset.
+- `scripts/sync_claude_trading_skills.py`: `--force-overwrite` CLI flag (escape hatch — reserved for the `sync-external-write-force` make target).
+- `Makefile`: `sync-external-write-force` target, double-gated by `REQUIRE_SYNC_WRITE=1` **and** `REQUIRE_FORCE_OVERWRITE=1`; passes `--force-overwrite` and re-runs `tests/test_output_safety.py` + `tests/test_required_sections.py` after writing.
+
+### Changed
+
+- `scripts/sync_claude_trading_skills.py:sync()` no longer overwrites existing `skill-bundles/*.yaml` unconditionally. For each preset, it inspects the on-disk bundle's `x-generated:` key: `false` → SKIP + WARN, missing key → SKIP + WARN (legacy unknown), `true` → write-if-changed (compare rendered bytes; skip the write entirely when identical so mtime is preserved). New mapping entries (file absent) still produce `x-generated: true` files automatically. `--force-overwrite` collapses every branch to "rewrite if content differs".
+- `scripts/sync_claude_trading_skills.py:update_external_config()` is now idempotent: short-circuit (no write) when `${CLAUDE_TRADING_SKILLS_REPO}/skills` is already in `skills.external_dirs[]`. Returns `True` only on the rare write path. This closes the `config.yaml`-side hole in the determinism contract.
+- `scripts/sync_claude_trading_skills.py:SyncResult` carries counts for `wrote` / `skipped_protected` / `skipped_legacy` / `skipped_unchanged` / `forced`; `main()` prints a one-line summary on `--write`.
+- All nine shipped `skill-bundles/*.yaml` are retroactively annotated `x-generated: false` so the generator no longer owns them. They will not be touched by `make sync-external-write` against the shipped tip.
+- `Makefile sync-external-write`: behavior change — was "rewrite every bundle", now "skip protected + legacy bundles; only touch new or `x-generated: true` bundles whose rendered content differs". The `REQUIRE_SYNC_WRITE=1` gate stays. Against the shipped tip the target is a no-op (nine SKIP lines, zero rewrites).
+
+### Documentation
+
+- `docs/04-skill-integration-strategy.md`: new "Current bundle-composition SoT" subsection explains that `data/skill-mapping.yaml` is the authoritative source for bundle composition; upstream `workflows/*.yaml` is intentionally not adopted as a primary source yet (shape + coverage mismatch) and tracked as TICKET-004b / B-2b.
+- `docs/09-coding-tickets.md`: TICKET-004 split into TICKET-004a (done in this round) and TICKET-004b (upstream workflows adapter, open).
+- `AGENTS.md`: Status table Phase 2 entry updated — B-2a done, B-2b open, with file pointers. TICKET-004 row split into 004a (done) and 004b (open).
+
 ## [0.1.3] - 2026-05-24
 
 Prompt timezone label envsubst (`{{TIMEZONE}}`) + verified Hermes v0.14.0 docs for `bundles reload`, MCP config location, and cron toolset restriction paths. No scheduler behavior change.

@@ -1,6 +1,7 @@
 name: trade-journal
 description: Convert user trade notes into structured journal entries, thesis records,
   and postmortem triggers.
+x-generated: false
 skills:
 - trading-research-orchestrator
 - trader-memory-core
