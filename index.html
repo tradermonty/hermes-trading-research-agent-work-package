@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Turn Hermes Agent into a disciplined US equity trading research assistant powered by Claude Trading Skills.">
+  <title>Hermes Trading Research Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #061b31;
+      --text: #52627a;
+      --muted: #6f7f96;
+      --purple: #533afd;
+      --purple-dark: #4434d4;
+      --brand-dark: #1c1e54;
+      --navy: #0d253d;
+      --border: #e5edf5;
+      --soft: #f6f9fc;
+      --soft-purple: #f2f0ff;
+      --green: #15be53;
+      --ruby: #ea2261;
+      --magenta: #f96bee;
+      --shadow: rgba(50,50,93,0.25) 0 30px 45px -30px, rgba(0,0,0,0.1) 0 18px 36px -18px;
+      --soft-shadow: rgba(23,23,23,0.08) 0 15px 35px 0;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-feature-settings: "ss01";
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.45;
+    }
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .shell pre, .code-card pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+    .container { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(229,237,245,.86);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 66px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--purple), var(--ruby) 58%, var(--magenta));
+      box-shadow: rgba(83,58,253,.35) 0 14px 24px -14px;
+      display: grid; place-items: center; color: white; font-family: 'Source Code Pro'; font-weight: 700; font-size: 15px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 18px; font-size: 14px; color: #273951; }
+    .nav-links a:hover { color: var(--purple); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .lang-switch { display: flex; gap: 6px; background: var(--soft); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+    .lang-switch a { padding: 5px 8px; border-radius: 5px; font-size: 13px; color: #273951; }
+    .lang-switch a:first-child { background: #fff; color: var(--purple); box-shadow: rgba(23,23,23,.06) 0 2px 8px; }
+    .lang-switch a:hover { background: #fff; color: var(--purple); }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 6px; padding: 10px 16px; font-size: 15px; font-weight: 400;
+      border: 1px solid transparent; cursor: pointer; transition: .2s ease;
+    }
+    .button.primary { background: var(--purple); color: #fff; box-shadow: rgba(83,58,253,.22) 0 16px 26px -16px; }
+    .button.primary:hover { background: var(--purple-dark); transform: translateY(-1px); }
+    .button.secondary { color: var(--purple); border-color: #b9b9f9; background: rgba(255,255,255,.76); }
+    .button.secondary:hover { background: rgba(83,58,253,.05); transform: translateY(-1px); }
+    .button.dark { background: #fff; color: var(--brand-dark); }
+    .button.dark:hover { transform: translateY(-1px); }
+
+    .hero { position: relative; overflow: hidden; padding: 88px 0 64px; }
+    .hero:before {
+      content: ""; position: absolute; inset: -220px -180px auto auto; width: 520px; height: 520px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(249,107,238,.5), rgba(83,58,253,.22) 45%, rgba(83,58,253,0) 72%);
+      pointer-events: none;
+    }
+    .hero-grid { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 430px; gap: 56px; align-items: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--purple); font-size: 13px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--purple)); box-shadow: rgba(21,190,83,.45) 0 0 0 6px; }
+    h1 { font-size: clamp(42px, 6vw, 70px); line-height: .98; letter-spacing: -1.5px; font-weight: 300; margin: 18px 0 22px; color: var(--ink); }
+    .lead { font-size: clamp(18px, 2vw, 22px); color: var(--text); font-weight: 300; max-width: 720px; margin: 0 0 28px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 30px 0 24px; }
+    .trust-row { display: flex; flex-wrap: wrap; gap: 10px; color: #273951; font-size: 13px; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; background: #fff; border: 1px solid var(--border); border-radius: 7px; box-shadow: rgba(23,23,23,.06) 0 3px 12px; }
+
+    .terminal-card {
+      background: #0d253d; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; overflow: hidden;
+      box-shadow: var(--shadow); color: #dce8ff;
+    }
+    .terminal-top { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.08); }
+    .traffic { display: flex; gap: 7px; }
+    .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .traffic i:nth-child(1){ background:#ff5f56; } .traffic i:nth-child(2){ background:#ffbd2e; } .traffic i:nth-child(3){ background:#27c93f; }
+    .terminal-title { color: rgba(255,255,255,.64); font-size: 12px; font-family: 'Source Code Pro'; }
+    .terminal-body { padding: 18px; font-size: 13px; line-height: 1.75; }
+    .terminal-body pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+    .prompt { color: #84f2b2; }
+    .cmd { color: #fff; }
+    .comment { color: #95a9c6; }
+    .warn { color: #ffd7ef; }
+
+    section { padding: 72px 0; }
+    .section-title { font-size: clamp(32px,4vw,48px); line-height: 1.08; letter-spacing: -.9px; font-weight: 300; margin: 0 0 14px; color: var(--ink); }
+    .section-lead { color: var(--text); font-size: 18px; font-weight: 300; max-width: 760px; margin: 0 0 34px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 24px; box-shadow: rgba(23,23,23,.04) 0 8px 24px; }
+    .card.featured { box-shadow: var(--shadow); }
+    .icon { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 16px; background: var(--soft-purple); color: var(--purple); font-size: 19px; }
+    .card h3 { margin: 0 0 10px; font-size: 23px; line-height: 1.1; letter-spacing: -.25px; font-weight: 300; }
+    .card p { margin: 0; color: var(--text); font-size: 16px; font-weight: 300; }
+
+    .dark { background: var(--brand-dark); color: #fff; position: relative; overflow: hidden; }
+    .dark:before { content:""; position:absolute; width: 680px; height:680px; border-radius:50%; right:-280px; top:-260px; background: radial-gradient(circle, rgba(249,107,238,.25), rgba(83,58,253,.13) 45%, transparent 72%); }
+    .dark .container { position: relative; }
+    .dark .section-title { color: #fff; }
+    .dark .section-lead, .dark p { color: rgba(255,255,255,.72); }
+    .dark-card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); border-radius: 10px; padding: 22px; }
+    .dark-card h3 { margin: 0 0 8px; font-size: 22px; font-weight: 300; }
+
+    .workflow { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+    .step { display: grid; grid-template-columns: 42px 1fr; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+    .num { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--soft-purple); color: var(--purple); font-family: 'Source Code Pro'; font-weight: 700; }
+    .step h3 { margin: 0 0 6px; font-weight: 400; font-size: 19px; }
+    .step p { margin: 0; color: var(--text); font-weight: 300; }
+
+    .command-table { display: grid; gap: 12px; }
+    .command { display: grid; grid-template-columns: 230px 1fr; gap: 16px; align-items: start; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+    .command code { color: var(--purple); font-weight: 700; font-size: 13px; }
+    .command p { margin: 0; color: var(--text); font-weight: 300; }
+
+    .shell { background: #0d253d; color: #dce8ff; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); box-shadow: var(--shadow); padding: 18px; overflow: auto; }
+    .shell code { font-size: 12px; line-height: 1.75; }
+    .callout { border-left: 4px solid var(--purple); background: var(--soft); border-radius: 8px; padding: 18px 20px; color: #273951; }
+    .callout strong { color: var(--ink); }
+    .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .mini-badge { border: 1px solid var(--border); background: #fff; border-radius: 6px; padding: 5px 8px; color: #273951; font-size: 12px; }
+
+    .jp { border-top: 1px solid var(--border); }
+    .footer { background: #061b31; color: rgba(255,255,255,.76); padding: 38px 0; }
+    .footer a { color: #fff; }
+    .footer-grid { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+    @media (max-width: 920px) {
+      .hero-grid, .grid-3, .grid-2, .workflow, .install-grid { grid-template-columns: 1fr; }
+      .terminal-card { max-width: 560px; }
+      .nav-links { display: none; }
+      .command { grid-template-columns: 1fr; }
+      section { padding: 56px 0; }
+    }
+    @media (max-width: 560px) {
+      .container { width: min(100% - 28px, 1120px); }
+      .nav-actions .button { display: none; }
+      .hero { padding-top: 58px; }
+      .terminal-body { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#top" aria-label="Hermes Trading Research Agent home"><span class="brand-mark">HT</span><span>Hermes Trading Research Agent</span></a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#why">Why it helps</a>
+        <a href="#commands">Routines</a>
+        <a href="#install">Install</a>
+        <a href="#ja">日本語</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="lang-switch" aria-label="Language links"><a href="#en">EN</a><a href="#ja">日本語</a></div>
+        <a class="button primary" href="https://github.com/tradermonty/hermes-trading-research-agent-work-package">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" id="en">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> Built for part-time investors and solo traders</div>
+          <h1>Turn Hermes Agent into your disciplined US equity trading assistant.</h1>
+          <p class="lead">This profile distribution packages the vision of <a href="https://github.com/tradermonty/claude-trading-skills">Claude Trading Skills</a> into beginner-friendly Hermes workflows: pre-market prep, after-close review, market regime checks, earnings triage, portfolio risk review, and trade journaling.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#install">Start the 10-minute setup</a>
+            <a class="button secondary" href="#commands">See the routines</a>
+          </div>
+          <div class="trust-row" aria-label="Key properties">
+            <span class="pill">Human decision gate</span>
+            <span class="pill">No auto-trading</span>
+            <span class="pill">Degraded mode without optional keys</span>
+            <span class="pill">Cron-ready routines</span>
+          </div>
+        </div>
+        <aside class="terminal-card" aria-label="Terminal preview">
+          <div class="terminal-top"><div class="traffic"><i></i><i></i><i></i></div><div class="terminal-title">trading-research-assistant</div></div>
+          <div class="terminal-body">
+            <pre><span class="prompt">$</span> <span class="cmd">trading-research-assistant chat</span>
+<span class="prompt">›</span> <span class="cmd">/pre-market-routine</span>
+
+<span class="comment">Market posture: research brief</span>
+• Data freshness and source provenance
+• Macro calendar and risk posture
+• Breadth / regime / sector rotation
+• Watchlist candidates with thesis
+• Invalidation and risk notes
+
+<span class="warn">Human gate:</span> Review context, size risk, and decide manually. No order is placed.</pre>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="container">
+        <h2 class="section-title">A trading copilot for process, not prediction.</h2>
+        <p class="section-lead">Solo traders do not need another black-box signal feed. They need a repeatable operating system that remembers the checklist, calls the right research skills, records the thesis, and forces the final decision back to the human.</p>
+        <div class="grid-3">
+          <article class="card featured"><div class="icon">☀</div><h3>Start the day prepared</h3><p>Run a pre-market routine that checks macro events, market regime, earnings movers, breadth, and risk posture before you open the broker screen.</p></article>
+          <article class="card"><div class="icon">✓</div><h3>Keep your discipline visible</h3><p>Every candidate is framed with setup, thesis, invalidation, risk considerations, data freshness, and a human decision gate.</p></article>
+          <article class="card"><div class="icon">↺</div><h3>Review without friction</h3><p>After the close, turn scattered observations into a structured review: what changed, what invalidated, what to journal, and what to watch tomorrow.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark" id="vision">
+      <div class="container">
+        <h2 class="section-title">Carrying forward the Claude Trading Skills vision.</h2>
+        <p class="section-lead">The upstream project provides domain-specific market research skills. This repository does not fork that knowledge silently. It orchestrates those canonical skills through Hermes profiles, bundles, cron jobs, and safety gates so a trader can use them as a cohesive assistant.</p>
+        <div class="grid-3">
+          <div class="dark-card"><h3>Canonical skills stay upstream</h3><p>Skill names and workflows are resolved from tradermonty/claude-trading-skills wherever possible.</p></div>
+          <div class="dark-card"><h3>Hermes adds the operating layer</h3><p>Profiles, slash commands, scheduled briefs, tool routing, provider choice, and gateway delivery become part of your personal assistant.</p></div>
+          <div class="dark-card"><h3>Safety is product design</h3><p>The profile is a research/process assistant: no hidden jobs, no order placement, no profit promises, and no signal-service UX.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="commands">
+      <div class="container">
+        <h2 class="section-title">One command for each recurring trading routine.</h2>
+        <p class="section-lead">You do not need to memorize individual skill names. Use the bundle that matches the moment in your trading day.</p>
+        <div class="command-table">
+          <div class="command"><code>/pre-market-routine</code><p>Macro calendar, regime, earnings movers, breadth, watchlist candidates, and the day’s risk gate.</p></div>
+          <div class="command"><code>/after-close-review</code><p>What changed today, sector rotation, open-trade review, journal prompts, and tomorrow preparation.</p></div>
+          <div class="command"><code>/market-regime-daily</code><p>A fast regime check for breadth, participation, and exposure ceiling.</p></div>
+          <div class="command"><code>/swing-opportunity-daily</code><p>Disciplined swing candidates with setup, thesis, invalidation, and risk assumptions.</p></div>
+          <div class="command"><code>/trade-ticket</code><p>A schema-validated trade ticket with DRAFT / REVIEW_READY / APPROVED / REJECTED / EXPIRED states. Ticket only; no execution.</p></div>
+          <div class="command"><code>/trade-journal</code><p>Turns trade notes into structured journal entries with thesis, invalidation, and risk record.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="fit">
+      <div class="container workflow">
+        <div>
+          <h2 class="section-title">Designed for the reality of part-time trading.</h2>
+          <p class="section-lead">The useful assistant is not the loudest one. It is the one that reduces context-switching when you only have a limited window before work, during lunch, or after the close.</p>
+          <div class="badge-row"><span class="mini-badge">US equities</span><span class="mini-badge">CANSLIM / Minervini-style workflows</span><span class="mini-badge">Earnings and PEAD triage</span><span class="mini-badge">Market breadth</span><span class="mini-badge">Portfolio heat</span><span class="mini-badge">Trade journaling</span></div>
+        </div>
+        <div class="card featured">
+          <h3>What it helps you avoid</h3>
+          <p style="margin-bottom:14px">Skipping the macro calendar. Chasing a gap-up without an invalidation level. Forgetting whether your exposure ceiling changed. Letting a thesis blur into a hope. Mixing research with execution.</p>
+          <h3>What it helps you build</h3>
+          <p>A calmer routine: research first, thesis second, risk third, human decision last.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="container">
+        <h2 class="section-title">Beginner-friendly setup path.</h2>
+        <p class="section-lead">Install Hermes, clone the upstream skills and this profile, connect them with one environment variable, then start chatting with your own trading assistant.</p>
+        <div class="install-grid">
+          <div>
+            <div class="step"><div class="num">1</div><div><h3>Install and configure Hermes Agent</h3><p>Use the official installer, then run the setup wizard to choose your model/provider.</p></div></div>
+            <div class="step"><div class="num">2</div><div><h3>Clone both repositories</h3><p>The upstream repository holds canonical trading skills; this repository packages them into Hermes routines.</p></div></div>
+            <div class="step"><div class="num">3</div><div><h3>Install the profile alias</h3><p>The alias <code>trading-research-assistant</code> gives you an isolated Hermes profile for trading research.</p></div></div>
+            <div class="step"><div class="num">4</div><div><h3>Run a routine</h3><p>Start with <code>/pre-market-routine</code>, then enable cron jobs only when you intentionally want scheduled briefs.</p></div></div>
+          </div>
+          <div class="shell"><pre><code># 1. Install Hermes Agent
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+
+# 2. Clone the trading skills and this profile
+git clone https://github.com/tradermonty/claude-trading-skills.git
+git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
+cd hermes-trading-research-agent-work-package
+
+# 3. Link upstream skills and install the profile
+export CLAUDE_TRADING_SKILLS_REPO="$(realpath ../claude-trading-skills)"
+hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+
+# 4. Configure model/provider and optional market-data keys
+trading-research-assistant model
+cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
+   ~/.hermes/profiles/trading-research-assistant/.env
+
+# 5. Use it
+trading-research-assistant chat
+# then type: /pre-market-routine</code></pre></div>
+        </div>
+        <div class="callout" style="margin-top:20px"><strong>Optional keys:</strong> FMP and FINVIZ improve data-backed research. Alpaca keys are optional and default to paper/read-only behavior. Missing keys produce explicit degraded-mode notes instead of pretending the data exists.</div>
+      </div>
+    </section>
+
+    <section id="cron">
+      <div class="container grid-2">
+        <div>
+          <h2 class="section-title">Make the routine come to you.</h2>
+          <p class="section-lead">Hermes cron can deliver scheduled research briefs after you explicitly create jobs. This repository ships presets for pre-market, after-close, weekly, and monthly reviews.</p>
+          <p class="callout"><strong>No hidden schedules:</strong> jobs are declared in <code>data/schedule-presets.yaml</code> and are only created when you run the cron script.</p>
+        </div>
+        <div class="shell"><pre><code>export HERMES_PROFILE_CMD=trading-research-assistant
+export HERMES_CRON_DELIVER=local
+bash cron/create_cron_jobs.sh
+trading-research-assistant cron list
+
+# Gateway must be running for scheduled delivery
+trading-research-assistant gateway install
+trading-research-assistant gateway start</code></pre></div>
+      </div>
+    </section>
+
+    <section class="jp" id="ja" lang="ja">
+      <div class="container">
+        <div class="eyebrow"><span class="dot"></span> 兼業投資家・ソロトレーダーのためのHermesプロファイル</div>
+        <h2 class="section-title">Hermes Agentを、あなた専用の米国株トレード・リサーチアシスタントに。</h2>
+        <p class="section-lead">このリポジトリは、<a href="https://github.com/tradermonty/claude-trading-skills">Claude Trading Skills</a> の思想を引き継ぎ、Hermes Agent上で「寄り付き前チェック」「引け後レビュー」「相場環境確認」「決算銘柄トリアージ」「ポートフォリオリスク確認」「トレード記録」をすぐ呼び出せる形にまとめたプロファイル配布パッケージです。</p>
+        <div class="grid-3">
+          <article class="card featured"><div class="icon">朝</div><h3>朝の限られた時間をチェックリスト化</h3><p>マクロ予定、相場環境、決算銘柄、ブレッド、ウォッチリスト候補、リスクゲートをまとめて確認できます。</p></article>
+          <article class="card"><div class="icon">守</div><h3>売買判断の前に規律を挟む</h3><p>候補には仮説、否定条件、リスク、データ鮮度、出典、人間の最終判断ゲートを必ず含めます。</p></article>
+          <article class="card"><div class="icon">録</div><h3>引け後レビューと記録を習慣化</h3><p>その日の変化、保有銘柄の仮説、明日の準備、トレードジャーナルを構造化できます。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section lang="ja">
+      <div class="container">
+        <h2 class="section-title">これは「シグナル配信」ではなく、あなたの投資プロセスを支える道具です。</h2>
+        <p class="section-lead">兼業投資家に必要なのは、煽るような売買指示ではなく、限られた時間で「見るべきものを見て、記録すべきことを記録し、最後は自分で判断する」ための仕組みです。</p>
+        <div class="command-table">
+          <div class="command"><code>/pre-market-routine</code><p>寄り付き前の相場環境・マクロ・決算・ブレッド・候補銘柄・リスクゲート。</p></div>
+          <div class="command"><code>/after-close-review</code><p>引け後の変化確認、セクターローテーション、保有銘柄レビュー、翌日の準備。</p></div>
+          <div class="command"><code>/swing-opportunity-daily</code><p>リスクゲートが許す時だけ、仮説・否定条件・リスク前提つきでスイング候補を整理。</p></div>
+          <div class="command"><code>/trade-ticket</code><p>候補をDRAFT / REVIEW_READY / APPROVED / REJECTED / EXPIREDの状態を持つチケットとして記録。発注はしません。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark" lang="ja">
+      <div class="container">
+        <h2 class="section-title">Claude Trading Skillsの知見を、Hermesの「日々使える相棒」に変換する。</h2>
+        <p class="section-lead">上流リポジトリのスキルを正本として尊重しながら、このリポジトリはHermesのprofile、slash command、cron、gateway、safety gateを使って、個人投資家が毎日使いやすい形に束ねます。</p>
+        <div class="grid-3">
+          <div class="dark-card"><h3>個別スキル名を覚えなくてよい</h3><p>「寄り付き前」「引け後」「決算」「ジャーナル」など、行動単位のコマンドから始められます。</p></div>
+          <div class="dark-card"><h3>データが無い時は無いと明記</h3><p>APIキー不足や外部リポジトリ不足はdegraded modeとして明示し、事実を装いません。</p></div>
+          <div class="dark-card"><h3>最終判断は常に人間</h3><p>自動売買、利益保証、隠しcron、発注代行は対象外。研究・記録・リスクレビューの補助に徹します。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section lang="ja">
+      <div class="container">
+        <h2 class="section-title">導入手順</h2>
+        <p class="section-lead">Hermes初心者でも、まずは以下の流れで試せます。市場データAPIキーは後から追加しても大丈夫です。</p>
+        <div class="shell"><pre><code># 1. Hermes Agentをインストール
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+
+# 2. 上流スキルとこのプロファイルをclone
+git clone https://github.com/tradermonty/claude-trading-skills.git
+git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
+cd hermes-trading-research-agent-work-package
+
+# 3. 上流スキルの場所を指定してprofile install
+export CLAUDE_TRADING_SKILLS_REPO="$(realpath ../claude-trading-skills)"
+hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
+
+# 4. モデル/providerと.envを設定
+trading-research-assistant model
+cp ~/.hermes/profiles/trading-research-assistant/.env.EXAMPLE \
+   ~/.hermes/profiles/trading-research-assistant/.env
+
+# 5. 起動して寄り付き前ルーチンを実行
+trading-research-assistant chat
+# チャット内で: /pre-market-routine</code></pre></div>
+        <div class="hero-actions"><a class="button primary" href="https://github.com/tradermonty/hermes-trading-research-agent-work-package">GitHubで見る</a><a class="button secondary" href="https://github.com/tradermonty/claude-trading-skills">上流のClaude Trading Skillsを見る</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div><strong>Hermes Trading Research Agent</strong><br>Research, journaling, and risk-review workflows for human traders.</div>
+      <div><a href="https://github.com/tradermonty/hermes-trading-research-agent-work-package">Repository</a> · <a href="https://github.com/tradermonty/claude-trading-skills">Claude Trading Skills</a> · <a href="https://hermes-agent.nousresearch.com/docs">Hermes Docs</a></div>
+    </div>
+  </footer>
+</body>
+</html>
