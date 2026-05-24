@@ -70,9 +70,20 @@ def _load_bundle_instruction() -> str:
 
 
 def _validator() -> jsonschema.Draft202012Validator:
+    """Build the canonical validator used by every fixture test.
+
+    `format_checker=FORMAT_CHECKER` upgrades `format: date-time` from
+    annotation-only to an actual check, so a fixture with
+    `created_at: "not-an-iso-date"` is rejected even before the
+    explicit `pattern` fires. Defence in depth: schema carries both
+    `format` and `pattern`; the validator honours both.
+    """
     schema = _load_schema()
     jsonschema.Draft202012Validator.check_schema(schema)
-    return jsonschema.Draft202012Validator(schema)
+    return jsonschema.Draft202012Validator(
+        schema,
+        format_checker=jsonschema.Draft202012Validator.FORMAT_CHECKER,
+    )
 
 
 def _assert_confirmed_matches_ticket(ticket: dict) -> None:
@@ -207,6 +218,8 @@ def test_expired_fixture_records_decided_at():
         "bad_approved_with_approved_false.yaml",
         "bad_approved_missing_confirmed.yaml",
         "bad_approved_null_entry_or_risk.yaml",
+        "bad_approved_blank_reviewer.yaml",
+        "bad_invalid_timestamp.yaml",
         "bad_rejected_no_reason.yaml",
         "bad_expired_no_decided_at.yaml",
     ],

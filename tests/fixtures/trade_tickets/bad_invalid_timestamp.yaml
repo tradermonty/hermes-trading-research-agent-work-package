@@ -1,0 +1,30 @@
+# Negative fixture: created_at is not an ISO-8601 timestamp.
+# Without a format_checker, jsonschema treats `format: date-time`
+# as annotation only; the explicit `pattern` on created_at /
+# approval.decided_at is what rejects this fixture, so even a
+# validator built without format_checker catches the regression.
+ticket_id: "TKT-20260524-abc123"
+created_at: "not-an-iso-date"          # <- the violation
+status: "DRAFT"
+approval:
+  required: true
+  approved: false
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP"
+  thesis: "test"
+  invalidation: "test"
+plan:
+  entry: {value: null, basis: "n/a"}
+  stop: {value: null, basis: "n/a"}
+  target: {value: null, basis: "n/a"}
+risk:
+  risk_per_trade_pct: null
+  exposure_impact: "n/a"
+  data_freshness: "n/a"
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: null
+  source_skills: []
+  source_candidate_ref: "TEST-2026-05-24-VCP"

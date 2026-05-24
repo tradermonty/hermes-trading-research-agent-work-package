@@ -1,6 +1,6 @@
 [project]
 name = "hermes-trading-research-agent"
-version = "0.1.4"
+version = "0.1.5"
 description = "Hermes profile distribution scaffold for Claude Trading Skills based trading research workflows."
 requires-python = ">=3.10"
 dependencies = [

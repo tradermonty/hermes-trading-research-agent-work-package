@@ -22,7 +22,8 @@
     "created_at": {
       "type": "string",
       "format": "date-time",
-      "description": "ISO-8601 UTC timestamp the ticket was first emitted."
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO-8601 UTC timestamp the ticket was first emitted. Pattern enforced in addition to format so a validator without format_checker still rejects malformed values."
     },
     "status": {
       "enum": ["DRAFT", "REVIEW_READY", "APPROVED", "REJECTED", "EXPIRED"],
@@ -42,12 +43,14 @@
         },
         "reviewer": {
           "type": "string",
-          "description": "Name or handle of the human reviewer who APPROVED or REJECTED the ticket."
+          "minLength": 1,
+          "description": "Name or handle of the human reviewer who APPROVED or REJECTED the ticket. Empty strings are rejected so APPROVED never carries a blank reviewer field."
         },
         "decided_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ISO-8601 UTC timestamp the reviewer decided. Required on APPROVED, EXPIRED."
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+          "description": "ISO-8601 UTC timestamp the reviewer decided. Required on APPROVED, EXPIRED. Pattern enforced in addition to format."
         },
         "reason": {
           "type": "string",
