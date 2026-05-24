@@ -8,6 +8,35 @@ Use these upstream files as the source of truth:
 - `workflows/*.yaml`: canonical workflow manifests when present.
 - `skills/*/SKILL.md`: actual skill instructions.
 
+### Current bundle-composition SoT (as of B-2a)
+
+For the **bundle composition** step (which skills end up under each
+slash command, with what required outputs), the source of truth in
+this profile is `data/skill-mapping.yaml`. Upstream
+`workflows/*.yaml` is intentionally **not adopted** as a primary
+source yet:
+
+- Shape mismatch: upstream workflows use a richer `steps[]` /
+  `artifacts[]` / `decision_gate` shape; our bundles are flat
+  `skills[]` + `required_outputs[]`. A non-trivial adapter layer
+  is needed in between.
+- Coverage mismatch: 9 of our bundles map onto only 5 upstream
+  workflows, and 6 of them (`pre-market-routine`,
+  `after-close-review`, `earnings-movers-triage`, `trade-journal`,
+  `portfolio-risk-check`, `weekly-portfolio-review`) have no
+  upstream workflow at all. Pulling a single workflow without the
+  rest would muddle the ownership story.
+- B-2a therefore stops at "generator ownership + determinism" —
+  see `scripts/sync_claude_trading_skills.py` and the
+  `x-generated:` contract documented in
+  `docs/09-coding-tickets.md` (TICKET-004a).
+
+Adopting upstream `workflows/*.yaml` as a primary source — the
+remaining piece of the original TICKET-004 — is tracked as
+**TICKET-004b** (B-2b). When that lands, the SoT order above
+will move workflows ahead of `data/skill-mapping.yaml`, and the
+generator will gain a workflow→bundle adapter.
+
 ## Initial adapter strategy
 
 This repo should not rewrite all trading skills for Hermes. Instead, it adds:
