@@ -87,6 +87,8 @@ Workaround applied to `prompts/pre-market-routine.md` and `prompts/after-close-r
 
 If a future prompt edit triggers `deception_hide` again, rewrite the offending sentence in positive form before tightening the SOUL guardrail.
 
+Related convention: prompt template variables use a Jinja-like `{{TIMEZONE}}` marker rather than `${TIMEZONE}`. The scanner has not flagged `$`-style env references that we know of, but the `{{...}}` form keeps the prompt body free of `$` syntax entirely, removing a future false-positive surface. See `cron/create_cron_jobs.py:_expand_prompt_template()`.
+
 ### `--alias` is HOME-bound, not HERMES_HOME-bound
 
 `hermes profile install --alias` writes a wrapper to `~/.local/bin/<name>` (i.e. `$HOME/.local/bin/<name>`), **not** to `$HERMES_HOME/.local/bin`. For isolated testing, override `HOME` and `PATH` as well as `HERMES_HOME`:
