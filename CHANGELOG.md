@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-24
+
+Prompt timezone label envsubst (`{{TIMEZONE}}`) + verified Hermes v0.14.0 docs for `bundles reload`, MCP config location, and cron toolset restriction paths. No scheduler behavior change.
+
 ### Added
 
 - `cron/create_cron_jobs.py`: `_resolve_report_timezone()`, `_read_env_file_value()` (stdlib `.env` parser), `_expand_prompt_template()`. At cron-create time, the new `{{TIMEZONE}}` token in scheduled prompts is expanded using priority **shell env `HERMES_TRADING_TIMEZONE` > `<repo-root>/.env` > `data/schedule-presets.yaml:timezone` > literal `America/Los_Angeles`** (with a one-shot fallback WARNING). Reading `.env` directly is required because `bash cron/create_cron_jobs.sh` does not auto-source the profile `.env`.
