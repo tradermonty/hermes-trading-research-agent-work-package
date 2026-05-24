@@ -104,6 +104,103 @@ hermes login --provider openai-codex   # opens browser, writes auth to $HERMES_H
 
 For the Anthropic-key path above no `hermes login` is needed — the key is read from the env var on each invocation.
 
+## Operational soak (prod alias, real-time gateway)
+
+The Post-release verification above runs in an isolated temp HOME and triggers cron jobs by hand (`cron run <job_id>`). That validates the install path and the prompt body. It does **not** validate that the Hermes scheduler actually fires a job at its scheduled time, and it does not exercise the production `trading-research-assistant` alias on the real `~/.hermes`.
+
+This section is a separate soak procedure for that. It is **not** part of the per-release pre-flight — run it once per significant gateway / cron change (currently: v0.1.4 + the next time anything in `cron/` or `scripts/sync_claude_trading_skills.py` shifts), then re-run any time a real-user incident points back at the scheduler.
+
+**Cost / time note:** the soak waits for at least one scheduled cron firing in wall-clock time and produces a real LLM-backed brief. Budget at least one trading-day window plus a small per-firing LLM cost.
+
+### 0. Preconditions
+
+- v0.1.4+ profile already installed under the prod alias `trading-research-assistant` against the **real** `~/.hermes` (not the isolated soak HOME used in Post-release verification).
+- Provider auth is valid for whatever `<alias> config show` reports. For API-key providers (Anthropic, OpenAI raw, OpenRouter), the matching key is set in the profile `.env`. For OAuth providers (e.g. `openai-codex`), `hermes login --provider <name>` has already been run against the **real** `~/.hermes` so the auth state is on the host.
+- `python3 -m pip install jsonschema pyyaml` already run on the host (otherwise `trader-memory-core` degrades and `cron/create_cron_jobs.py` fails to import).
+- Host IANA timezone matches the preset (`America/Los_Angeles`). If it does not, the runtime will already have warned during cron creation — recompute the schedules per `cron/README.md` before starting the soak.
+- Decide a soak window long enough to cover at least one scheduled job (e.g. an overnight window covering the next weekday `0 6 * * 1-5` pre-market firing).
+
+### 1. Start the gateway
+
+```bash
+# Confirm the prod profile is installed and the wrapper is on PATH.
+hermes profile list | grep -F "trading-research-assistant"
+command -v trading-research-assistant
+
+# Cron jobs should already exist from `bash cron/create_cron_jobs.sh`.
+trading-research-assistant cron list   # expect 4 active jobs with Next run timestamps
+
+# Managed gateway (recommended):
+trading-research-assistant gateway install
+trading-research-assistant gateway start
+trading-research-assistant gateway status   # expect "running" / similar
+```
+
+If you prefer a foreground run for live tailing, `trading-research-assistant gateway run` works but blocks the terminal.
+
+### 2. Wait for a scheduled firing
+
+The point of the soak is to confirm the scheduler fires **without** `cron run`. Do not trigger anything by hand during the window.
+
+While waiting, occasionally check:
+
+```bash
+trading-research-assistant gateway status
+trading-research-assistant cron list                  # Next run timestamp should advance after a firing
+ls -la ~/.hermes/profiles/trading-research-assistant/cron/output/
+```
+
+### 3. Inspect the firing
+
+After the expected wall-clock time, the matching `cron/output/<job_id>/<timestamp>.md` should exist. Confirm:
+
+- File creation time is after the scheduled wall-clock time and matches the expected `America/Los_Angeles` cron expression. Record both timestamps (scheduler fire vs. output file mtime) — LLM execution can add seconds-to-minutes of latency, and tracking the delta over multiple soak runs is more useful than picking a fixed tolerance.
+- The brief contains every required section (risk posture, regime, watchlist, human next actions, data freshness with as-of timestamps).
+- Missing-API-key sections are explicitly marked as degraded mode rather than fabricated.
+- `Timezone label for the report: <timezone>` matches `HERMES_TRADING_TIMEZONE` (or the preset YAML fallback).
+- The brief does not contain forbidden execution language (cross-check against `tests/test_output_safety.py` patterns).
+
+### 4. Record the run in the soak log
+
+Append one row per firing to a soak log (kept locally; do **not** commit the soak log to this repo — it can contain account-flavored context). Suggested template:
+
+```text
+# Operational soak log — trading-research-assistant
+
+| Soak date | Hermes ver | Profile ver | Job id | Job name | Schedule | Actual fire (UTC) | Actual fire (local) | Deliver | Output file | Required sections OK? | Degraded sections | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-05-26 | v0.14.0 | v0.1.4 | ec09df0e0f94 | Pre-market routine | 0 6 * * 1-5 | 2026-05-26T13:00:12Z | 2026-05-26T06:00:12-07:00 | local | cron/output/ec09df0e0f94/2026-05-26_06-00-12.md | yes | FMP earnings calendar (key absent) | first soak after v0.1.4 |
+```
+
+Failure rows (gateway crashed, no firing, threat scanner reject, missing output file, missing required section, regression on `{{TIMEZONE}}` expansion, etc.) are the **valuable** ones — capture them with as much context as possible.
+
+### 5. Decide stop / continue
+
+After the planned window:
+
+```bash
+# Stop the gateway for the soak window (optional — leave running for prod use).
+trading-research-assistant gateway stop      # or `gateway uninstall` to remove the managed service entirely
+```
+
+Do **not** delete the profile after the soak — that is a separate decommission step.
+
+### 6. Promote findings
+
+For every failure row in the soak log:
+
+- If the cause is in this repo, open a ticket and update `docs/03-hermes-compatibility-notes.md` "Operational findings" with a new subsection (mirroring the existing `gateway not running`, `chat -q`, `jsonschema`, `deception_hide`, `--alias is HOME-bound`, `model/provider keys`, `cron timezone interpretation` pattern).
+- If the cause is upstream (`claude-trading-skills` or Hermes Agent), file the issue there and link it from `docs/03` so the next reader sees the boundary.
+- If the cause is operator setup (timezone mismatch, missing API key), reinforce the relevant Quick Start / `cron/README.md` line.
+
+### 7. Soak-exit checklist
+
+- [ ] At least one scheduled job fired at the expected wall-clock time without `cron run` intervention.
+- [ ] The corresponding `cron/output/<job_id>/<timestamp>.md` contains all required sections.
+- [ ] Degraded-mode sections (if any) are explicit, not fabricated.
+- [ ] The soak log captures the firing (success or failure rows).
+- [ ] Any new operational findings are folded into `docs/03-hermes-compatibility-notes.md` and pointed at from the next release CHANGELOG.
+
 ## Release notes template
 
 ```markdown

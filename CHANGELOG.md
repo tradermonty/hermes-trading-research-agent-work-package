@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- `docs/08-release-playbook.md`: new **Operational soak (prod alias, real-time gateway)** section codifying the post-v0.1.4 "D" work. Covers preconditions, `gateway install/start`, waiting for a real scheduled firing (no `cron run` shortcut), inspecting `cron/output/<job_id>/<timestamp>.md`, recording each firing in a local soak log (template included; intentionally not committed to this repo), promoting failure rows back into `docs/03-hermes-compatibility-notes.md`, and a soak-exit checklist. Run cadence: once per significant gateway / cron change rather than per release.
+
 ## [0.1.4] - 2026-05-24
 
 Generator ownership + determinism (B-2a / TICKET-004a). `make sync-external-write` is now a no-op against the shipped tip — `x-generated: false` (or missing) bundles are skipped with a stderr WARN, `x-generated: true` bundles are write-if-changed, and `config.yaml` is touched only when the env entry is actually missing. A new `--force-overwrite` flag (gated by the `sync-external-write-force` make target requiring `REQUIRE_SYNC_WRITE=1` **and** `REQUIRE_FORCE_OVERWRITE=1`) is the only way to rewrite protected bundles.
