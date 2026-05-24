@@ -1,22 +1,22 @@
 # Work Order for Coding Agents
 
-## Status (as of v0.1.2 — 2026-05-23)
+## Status (as of v0.1.3 — 2026-05-24)
 
-This document was originally written as a pre-v0.1.0 coding handoff. The MVP (v0.1.0), CI / docs polish (v0.1.1), and the cron timezone single-source refactor (v0.1.2) have all shipped. The Phase / Ticket structure below is kept for historical context — it captures the original intent and the canonical source-of-truth ordering. **For current state, this table is authoritative; the Phase bodies below are not.**
+This document was originally written as a pre-v0.1.0 coding handoff. The MVP (v0.1.0), CI / docs polish (v0.1.1), cron timezone single-source refactor (v0.1.2), and the `{{TIMEZONE}}` prompt template + verified-Hermes-v0.14.0 docs round (v0.1.3) have all shipped. The Phase / Ticket structure below is kept for historical context — it captures the original intent and the canonical source-of-truth ordering. **For current state, this table is authoritative; the Phase bodies below are not.**
 
 | Phase / Ticket | Status | Where it landed |
 |---|---|---|
-| Phase 0 — Verify Hermes capabilities | ✓ done | `docs/03-hermes-compatibility-notes.md` (verified table + operational findings, Hermes v0.14.0) |
+| Phase 0 — Verify Hermes capabilities | ✓ done | `docs/03-hermes-compatibility-notes.md` (verified table + operational findings, Hermes v0.14.0; v0.1.3 added verified entries for `bundles reload`, MCP config location, and cron toolset restrictions) |
 | Phase 1 — External-linked skill integration | ✓ done | `config.yaml:skills.external_dirs`, `scripts/validate_upstream_index.py`, `docs/04-skill-integration-strategy.md` |
-| Phase 2 — Bundle generation | **partial** | Canonical index validation shipped (`scripts/validate_upstream_index.py`). `sync_claude_trading_skills.py --write` regenerates bundles with the required-concepts contract, but **`x-generated: false` manual-edit protection and the "no-diff on re-run" determinism test are still open** — `make sync-external-write` is gated behind `REQUIRE_SYNC_WRITE=1` for now. |
-| Phase 3 — Cron presets | ✓ done | `data/schedule-presets.yaml` (single source of truth), `cron/create_cron_jobs.py`, `cron/create_cron_jobs.sh` wrapper, `tests/test_schedule_drift.py`. `cron run` requires a `job_id` rather than a human name in Hermes v0.14.0 — documented in `docs/03-hermes-compatibility-notes.md`. |
+| Phase 2 — Bundle generation | **partial** | Canonical index validation shipped (`scripts/validate_upstream_index.py`). `sync_claude_trading_skills.py --write` regenerates bundles with the required-concepts contract, but **`x-generated: false` manual-edit protection and the "no-diff on re-run" determinism test are still open** — `make sync-external-write` is gated behind `REQUIRE_SYNC_WRITE=1` for now. Next ticket: TICKET-004 completion (B-2). |
+| Phase 3 — Cron presets | ✓ done | `data/schedule-presets.yaml` (single source of truth for schedule / name / skills / prompt_file / timezone), `cron/create_cron_jobs.py` (host-TZ warning + `{{TIMEZONE}}` prompt template expansion from v0.1.3, priority shell env > `.env` > preset YAML > LA), `cron/create_cron_jobs.sh` wrapper, `tests/test_schedule_drift.py`, `tests/test_prompt_template.py`. `cron run` requires a `job_id` rather than a human name in Hermes v0.14.0 — documented in `docs/03-hermes-compatibility-notes.md`. |
 | Phase 4 — Safety and policy gates | ✓ done | `SOUL.md`, `tests/test_output_safety.py`, `tests/test_required_sections.py`, `tests/fixtures/sample_outputs/` |
-| Phase 5 — Optional vendored mode | **out of scope (deferred)** | TICKET-008 — sync script skeleton exists but vendored-mode operations + `vendor-manifest.json` + drift detection are not implemented. Planned for a future release. |
-| Phase 6 — Release and documentation | ✓ done | v0.1.0 / v0.1.1 / v0.1.2 published on GitHub Releases. README + README.ja + CHANGELOG ship with each release. |
+| Phase 5 — Optional vendored mode | **out of scope (deferred)** | TICKET-008 — sync script skeleton exists but vendored-mode operations + `vendor-manifest.json` + drift detection are not implemented. Planned to follow TICKET-004 (B-2). |
+| Phase 6 — Release and documentation | ✓ done | v0.1.0 / v0.1.1 / v0.1.2 / v0.1.3 published on GitHub Releases. README + README.ja + CHANGELOG ship with each release. |
 | TICKET-001..007 | ✓ done | See [v0.1.0 changelog](CHANGELOG.md). |
 | TICKET-008 (vendored mode) | open | See Phase 5 above. |
 
-Open work items are also reflected in `CHANGELOG.md` under `[Unreleased]` once a fix lands; right now `[Unreleased]` is empty (v0.1.2 just shipped).
+Open work items are also reflected in `CHANGELOG.md` under `[Unreleased]` once a fix lands; right now `[Unreleased]` is empty (v0.1.3 just shipped). Next planned ticket is TICKET-004 (B-2) — generator ownership / `x-generated: false` protection / `sync --write` determinism — which finishes Phase 2.
 
 For a current-state walkthrough, start with `README.md` → `docs/01-architecture.md` → `docs/03-hermes-compatibility-notes.md`. Use this file for the original intent.
 
