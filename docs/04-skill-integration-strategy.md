@@ -78,6 +78,20 @@ This repo should not rewrite all trading skills for Hermes. Instead, it adds:
 | Chart image | Ask user to upload screenshot or skip chart interpretation. |
 | `jsonschema` Python module missing | `trader-memory-core` CLI degrades. Install via `python3 -m pip install jsonschema` (or `uv pip install jsonschema`). Skill output continues with reduced validation. |
 
+## Trade ticket primitive (as of B-3 / TICKET-009)
+
+The `/trade-ticket` bundle introduces a single operator-visible primitive between research output and post-hoc journaling: the **trade ticket**. A ticket is a JSON-Schema-validated YAML object (`schemas/trade-ticket.schema.json`) that captures one candidate, the operator-confirmed plan and risk, and an explicit `approval` state (`DRAFT` / `REVIEW_READY` / `APPROVED` / `REJECTED` / `EXPIRED`).
+
+Boundaries (codified by the schema, the bundle instruction, and `tests/test_trade_ticket_schema.py`):
+
+- **`approval.required` is constant `true`** on every ticket — the bundle never produces un-gated artifacts.
+- On `APPROVED`, the reviewer must re-type ticker, direction, entry, stop, and `risk_per_trade_pct` into `approval.confirmed.*`. The business-invariant test asserts the values match the ticket body (`candidate.*`, `plan.*`, `risk.*`) and are non-null. A mismatch demotes the ticket back to `REVIEW_READY`.
+- **Output surface is the ticket YAML only.** The bundle does not place orders, submit to brokers, or schedule executions. The instruction states this in positive form ("ticket output only; execution and broker submission are out of scope") and the boundary phrase is asserted by test.
+- **Persistence is operator-owned.** The bundle is stateless across invocations. The operator either commits ticket files under an external `tickets/` directory or hands them to `trader-memory-core` via its own storage interface.
+- **Lineage** is carried through `provenance.source_bundle` and `provenance.source_candidate_ref` (a stable composite like `NVDA-2026-05-24-VCP`). The `/swing-opportunity-daily` and `/pre-market-routine` bundles' instructions are updated to require both fields when escalating a candidate to `/trade-ticket`.
+
+Out of scope for B-3 / TICKET-009 (deferred to a future ticket): multi-session ticket lifecycle, archive directory, id allocator, automatic expiration trigger, broker submission of any kind. The SOUL perimeter (`SOUL.md`) remains authoritative.
+
 ## Vendoring rules
 
 When implementing vendored mode:

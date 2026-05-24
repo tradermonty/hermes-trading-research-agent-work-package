@@ -1,0 +1,38 @@
+# Negative fixture: status=APPROVED with null entry value and a
+# matching null confirmed.entry. Schema's APPROVED branch tightens
+# plan.entry.value, plan.stop.value, risk.risk_per_trade_pct, and
+# approval.confirmed.{entry, stop, risk_per_trade_pct} to
+# {"type": "number"} (no null), so this must be rejected.
+ticket_id: "TKT-20260524-abc123"
+created_at: "2026-05-24T13:30:00Z"
+status: "APPROVED"
+approval:
+  required: true
+  approved: true
+  reviewer: "tradermonty"
+  decided_at: "2026-05-24T14:05:00Z"
+  confirmed:
+    ticker: "NVDA"
+    direction: "long"
+    entry: null                 # <- violates APPROVED tightening
+    stop: 192.30
+    risk_per_trade_pct: 0.5
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP"
+  thesis: "test"
+  invalidation: "test"
+plan:
+  entry: {value: null, basis: "pending"}    # <- also violates APPROVED tightening
+  stop: {value: 192.30, basis: "n/a"}
+  target: {value: 220.0, basis: "n/a"}
+risk:
+  risk_per_trade_pct: 0.5
+  exposure_impact: "n/a"
+  data_freshness: "n/a"
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: null
+  source_skills: []
+  source_candidate_ref: "TEST-2026-05-24-VCP"

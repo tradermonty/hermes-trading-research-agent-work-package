@@ -118,3 +118,49 @@ Done when:
 Done when:
 
 - Profile works without external repo.
+
+## TICKET-009 — `/trade-ticket` bundle + Trade Ticket schema (B-3)
+
+(Shipped on `main`; folds into the next release.)
+
+- New `schemas/trade-ticket.schema.json` (JSON Schema draft/2020-12).
+  Top-level required: `ticket_id`, `created_at`, `status`,
+  `approval`, `candidate`, `plan`, `risk`, `provenance`. Status
+  enum exactly `[DRAFT, REVIEW_READY, APPROVED, REJECTED,
+  EXPIRED]`. `approval.required` is `{"const": true}` at the base
+  level. `allOf` + `if`/`then` enforce per-status approval
+  invariants; the APPROVED branch tightens numeric fields
+  (`plan.entry.value`, `plan.stop.value`,
+  `risk.risk_per_trade_pct`, `approval.confirmed.entry`,
+  `approval.confirmed.stop`,
+  `approval.confirmed.risk_per_trade_pct`) to non-null.
+- New `skill-bundles/trade-ticket.yaml` (`x-generated: false`).
+  Five operator verbs (`new` / `review` / `APPROVE` / `REJECT` /
+  `EXPIRE`). APPROVE requires the reviewer to re-type
+  `confirmed.{ticker,direction,entry,stop,risk_per_trade_pct}`;
+  any mismatch demotes the ticket to `REVIEW_READY`. Positive
+  boundary statements ("ticket output only", "execution is out of
+  scope", "broker submission is out of scope") appear in the
+  instruction body. Persistence is operator-owned.
+- `data/skill-mapping.yaml`: new `trade-ticket` workflow entry
+  (`cadence: manual`, `category: trade-planning`).
+- `/swing-opportunity-daily` and `/pre-market-routine` bundles
+  gain an escalation pointer requiring `source_bundle` and
+  `source_candidate_ref` when forwarding a candidate.
+- `tests/test_trade_ticket_schema.py` (20 cases — 3 structural,
+  4 positive fixtures, 8 negative fixtures, 1 business-invariant
+  positive, 4 boundary / instruction contract) plus 12 fixtures
+  under `tests/fixtures/trade_tickets/`.
+
+Done when:
+
+- `schemas/trade-ticket.schema.json` is a valid draft/2020-12
+  schema with the exact 5-value status enum and the four
+  status-conditional `if`/`then` blocks.
+- `tests/test_trade_ticket_schema.py` (20 cases) all pass; the
+  `tests/test_required_sections.py` matrix grows to 10 × 6 = 60
+  and all pass.
+- `make sync-external-write` against the shipped tip prints 10
+  `SKIP protected bundle:` lines (the new bundle is owned by
+  the operator from day one).
+- `make validate-all` is green.

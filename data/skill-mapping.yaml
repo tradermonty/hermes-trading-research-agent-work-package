@@ -203,3 +203,22 @@ workflows:
       - process_mistakes
       - acceptable_losses
       - next_month_rules
+
+  trade-ticket:
+    name: "Trade ticket"
+    title: "Trade ticket"
+    category: trade-planning
+    cadence: manual
+    canonical_source: custom-hermes-preset
+    skills:
+      - trading-research-orchestrator
+      - exposure-coach
+      - position-sizer
+      - trader-memory-core
+    required_outputs:
+      - ticket_metadata
+      - approval_status
+      - candidate
+      - plan
+      - risk
+      - provenance

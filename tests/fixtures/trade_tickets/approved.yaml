@@ -1,0 +1,51 @@
+# Positive fixture: status=APPROVED.
+# Every numeric field is non-null. approval.confirmed re-types
+# ticker/direction/entry/stop/risk_per_trade_pct and the values
+# match the ticket body exactly (business-invariant test enforces
+# the equality across the two blocks).
+ticket_id: "TKT-20260524-abc123"
+created_at: "2026-05-24T13:30:00Z"
+status: "APPROVED"
+approval:
+  required: true
+  approved: true
+  reviewer: "tradermonty"
+  decided_at: "2026-05-24T14:05:00Z"
+  reason: "breakout confirmed on volume; thesis still valid; sized within risk band."
+  confirmed:
+    ticker: "NVDA"
+    direction: "long"
+    entry: 196.20
+    stop: 192.30
+    risk_per_trade_pct: 0.5
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP base #2 above rising 21-day"
+  thesis: "AI infrastructure cycle leadership; volume thesis intact after last earnings reaction."
+  invalidation: "Weekly close below 50-day MA; or breakout fails and reverses below pivot."
+plan:
+  entry:
+    value: 196.20
+    basis: "breakout +0.4% above pivot 195.40 on 178% relative volume"
+  stop:
+    value: 192.30
+    basis: "low of breakout bar minus 1.5%"
+  target:
+    value: 220.00
+    basis: "measured move from base; T1 +12% partial, T2 +25%"
+  size_hint: "starter at 0.5R confirmed; scale on +5% follow-through"
+  time_horizon: "4-8 weeks"
+  notes: null
+risk:
+  risk_per_trade_pct: 0.5
+  exposure_impact: "Tech allocation post-fill ~22%; within 25% cap."
+  data_freshness: "FMP earnings calendar as of 2026-05-24T05:55Z; breadth CSV as of prior close; intraday quote 2026-05-24T13:55Z."
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: "20260524_063012_swing"
+  source_skills:
+    - "vcp-screener"
+    - "exposure-coach"
+    - "position-sizer"
+  source_candidate_ref: "NVDA-2026-05-24-VCP"

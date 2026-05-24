@@ -1,0 +1,30 @@
+# Negative fixture: status=REJECTED but approval.reason is missing.
+# Schema's REJECTED branch requires reason (minLength 1).
+ticket_id: "TKT-20260524-abc123"
+created_at: "2026-05-24T13:30:00Z"
+status: "REJECTED"
+approval:
+  required: true
+  approved: false
+  reviewer: "tradermonty"
+  decided_at: "2026-05-24T14:10:00Z"
+  # reason intentionally absent <-- the violation
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP"
+  thesis: "test"
+  invalidation: "test"
+plan:
+  entry: {value: null, basis: "n/a"}
+  stop: {value: null, basis: "n/a"}
+  target: {value: null, basis: "n/a"}
+risk:
+  risk_per_trade_pct: null
+  exposure_impact: "n/a"
+  data_freshness: "n/a"
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: null
+  source_skills: []
+  source_candidate_ref: "TEST-2026-05-24-VCP"

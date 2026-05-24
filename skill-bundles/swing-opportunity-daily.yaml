@@ -20,6 +20,8 @@ instruction: |
   - Candidate table with setup, thesis, invalidation, position-sizing assumptions, and chart-review requirements.
   - If risk gate is blocked, provide only education/review tasks and do not generate new trade candidates.
 
+  Candidates ready for confirmation can be escalated to `/trade-ticket`. Include `source_bundle: swing-opportunity-daily` and a stable `source_candidate_ref` (e.g. `<TICKER>-<YYYY-MM-DD>-<setup>`) so the ticket can populate its provenance field.
+
   Output must always include:
   - data freshness (as-of timestamps for each input and any stale data warnings)
   - source provenance for each data point (which skill or data source produced it)

@@ -98,6 +98,7 @@ Every key is **optional** at install time (`distribution.yaml` marks them `requi
 | `/earnings-movers-triage` | Event-driven | Classifies gap-up / gap-down earnings names and PEAD candidates. |
 | `/portfolio-risk-check` | Manual | Exposure, concentration, portfolio heat, open-thesis validity. |
 | `/trade-journal` | Manual | Structures trade notes into journal entries with thesis / invalidation / risk record. |
+| `/trade-ticket` | Manual | Captures a candidate as a JSON-Schema-validated trade ticket with an explicit human approval gate (`DRAFT` / `REVIEW_READY` / `APPROVED` / `REJECTED` / `EXPIRED`). Ticket output only — **never executes orders**. See `schemas/trade-ticket.schema.json` and `docs/04-skill-integration-strategy.md` "Trade ticket primitive". |
 | `/weekly-portfolio-review` | Saturday 09:00 PT | Long-term holdings, dividends, allocation drift, forced-review triggers. |
 | `/monthly-performance-review` | First of month 09:00 PT | Process review, signal postmortem, next-month operating rules. |
 

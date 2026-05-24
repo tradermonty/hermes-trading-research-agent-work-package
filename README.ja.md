@@ -87,7 +87,7 @@ trading-research-assistant chat
 
 ---
 
-## スラッシュコマンド (9個)
+## スラッシュコマンド (10個)
 
 | スラッシュコマンド | デフォルト cron | 用途 |
 |---|---|---|
@@ -98,6 +98,7 @@ trading-research-assistant chat
 | `/earnings-movers-triage` | イベント駆動 | 決算ギャップ銘柄と PEAD 候補の分類 |
 | `/portfolio-risk-check` | 手動 | エクスポージャー、集中度、ポートフォリオヒート、保有仮説の有効性 |
 | `/trade-journal` | 手動 | トレードメモを仮説 / 否定条件 / リスク記録付きの構造化ジャーナルへ |
+| `/trade-ticket` | 手動 | 候補を JSON-Schema 検証付きの trade ticket として記録、明示的な human approval gate (`DRAFT` / `REVIEW_READY` / `APPROVED` / `REJECTED` / `EXPIRED`) を伴う。ticket 出力のみで **発注は一切しない**。`schemas/trade-ticket.schema.json` と `docs/04-skill-integration-strategy.md` の "Trade ticket primitive" 節を参照 |
 | `/weekly-portfolio-review` | 土曜 09:00 PT | 長期保有・配当・アロケーションドリフト・要レビュー銘柄 |
 | `/monthly-performance-review` | 月初 09:00 PT | プロセスレビュー、シグナル postmortem、来月の運用ルール |
 

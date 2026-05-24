@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `schemas/trade-ticket.schema.json` (new, JSON Schema draft/2020-12): trade ticket primitive. Top-level required fields (`ticket_id`, `created_at`, `status`, `approval`, `candidate`, `plan`, `risk`, `provenance`); status enum exactly `[DRAFT, REVIEW_READY, APPROVED, REJECTED, EXPIRED]`; `approval.required` is `{"const": true}` at the base level so every ticket is approval-gated; `allOf` + `if`/`then` enforce per-status approval invariants; the APPROVED branch tightens `plan.entry.value`, `plan.stop.value`, `risk.risk_per_trade_pct`, `approval.confirmed.entry`, `approval.confirmed.stop`, `approval.confirmed.risk_per_trade_pct` to non-null number.
+- `skill-bundles/trade-ticket.yaml` (new, `/trade-ticket` slash command, `x-generated: false`): five operator verbs (`new` / `review` / `APPROVE` / `REJECT` / `EXPIRE`). APPROVE requires the reviewer to re-type `confirmed.{ticker,direction,entry,stop,risk_per_trade_pct}`; any mismatch demotes the ticket back to `REVIEW_READY` with each mismatched field listed. Positive boundary statements ("ticket output only", "execution is out of scope", "broker submission is out of scope") in the instruction body. Persistence is operator-owned (commit YAML elsewhere or hand to `trader-memory-core`).
+- `data/skill-mapping.yaml`: new `trade-ticket` workflow entry (`cadence: manual`, `category: trade-planning`).
+- `tests/test_trade_ticket_schema.py` (new, 20 cases): 3 structural (schema validity, status enum exact + order, `approval.required` const true), 4 positive fixtures (DRAFT, APPROVED, REJECTED, EXPIRED), 7 schema negative fixtures (missing approval, `required: false`, status/approved mismatch, missing `confirmed`, APPROVED with null `entry`/`stop`/`risk`, REJECTED without `reason`, EXPIRED without `decided_at`), 1 business-invariant positive (`_assert_confirmed_matches_ticket` helper enforces equality between `confirmed.*` and `candidate.*` / `plan.*` / `risk.*`, plus non-null on APPROVED), 1 mismatch negative (schema-valid ticket whose `confirmed.ticker` ≠ `candidate.ticker` — caught by the invariant helper), 4 boundary / instruction contract (five status + five verbs, positive boundary phrases, `confirmed.*` re-type requirement, mismatch-handling documented).
+- 12 fixtures under `tests/fixtures/trade_tickets/` (4 positive + 8 negative).
+
+### Changed
+
+- `skill-bundles/swing-opportunity-daily.yaml` and `skill-bundles/pre-market-routine.yaml`: instruction bodies gain a paragraph pointing at `/trade-ticket` and requiring `source_bundle` + `source_candidate_ref` when escalating a candidate. Existing 6-concept footer unchanged; bundle count grows from 9 to 10.
+
 ### Documentation
 
+- `docs/04-skill-integration-strategy.md`: new "Trade ticket primitive (as of B-3 / TICKET-009)" subsection.
+- `docs/09-coding-tickets.md`: new TICKET-009 entry with Done conditions.
+- `AGENTS.md`: Status table gains a row for TICKET-009 / B-3 (done); closing line updated.
+- `README.md` / `README.ja.md`: bundle list 9 → 10, `/trade-ticket` row added with "never executes orders" / 「発注は一切しない」 note.
 - `docs/08-release-playbook.md`: new **Operational soak (prod alias, real-time gateway)** section codifying the post-v0.1.4 "D" work. Covers preconditions, `gateway install/start`, waiting for a real scheduled firing (no `cron run` shortcut), inspecting `cron/output/<job_id>/<timestamp>.md`, recording each firing in a local soak log (template included; intentionally not committed to this repo), promoting failure rows back into `docs/03-hermes-compatibility-notes.md`, and a soak-exit checklist. Run cadence: once per significant gateway / cron change rather than per release.
 
 ## [0.1.4] - 2026-05-24

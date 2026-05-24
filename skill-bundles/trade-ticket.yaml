@@ -1,0 +1,83 @@
+name: trade-ticket
+description: "Capture a swing or pre-market candidate as a trade ticket draft, with an explicit human approval gate. Ticket output only; execution and broker submission are out of scope."
+x-generated: false
+skills:
+  - trading-research-orchestrator
+  - exposure-coach
+  - position-sizer
+  - trader-memory-core
+instruction: |
+  Create or update a single trade ticket. The output surface of
+  this bundle is the ticket YAML only. Execution is out of scope.
+  Broker submission is out of scope. Approval is a recorded
+  human decision, not an execution trigger.
+
+  Required output: one YAML document that validates against
+  `schemas/trade-ticket.schema.json`. Status enum (five values):
+  DRAFT / REVIEW_READY / APPROVED / REJECTED / EXPIRED.
+
+  Initial drafts MUST set `approval.required: true` and
+  `approval.approved: false`. `approval.required` is constant
+  true on every ticket — this bundle does not produce
+  un-gated artifacts.
+
+  Operator command forms recognised in the user message
+  (five verbs total):
+  - `/trade-ticket new` (or no command verb): emit a fresh DRAFT
+    populated from the prior message context. ticket_id is fresh
+    (format TKT-YYYYMMDD-<6-char suffix>).
+  - `/trade-ticket review <ticket_id>`: re-emit the same ticket
+    with status REVIEW_READY, leaving approval.approved false.
+  - `/trade-ticket APPROVE <ticket_id> reviewer=<name>
+    confirmed.ticker=<TICKER> confirmed.direction=<long|short>
+    confirmed.entry=<value> confirmed.stop=<value>
+    confirmed.risk_per_trade_pct=<value> [reason=<text>]`:
+    emit the ticket with status APPROVED,
+    approval.approved=true, and approval.reviewer / decided_at /
+    confirmed populated from operator input. The
+    `confirmed.*` fields are NOT optional — the reviewer must
+    re-type ticker, direction, entry, stop, and
+    risk_per_trade_pct. If the operator omits any of these,
+    refuse the approval and re-emit the ticket in REVIEW_READY
+    with a note that `confirmed.*` are missing.
+
+    Mismatch handling: before emitting APPROVED, compare each
+    `confirmed.*` value to the ticket body — `confirmed.ticker`
+    vs `candidate.ticker`, `confirmed.direction` vs
+    `candidate.direction`, `confirmed.entry` vs
+    `plan.entry.value`, `confirmed.stop` vs `plan.stop.value`,
+    `confirmed.risk_per_trade_pct` vs `risk.risk_per_trade_pct`.
+    If ANY pair disagrees, do not promote to APPROVED. Re-emit
+    the ticket as REVIEW_READY, list each mismatched field with
+    the ticket value and the operator-supplied value, and ask
+    the operator to either correct their APPROVE input or update
+    the ticket body first.
+  - `/trade-ticket REJECT <ticket_id> reason=<text>`: status
+    REJECTED, approval.approved=false, approval.reason required
+    and non-empty.
+  - `/trade-ticket EXPIRE <ticket_id> [reason=<text>]`: status
+    EXPIRED, approval.approved=false, approval.decided_at
+    required (when the ticket lapsed). reason is optional but
+    recommended.
+
+  Requests outside the ticket-output surface — anything that
+  would commit, submit, sign, or schedule a trade — receive the
+  boundary statement ("ticket output only; execution and broker
+  submission are out of scope") and the current ticket
+  unchanged. The output stays a ticket YAML in every case.
+
+  Persistence is the operator's responsibility. Either commit
+  the emitted YAML under an operator-managed tickets directory
+  (outside this profile to avoid Hermes state-isolation
+  surprises) or hand it to `trader-memory-core` via its own
+  storage interface. This bundle is stateless across
+  invocations — every call emits a fresh ticket document; it
+  does not assume the prior ticket is still on disk.
+
+  Output must always include:
+  - data freshness (as-of timestamps for each input and any stale data warnings)
+  - source provenance for each data point (which skill or data source produced it)
+  - thesis behind each watchlist or candidate item
+  - invalidation criteria for each thesis
+  - risk considerations (exposure impact, drawdown sensitivity, event risk)
+  - a human decision gate — the human reviewer makes all entry and exit decisions; ticket output only; execution and broker submission are out of scope

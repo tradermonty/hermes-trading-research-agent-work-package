@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TradeTicket",
+  "description": "Trade ticket emitted by the /trade-ticket bundle. Captures a single candidate, the operator-confirmed plan and risk, and an explicit human approval state. Ticket output only; execution and broker submission are out of scope.",
+  "type": "object",
+  "required": [
+    "ticket_id",
+    "created_at",
+    "status",
+    "approval",
+    "candidate",
+    "plan",
+    "risk",
+    "provenance"
+  ],
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "pattern": "^TKT-[0-9]{8}-[a-z0-9]{6}$",
+      "description": "Stable identifier. TKT-YYYYMMDD-<6-char suffix>."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp the ticket was first emitted."
+    },
+    "status": {
+      "enum": ["DRAFT", "REVIEW_READY", "APPROVED", "REJECTED", "EXPIRED"],
+      "description": "Lifecycle state. Order is canonical and asserted by tests."
+    },
+    "approval": {
+      "type": "object",
+      "required": ["required", "approved"],
+      "properties": {
+        "required": {
+          "const": true,
+          "description": "Every trade ticket is by definition approval-gated; this field is constant."
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Set true only on APPROVED tickets. Status/approved consistency is enforced by the schema's allOf/if/then below."
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Name or handle of the human reviewer who APPROVED or REJECTED the ticket."
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp the reviewer decided. Required on APPROVED, EXPIRED."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Free text. Required on REJECTED."
+        },
+        "confirmed": {
+          "type": "object",
+          "description": "Reviewer re-types ticker, direction, entry, stop, and risk_per_trade_pct on APPROVE. The values must match the ticket body — the business-invariant test enforces equality; the schema enforces presence and non-null on APPROVED.",
+          "properties": {
+            "ticker": {"type": "string"},
+            "direction": {"enum": ["long", "short"]},
+            "entry": {"type": ["number", "null"]},
+            "stop": {"type": ["number", "null"]},
+            "risk_per_trade_pct": {"type": ["number", "null"]}
+          }
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["ticker", "direction", "setup", "thesis", "invalidation"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "direction": {"enum": ["long", "short"]},
+        "setup": {"type": "string"},
+        "thesis": {"type": "string"},
+        "invalidation": {"type": "string"}
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": ["entry", "stop", "target"],
+      "properties": {
+        "entry": {
+          "type": "object",
+          "required": ["value", "basis"],
+          "properties": {
+            "value": {"type": ["number", "null"]},
+            "basis": {"type": "string"}
+          }
+        },
+        "stop": {
+          "type": "object",
+          "required": ["value", "basis"],
+          "properties": {
+            "value": {"type": ["number", "null"]},
+            "basis": {"type": "string"}
+          }
+        },
+        "target": {
+          "type": "object",
+          "required": ["value", "basis"],
+          "properties": {
+            "value": {"type": ["number", "null"]},
+            "basis": {"type": "string"}
+          }
+        },
+        "size_hint": {"type": ["string", "null"]},
+        "time_horizon": {"type": ["string", "null"]},
+        "notes": {"type": ["string", "null"]}
+      }
+    },
+    "risk": {
+      "type": "object",
+      "required": ["risk_per_trade_pct", "exposure_impact", "data_freshness"],
+      "properties": {
+        "risk_per_trade_pct": {"type": ["number", "null"]},
+        "exposure_impact": {"type": "string"},
+        "data_freshness": {"type": "string"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_bundle", "source_session", "source_skills", "source_candidate_ref"],
+      "properties": {
+        "source_bundle": {"type": "string"},
+        "source_session": {"type": ["string", "null"]},
+        "source_skills": {"type": "array", "items": {"type": "string"}},
+        "source_candidate_ref": {
+          "type": "string",
+          "description": "Stable composite reference to the originating candidate, e.g. NVDA-2026-05-24-VCP."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"enum": ["DRAFT", "REVIEW_READY"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "required": ["required", "approved"],
+            "properties": {"approved": {"const": false}}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "APPROVED"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "plan": {
+            "properties": {
+              "entry": {"properties": {"value": {"type": "number"}}, "required": ["value"]},
+              "stop": {"properties": {"value": {"type": "number"}}, "required": ["value"]}
+            }
+          },
+          "risk": {
+            "properties": {"risk_per_trade_pct": {"type": "number"}}
+          },
+          "approval": {
+            "required": ["required", "approved", "reviewer", "decided_at", "confirmed"],
+            "properties": {
+              "approved": {"const": true},
+              "confirmed": {
+                "type": "object",
+                "required": ["ticker", "direction", "entry", "stop", "risk_per_trade_pct"],
+                "properties": {
+                  "entry": {"type": "number"},
+                  "stop": {"type": "number"},
+                  "risk_per_trade_pct": {"type": "number"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "REJECTED"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "required": ["required", "approved", "reason"],
+            "properties": {
+              "approved": {"const": false},
+              "reason": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "EXPIRED"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "required": ["required", "approved", "decided_at"],
+            "properties": {"approved": {"const": false}}
+          }
+        }
+      }
+    }
+  ]
+}
