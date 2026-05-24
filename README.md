@@ -14,6 +14,30 @@ A Hermes Profile Distribution that turns `tradermonty/claude-trading-skills` int
 
 ## Quick Start (5 minutes)
 
+### Easiest path: ask Hermes to install it
+
+If you already trust Hermes to run terminal commands for setup, install Hermes first and then let the agent do the repository work:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+hermes
+```
+
+Paste this into the Hermes chat:
+
+```text
+Please install the Hermes Trading Research Agent profile from
+https://github.com/tradermonty/hermes-trading-research-agent-work-package
+using the upstream skills repo
+https://github.com/tradermonty/claude-trading-skills
+
+Use the alias trading-research-assistant, keep brokerage access paper/read-only,
+and show me how to run /pre-market-routine when installation is complete.
+```
+
+### Manual path
+
 ```bash
 # 1. Clone this repo and the upstream skills repo.
 git clone <this-repo-url> hermes-trading-research-agent

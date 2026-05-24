@@ -278,7 +278,24 @@
     <section id="install">
       <div class="container">
         <h2 class="section-title">Beginner-friendly setup path.</h2>
-        <p class="section-lead">Install Hermes, clone the upstream skills and this profile, connect them with one environment variable, then start chatting with your own trading assistant.</p>
+        <p class="section-lead">The easiest path is to install Hermes Agent first, then ask Hermes to do the repository setup for you. The manual commands stay below for people who prefer to see every step.</p>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card featured"><div class="icon">1</div><h3>Easiest: ask Hermes to install this profile</h3><p>After <code>hermes setup</code>, open a normal Hermes chat and paste the prompt on the right. Hermes can clone both repositories, install the profile alias, and tell you exactly which optional keys to add.</p></div>
+          <div class="shell"><pre><code># Install and configure Hermes first
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+hermes
+
+# Then paste this into Hermes:
+Please install the Hermes Trading Research Agent profile from
+https://github.com/tradermonty/hermes-trading-research-agent-work-package
+using the upstream skills repo
+https://github.com/tradermonty/claude-trading-skills
+
+Use the alias trading-research-assistant, keep brokerage access paper/read-only,
+and show me how to run /pre-market-routine when installation is complete.</code></pre></div>
+        </div>
+        <div class="callout" style="margin-bottom:22px"><strong>Manual fallback:</strong> if you want a fully explicit install, or if your Hermes session does not have terminal/file tools enabled yet, use the step-by-step commands below.</div>
         <div class="install-grid">
           <div>
             <div class="step"><div class="num">1</div><div><h3>Install and configure Hermes Agent</h3><p>Use the official installer, then run the setup wizard to choose your model/provider.</p></div></div>
@@ -371,7 +388,26 @@ trading-research-assistant gateway start</code></pre></div>
     <section lang="ja">
       <div class="container">
         <h2 class="section-title">導入手順</h2>
-        <p class="section-lead">Hermes初心者でも、まずは以下の流れで試せます。市場データAPIキーは後から追加しても大丈夫です。</p>
+        <p class="section-lead">いちばん簡単なのは、まずHermes Agentをインストールしてから、Hermes本人にこのプロファイルの導入を依頼する方法です。すべてのコマンドを自分で確認したい方向けに、従来の手動手順もそのまま下に残しています。</p>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card featured"><div class="icon">簡</div><h3>最短: Hermesに導入を依頼する</h3><p><code>hermes setup</code> 後に通常のHermesチャットを開き、右の依頼文を貼り付けます。Hermesが2つのリポジトリをcloneし、profile aliasをinstallし、最後に使い方を案内します。</p></div>
+          <div class="shell"><pre><code># まずHermes Agentをインストール・初期設定
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+hermes
+
+# 次に、Hermesへこの依頼文を貼り付け:
+以下のHermes Trading Research Agent profileを導入してください。
+https://github.com/tradermonty/hermes-trading-research-agent-work-package
+
+上流スキルリポジトリはこちらです。
+https://github.com/tradermonty/claude-trading-skills
+
+aliasは trading-research-assistant にしてください。
+ブローカー連携はpaper/read-only前提のままにしてください。
+導入後、/pre-market-routine の実行方法も教えてください。</code></pre></div>
+        </div>
+        <div class="callout" style="margin-bottom:22px"><strong>手動手順:</strong> Hermesのterminal/file toolsがまだ使えない場合や、全ステップを自分で確認したい場合は、以下の従来手順を使ってください。</div>
         <div class="shell"><pre><code># 1. Hermes Agentをインストール
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 hermes setup

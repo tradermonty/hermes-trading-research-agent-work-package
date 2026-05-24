@@ -14,6 +14,32 @@ Hermes Agent上で動作する、米国株個人投資家向けのリサーチ�
 
 ## クイックスタート (5分)
 
+### 最短手順: Hermesに導入を依頼する
+
+Hermesにセットアップ用のターミナル操作を任せてよい場合は、まずHermes Agentをインストールしてから、Hermes本人にこのprofileの導入を依頼できます。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+hermes setup
+hermes
+```
+
+Hermesチャットに以下を貼り付けてください:
+
+```text
+以下のHermes Trading Research Agent profileを導入してください。
+https://github.com/tradermonty/hermes-trading-research-agent-work-package
+
+上流スキルリポジトリはこちらです。
+https://github.com/tradermonty/claude-trading-skills
+
+aliasは trading-research-assistant にしてください。
+ブローカー連携はpaper/read-only前提のままにしてください。
+導入後、/pre-market-routine の実行方法も教えてください。
+```
+
+### 手動手順
+
 ```bash
 # 1. このリポジトリと上流のスキルリポジトリを clone
 git clone <this-repo-url> hermes-trading-research-agent
