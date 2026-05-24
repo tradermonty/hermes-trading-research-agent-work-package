@@ -1,7 +1,7 @@
 Run the US equity after-close review for today.
 
 Operating context:
-- Timezone label for the report: America/Los_Angeles.
+- Timezone label for the report: {{TIMEZONE}}.
 - This is research and process support.
 - Use installed Claude Trading Skills when available.
 - When data or API keys are unavailable, mark the relevant section as degraded mode and cite the missing input.

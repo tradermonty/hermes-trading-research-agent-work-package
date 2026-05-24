@@ -12,6 +12,12 @@ Cron expressions in `data/schedule-presets.yaml` are written assuming `America/L
 
 On startup the runtime resolves the host IANA zone (via `TZ` env, then `/etc/localtime`) and compares it to the preset `timezone` **by IANA name**, not by UTC offset alone. So `America/Phoenix` is still flagged against `America/Los_Angeles` in summer even though both are UTC-7 — because the DST rules differ. The check emits a `WARNING` on stderr but continues; it never blocks job creation. PyYAML is required at runtime (`python3 -m pip install pyyaml`).
 
+### Report-label `{{TIMEZONE}}` expansion (separate from scheduler)
+
+Scheduled prompts (`prompts/pre-market-routine.md`, `after-close-review.md`, `weekly-portfolio-review.md`, `monthly-performance-review.md`) contain a `Timezone label for the report: {{TIMEZONE}}.` line. At cron-create time the runtime expands `{{TIMEZONE}}` using this priority — **shell env > `<repo-root>/.env` > `data/schedule-presets.yaml:timezone` > literal `America/Los_Angeles`** — so an operator can re-label reports to e.g. `Asia/Tokyo` without editing the prompt files.
+
+This expansion path is intentionally separate from the scheduler comparison above: `HERMES_TRADING_TIMEZONE` only changes the report label, never when cron fires. Drop the override into the installed-profile `.env` for persistent behavior, or set it in the shell for an ad-hoc run. The runtime uses a Jinja-like `{{TIMEZONE}}` marker (not `${TIMEZONE}`) so the prompt body never carries a `$`-style env reference that could edge-case the Hermes threat scanner.
+
 To run these schedules at the intended local times:
 
 - Run the host in `America/Los_Angeles`, **or**

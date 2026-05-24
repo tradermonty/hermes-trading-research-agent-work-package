@@ -116,6 +116,8 @@ trading-research-assistant cron list
 
 `data/schedule-presets.yaml` is the **single source of truth** for the four cron jobs (schedule + name + skills + prompt file + expected timezone). The shell script is a thin wrapper around `cron/create_cron_jobs.py`, which reads the YAML, runs each `cron create` invocation in preset order, and **emits a WARNING on stderr** when the host's IANA timezone differs from the preset (IANA-name comparison, not just UTC offset — so e.g. `America/Phoenix` is flagged against `America/Los_Angeles` even when offsets coincide). Pass `--dry-run` to `cron/create_cron_jobs.py` to preview the commands without executing.
 
+Scheduled prompts also contain a `{{TIMEZONE}}` template token; the runtime expands it at cron-create time using **`HERMES_TRADING_TIMEZONE` from the shell env, then the profile `.env`, then the preset YAML timezone, then literal `America/Los_Angeles`**. This is a label-only override — it does not move the cron schedule. See `cron/README.md` for the full priority stack.
+
 Cron jobs register as `active` but **do not fire automatically until the Hermes gateway is running**. After `cron list` shows the four jobs, choose:
 
 ```bash

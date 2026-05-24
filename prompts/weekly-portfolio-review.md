@@ -1,5 +1,7 @@
 Run the weekly core portfolio review.
 
+Timezone label for the report: {{TIMEZONE}}.
+
 Focus on long-term holdings, ETFs, dividend holdings, concentration, allocation drift, and forced-review triggers.
 
 Required output:

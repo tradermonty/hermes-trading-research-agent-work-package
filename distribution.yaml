@@ -48,6 +48,10 @@ env_requires:
     description: "Cron delivery target such as local, telegram, discord, slack, or origin. Defaults to local."
     required: false
     default: "local"
+  - name: HERMES_TRADING_TIMEZONE
+    description: "IANA timezone used to expand `{{TIMEZONE}}` in the cron prompt body. Honored as a report-body label only — does NOT affect the cron scheduler firing time. Override priority: shell env > profile .env > data/schedule-presets.yaml:timezone > America/Los_Angeles."
+    required: false
+    default: "America/Los_Angeles"
 
 # Include skill-bundles and project docs in addition to the Hermes defaults.
 # Installer-owned runtime state, memories, sessions, .env, logs, and auth files must never be overwritten.

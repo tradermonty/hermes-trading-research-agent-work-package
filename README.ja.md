@@ -116,6 +116,8 @@ trading-research-assistant cron list
 
 `data/schedule-presets.yaml` が4つの cron job の **単一の source of truth** です (schedule + name + skills + prompt file + 期待 timezone)。シェルスクリプトは `cron/create_cron_jobs.py` の thin wrapper で、YAML を読んで preset 順に `cron create` を発行し、host の IANA timezone が preset と異なる場合は **stderr に WARNING** を出力します (IANA 名比較のため、UTC offset が一致しても `America/Phoenix` vs `America/Los_Angeles` のような mismatch は検出されます)。`cron/create_cron_jobs.py --dry-run` で実行せずに発行コマンドを確認可能。
 
+スケジュール対象 prompt には `{{TIMEZONE}}` テンプレートが含まれていて、cron-create 時に runtime が展開します。優先度は **`HERMES_TRADING_TIMEZONE` shell env → profile `.env` → preset YAML timezone → リテラル `America/Los_Angeles`**。これはラベル専用の override であり、cron 発火時刻は動きません。完全な priority stack は `cron/README.md` を参照。
+
 cron ジョブは `active` として登録されますが、**Hermes gateway が起動していないと自動発火しません**。`cron list` で4ジョブ確認後にどちらかを選択:
 
 ```bash

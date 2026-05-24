@@ -13,9 +13,13 @@ Operator-facing behaviour:
   expression fires in the host OS local timezone. The warning is
   non-interactive — the script continues regardless. See
   docs/03-hermes-compatibility-notes.md.
-- `HERMES_TRADING_TIMEZONE` is intentionally NOT consulted here. Per the
-  project docs, that env var is a report-body label only and has no
-  effect on the scheduler.
+- `HERMES_TRADING_TIMEZONE` is intentionally NOT consulted for the
+  scheduler comparison above (per the project docs it is a report-body
+  label only and has no effect on the scheduler). It IS consulted for
+  expanding `{{TIMEZONE}}` in prompt bodies — see
+  `_resolve_report_timezone()`. Override priority for the report label:
+  shell env > `<repo-root>/.env` > `data/schedule-presets.yaml:timezone`
+  > literal `America/Los_Angeles`.
 - `--dry-run` prints the Hermes CLI invocations instead of executing them.
 
 Exits:
@@ -52,7 +56,10 @@ except ImportError as exc:  # pragma: no cover - Python <3.9
 
 ROOT = Path(__file__).resolve().parent.parent
 PRESET_FILE = ROOT / "data" / "schedule-presets.yaml"
+ENV_FILE = ROOT / ".env"
 COMPAT_DOC = "docs/03-hermes-compatibility-notes.md"
+REPORT_TZ_FALLBACK = "America/Los_Angeles"
+PROMPT_TIMEZONE_TOKEN = "{{TIMEZONE}}"
 
 
 def _emit_warning(lines: list[str]) -> None:
@@ -162,6 +169,78 @@ def check_host_timezone(expected_zone: str) -> None:
     ])
 
 
+def _read_env_file_value(
+    key: str,
+    env_path: Path | None = None,
+) -> str | None:
+    """Minimal stdlib `.env` parser: `KEY=VALUE` per line, `#` comment,
+    optional matching surrounding quotes. Returns the value for `key`
+    or `None` if the file is missing or the key is absent.
+
+    `env_path=None` resolves to the module-level `ENV_FILE` at call
+    time (not at function-definition time), so tests can
+    `monkeypatch.setattr(mod, "ENV_FILE", tmp_env)` and the new value
+    is honored without re-importing the module.
+    """
+    if env_path is None:
+        env_path = ENV_FILE
+    if not env_path.is_file():
+        return None
+    try:
+        text = env_path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        if k.strip() != key:
+            continue
+        value = v.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        return value
+    return None
+
+
+def _resolve_report_timezone(
+    preset_timezone: str,
+    env_path: Path | None = None,
+) -> str:
+    """Resolve the timezone used to expand `{{TIMEZONE}}` in prompt bodies.
+
+    Priority (highest wins):
+    1. Shell env `HERMES_TRADING_TIMEZONE` (non-empty).
+    2. `<repo-root>/.env` HERMES_TRADING_TIMEZONE (non-empty).
+       `env_path` is threaded for unit tests; default is module-level
+       `ENV_FILE`.
+    3. `preset_timezone` from data/schedule-presets.yaml.
+    4. Literal fallback `America/Los_Angeles` with a one-shot WARNING.
+
+    This routine is INTENTIONALLY separate from `check_host_timezone()`:
+    only report-label expansion reads `HERMES_TRADING_TIMEZONE`; the
+    scheduler comparison keeps ignoring it (the v0.1.2 separation).
+    """
+    env_value = os.environ.get("HERMES_TRADING_TIMEZONE", "").strip()
+    if env_value:
+        return env_value
+    file_value = (_read_env_file_value("HERMES_TRADING_TIMEZONE", env_path) or "").strip()
+    if file_value:
+        return file_value
+    if preset_timezone:
+        return preset_timezone
+    sys.stderr.write(
+        "WARNING: no HERMES_TRADING_TIMEZONE (shell env or .env), no preset "
+        f"timezone; falling back to {REPORT_TZ_FALLBACK} for report label.\n"
+    )
+    return REPORT_TZ_FALLBACK
+
+
+def _expand_prompt_template(body: str, report_timezone: str) -> str:
+    return body.replace(PROMPT_TIMEZONE_TOKEN, report_timezone)
+
+
 def load_presets() -> tuple[str, dict[str, dict]]:
     """Return (expected_timezone, ordered_presets_dict)."""
     if not PRESET_FILE.exists():
@@ -183,9 +262,11 @@ def build_command(
     profile_cmd: str,
     deliver: str,
     preset: dict,
+    report_timezone: str,
 ) -> list[str]:
     prompt_path = ROOT / preset["prompt_file"]
-    prompt_body = prompt_path.read_text(encoding="utf-8")
+    raw_prompt = prompt_path.read_text(encoding="utf-8")
+    prompt_body = _expand_prompt_template(raw_prompt, report_timezone)
     cmd = [
         profile_cmd,
         "cron",
@@ -217,6 +298,7 @@ def main(argv: list[str] | None = None) -> int:
 
     expected_tz, presets = load_presets()
     check_host_timezone(expected_tz)
+    report_timezone = _resolve_report_timezone(expected_tz)
 
     profile_cmd = os.environ.get("HERMES_PROFILE_CMD", "trading-research-assistant")
     deliver = os.environ.get("HERMES_CRON_DELIVER", "local")
@@ -233,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
         if missing:
             sys.stderr.write(f"ERROR: preset {slug} missing fields: {missing}\n")
             return 1
-        cmd = build_command(profile_cmd, deliver, preset)
+        cmd = build_command(profile_cmd, deliver, preset, report_timezone)
         if args.dry_run:
             # Print a shell-safe one-liner per job, in preset order.
             # `# JOB:` prefix distinguishes the header from `#` lines

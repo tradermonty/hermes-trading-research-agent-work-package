@@ -1,5 +1,7 @@
 Run the monthly trading process review.
 
+Timezone label for the report: {{TIMEZONE}}.
+
 Required output:
 1. What worked.
 2. What failed.

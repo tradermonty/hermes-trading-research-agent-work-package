@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `cron/create_cron_jobs.py`: `_resolve_report_timezone()`, `_read_env_file_value()` (stdlib `.env` parser), `_expand_prompt_template()`. At cron-create time, the new `{{TIMEZONE}}` token in scheduled prompts is expanded using priority **shell env `HERMES_TRADING_TIMEZONE` > `<repo-root>/.env` > `data/schedule-presets.yaml:timezone` > literal `America/Los_Angeles`** (with a one-shot fallback WARNING). Reading `.env` directly is required because `bash cron/create_cron_jobs.sh` does not auto-source the profile `.env`.
+- `tests/test_prompt_template.py` (new, 11 tests): preset-derived `{{TIMEZONE}}` contract for the four schedule-bound prompts and zero-token assertion for the event-driven ones (`earnings-movers-triage.md`, `trade-journal.md`); subprocess matrix for default / shell-env-override / scheduler-warning-regression / token-leak; in-process unit tests for `.env` override, shell-wins-over-`.env`, monkeypatched `ENV_FILE` honored at call time, and direct `_resolve_report_timezone` unit. Total suite now 118 passing.
+- `distribution.yaml:env_requires`: declared `HERMES_TRADING_TIMEZONE` as optional (default `America/Los_Angeles`) with a description spelling out the priority stack and that it is a label-only override (not a scheduler input). `tests/test_package_structure.py` extended to assert the entry exists and `required: false`.
+
+### Changed
+
+- Prompt files: `prompts/pre-market-routine.md` and `prompts/after-close-review.md` swap hard-coded `America/Los_Angeles` for `{{TIMEZONE}}`; `prompts/weekly-portfolio-review.md` and `prompts/monthly-performance-review.md` gain a `Timezone label for the report: {{TIMEZONE}}.` line. Event-driven prompts (`earnings-movers-triage.md`, `trade-journal.md`) intentionally unchanged.
+- `cron/create_cron_jobs.py:build_command()` now takes a `report_timezone` argument and expands `{{TIMEZONE}}` in the prompt body before handing it to Hermes. `main()` resolves the report timezone once per invocation.
+
 ### Documentation
 
+- `cron/README.md`: new "Report-label `{{TIMEZONE}}` expansion" subsection explaining the override priority and that it is separate from the scheduler comparison.
+- `docs/03-hermes-compatibility-notes.md`: extended the `deception_hide` subsection with the `{{TIMEZONE}}` vs `${TIMEZONE}` convention rationale.
+- `README.md` / `README.ja.md`: cron-enablement section now mentions the `{{TIMEZONE}}` expansion + override priority + label-only scope.
 - `docs/03-hermes-compatibility-notes.md`: verify and document `bundles reload`, active MCP config location (`config.yaml:mcp_servers`), and cron toolset restriction paths (`platform_toolsets.cron` / per-job `enabled_toolsets`).
 - `README.md` / `README.ja.md` / `docs/08-release-playbook.md`: remove stale MCP-schema TODO wording and clarify that `mcp.json` remains empty while real MCP servers are configured through `hermes mcp add ...` / `config.yaml:mcp_servers`.
 
