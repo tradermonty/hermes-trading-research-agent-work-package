@@ -168,9 +168,9 @@ Hermes 側で Git-ref pinning が追加されたら、このセクションは G
 
 ## MCP サーバ
 
-`mcp.json` はデフォルトで **空** です。例示用の `mcp.example.json` には `finviz-mcp-server`、`your_alpaca_mcp_server` 等のプレースホルダーが入っていますが **未検証** で、パッケージ名 / 実行コマンド / 権限はすべて、実際に使う MCP server に対して確認が必要です。MCP config schema 自体も `docs/03-hermes-compatibility-notes.md` で TODO 扱いのままです。
+`mcp.json` はデフォルトで **空** です。将来の Hermes が active MCP config source として明文化するまでは空のままにしてください。Hermes v0.14.0 で確認済みの MCP CLI 経路は `hermes mcp add ...` で、profile の `config.yaml` に `mcp_servers:` として保存されます。例示用の `mcp.example.json` は placeholder/reference のみで、パッケージ名 / 実行コマンド / 権限はすべて、実際に使う MCP server に対して確認が必要です。
 
-推奨: 使う MCP server を検証 + 露出する tool surface を決めてから `mcp.json` を埋めること。それまでは空のままで構いません。
+推奨: `mcp.json` は空のまま、実サーバは `hermes mcp add ...` または明示的な `config.yaml:mcp_servers` で追加し、cron から見える tool surface を絞る場合は `hermes tools enable/disable --platform cron ...` を使ってください。
 
 ## できないこと
 

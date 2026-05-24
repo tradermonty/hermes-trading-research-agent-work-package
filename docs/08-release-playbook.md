@@ -12,7 +12,7 @@
 - [ ] When publishing an updated profile, remind installed users to run `hermes profile update trading-research-assistant -y` — installed copies otherwise keep stale docs (e.g. older repo name in `~/.hermes/profiles/.../docs/08-release-playbook.md`).
 - [ ] Decide gateway mode for the release: documented "managed" (`gateway install && gateway start`) for production, or "manual-only" (pause every cron job) for dry-runs.
 - [ ] Confirm `cron/create_cron_jobs.sh` runs cleanly with `HERMES_PROFILE_CMD="$TEST_PROFILE_NAME"` and no prompt is rejected by the `deception_hide` threat scanner.
-- [ ] Inspect `mcp.json` and ensure no unverified MCP servers are enabled.
+- [ ] Confirm `mcp.json` remains empty; real MCP servers should be added via `hermes mcp add ...` / `config.yaml:mcp_servers` only after server package, command, env, and permissions are verified.
 - [ ] Confirm `.env` is not committed (`.gitignore` covers it; `.env.EXAMPLE` is the user-facing template and IS shipped via `distribution_owned`).
 - [ ] Confirm `distribution.yaml` `distribution_owned` includes `.env.EXAMPLE`, `README.md`, `README.ja.md`, and `CHANGELOG.md` (`tests/test_package_structure.py::test_distribution_manifest_includes_user_docs_and_env_example`).
 - [ ] Update `CHANGELOG.md` (move `[Unreleased]` items into the new version, add release date).
@@ -124,6 +124,6 @@ Includes:
 Known limitations (deferred to a future release):
 - External-linked mode is the only supported integration. Vendored mode (TICKET-008) is not shipped.
 - `sync_claude_trading_skills.py --write` regenerates bundles from `data/skill-mapping.yaml` + `build_instruction()`; manual `instruction:` edits are preserved only as long as you do not run the writer. Generator hardening, `x-generated: false` protection, and deterministic-output tests remain as TICKET-004 follow-up.
-- MCP config (`mcp.json`) ships empty; examples are in `mcp.example.json` until verified.
+- MCP config ships with `mcp.json` empty. In Hermes v0.14.0, active MCP servers belong in profile `config.yaml:mcp_servers` via `hermes mcp add ...`; `mcp.example.json` is placeholder reference only.
 - No live brokerage execution.
 ```

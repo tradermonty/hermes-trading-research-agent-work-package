@@ -168,9 +168,9 @@ When Hermes adds Git-ref pinning to its installer, this section will be replaced
 
 ## MCP servers
 
-`mcp.json` ships **empty by default**. The example file `mcp.example.json` contains placeholder entries (`finviz-mcp-server`, `your_alpaca_mcp_server`, etc.) that are **not verified** — package names, command invocations, and permissions all need to be checked against the actual MCP server you intend to run before enabling. The MCP config schema itself is also still listed as TODO in `docs/03-hermes-compatibility-notes.md`.
+`mcp.json` ships **empty by default** and should stay empty unless a future Hermes release documents it as an active MCP config source. In Hermes v0.14.0, the verified MCP CLI path is `hermes mcp add ...`, which writes profile `config.yaml` under `mcp_servers:`. The example file `mcp.example.json` remains a placeholder/reference file only; package names, command invocations, and permissions all need to be checked against the actual MCP server you intend to run before enabling.
 
-Recommended: leave `mcp.json` empty until you have validated your chosen MCP servers and decided which tool surfaces to expose.
+Recommended: leave `mcp.json` empty, add real servers with `hermes mcp add ...` or explicit `config.yaml:mcp_servers`, then use `hermes tools enable/disable --platform cron ...` if you want to narrow cron-visible tool surfaces.
 
 ## Repository layout
 

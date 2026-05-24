@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- `docs/03-hermes-compatibility-notes.md`: verify and document `bundles reload`, active MCP config location (`config.yaml:mcp_servers`), and cron toolset restriction paths (`platform_toolsets.cron` / per-job `enabled_toolsets`).
+- `README.md` / `README.ja.md` / `docs/08-release-playbook.md`: remove stale MCP-schema TODO wording and clarify that `mcp.json` remains empty while real MCP servers are configured through `hermes mcp add ...` / `config.yaml:mcp_servers`.
+
 ## [0.1.2] - 2026-05-23
 
 Cron timezone polish + post-v0.1.1 doc generalization. No profile-distribution behavior change for callers who keep the default schedule — only when a host is **not** in the preset timezone, the new runtime now emits a stderr WARNING (non-blocking).
