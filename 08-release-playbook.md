@@ -161,11 +161,11 @@ ls -la ~/.hermes/profiles/trading-research-assistant/cron/output/
 
 After the expected wall-clock time, the matching `cron/output/<job_id>/<timestamp>.md` should exist. Confirm:
 
-- File creation time is after the scheduled wall-clock time and matches the expected `America/Los_Angeles` cron expression. Record both timestamps (scheduler fire vs. output file mtime) — LLM execution can add seconds-to-minutes of latency, and tracking the delta over multiple soak runs is more useful than picking a fixed tolerance.
+- File creation time is after the scheduled wall-clock time and matches the expected `America/Los_Angeles` cron expression. Record both timestamps (scheduler fire vs. output file mtime). The Hermes gateway evaluates cron expressions on a tick / queue basis, so an `actual_fire_ts` within roughly **0–30 minutes** of `expected_fire_ts` is a PASS; consistently larger deltas across multiple firings should be flagged as an incident. (Observed v0.1.6 on macOS: `0 6 * * 1-5` fired at `06:13:59 PDT`, ~14 min after nominal — PASS. See `docs/03 → Cron tick latency`.)
 - The brief contains every required section (risk posture, regime, watchlist, human next actions, data freshness with as-of timestamps).
 - Missing-API-key sections are explicitly marked as degraded mode rather than fabricated.
 - `Timezone label for the report: <timezone>` matches `HERMES_TRADING_TIMEZONE` (or the preset YAML fallback).
-- The brief does not contain forbidden execution language (cross-check against `tests/test_output_safety.py` patterns).
+- The brief does not contain forbidden execution language. **Restrict the scan to the `## Response` section** — the cron output file also contains the verbatim prompt body above the response, and the prompt deliberately carries safety instructions ("do not place trades", "execution is out of scope") that will produce false positives when grep'd against the whole file. The prompt echo is bundle safety instruction, not model output. See `docs/03 → Forbidden-phrase scan applies to the ## Response section`.
 
 ### 4. Record the run in the soak log
 

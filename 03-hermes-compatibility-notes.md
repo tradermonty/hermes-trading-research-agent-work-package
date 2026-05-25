@@ -176,6 +176,68 @@ The `--env KEY=VALUE` option is supported for stdio MCP servers (`--command` or 
 
 If neither is configured, the scheduler resolves the default cron platform toolset. In the scheduler, `cronjob`, `messaging`, and `clarify` are still passed as disabled toolsets for cron agent runs, even if they appear enabled in `hermes tools list --platform cron`.
 
+### Profile install does not register cron presets
+
+`hermes profile install` (and subsequent `hermes profile update`)
+installs the profile assets — bundles, skills, prompts, config,
+`.env.EXAMPLE` — but does **not** create any cron jobs. The 4
+presets declared in `data/schedule-presets.yaml` are registered only
+when the operator explicitly runs:
+
+```bash
+bash cron/create_cron_jobs.sh
+```
+
+Observed on 2026-05-25 operational soak (v0.1.6 latest-tag run):
+
+- **macOS profile** (`v0.1.6` installed from
+  `github.com/tradermonty/hermes-trading-research-agent-work-package`,
+  cron script previously executed, gateway running):
+  `pre-market-routine` (`6084ade3b095`, schedule `0 6 * * 1-5`)
+  fired at `2026-05-25T06:13:59.679316-07:00` and wrote a 112 KB
+  output file with every required section present. PASS.
+- **Linux profile** (same v0.1.6 install, cron script never
+  executed): `cron list` empty, no output file, no scheduler
+  activity. MISS — not a bug, just the missing manual step.
+
+This is by design: `cron/README.md` and `README.md` "Enabling
+scheduled jobs" both document the script as the required step that
+turns a `data/schedule-presets.yaml` entry into a registered Hermes
+cron job. The finding is recorded here so a future operator does not
+assume that `hermes profile install` alone is enough.
+
+### Cron tick latency
+
+The Hermes gateway evaluates cron expressions on a tick / queue
+basis, not in strict real time. Observed on the same 2026-05-25
+soak: `pre-market-routine` with expression `0 6 * * 1-5` fired at
+`06:13:59 PDT`, ~14 minutes after the nominal `06:00 PDT` schedule.
+This is expected behaviour (gateway tick interval + LLM execution
+queue), not a delay incident.
+
+Operational consequence for soak judgement: an `actual_fire_ts`
+within roughly `0–30 minutes` of `expected_fire_ts` is a PASS.
+A consistently larger delta across multiple firings (or a complete
+no-fire) should be recorded as an incident in the soak log and
+investigated.
+
+### Forbidden-phrase scan applies to the `## Response` section
+
+`tests/test_output_safety.py` scans bundle instructions and fixture
+output for execution-language phrases (`place trades`, `execute
+trades`, `submit order`, etc.). When inspecting a real cron-output
+markdown file by hand, restrict the scan to the **`## Response`**
+section. The file also contains the verbatim prompt body above the
+response, and any prompt that intentionally tells the LLM "do not
+place trades" — together with the SOUL-style boundary statements —
+will match the forbidden-phrase regex if the entire file is grep'd.
+
+Observed on the 2026-05-25 `pre-market-routine` output: 0 hits
+inside `## Response`, several false-positive hits in the prompt-echo
+section above it. The prompt echo is the bundle's safety
+instruction, not model output, and must not be treated as a
+violation.
+
 ## Known conservative choices
 
 - `mcp.json` is empty by default; active MCP servers should be configured via `hermes mcp add ...` / `config.yaml:mcp_servers` after validation.
