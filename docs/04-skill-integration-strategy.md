@@ -8,34 +8,63 @@ Use these upstream files as the source of truth:
 - `workflows/*.yaml`: canonical workflow manifests when present.
 - `skills/*/SKILL.md`: actual skill instructions.
 
-### Current bundle-composition SoT (as of B-2a)
+### Current bundle-composition SoT (as of B-2b)
 
-For the **bundle composition** step (which skills end up under each
-slash command, with what required outputs), the source of truth in
-this profile is `data/skill-mapping.yaml`. Upstream
-`workflows/*.yaml` is intentionally **not adopted** as a primary
-source yet:
+3 overlap workflows (`market-regime-daily` / `swing-opportunity-daily` /
+`monthly-performance-review`) について B-2b で SoT 分担を明文化した:
 
-- Shape mismatch: upstream workflows use a richer `steps[]` /
-  `artifacts[]` / `decision_gate` shape; our bundles are flat
-  `skills[]` + `required_outputs[]`. A non-trivial adapter layer
-  is needed in between.
-- Coverage mismatch: 9 of our bundles map onto only 5 upstream
-  workflows, and 6 of them (`pre-market-routine`,
-  `after-close-review`, `earnings-movers-triage`, `trade-journal`,
-  `portfolio-risk-check`, `weekly-portfolio-review`) have no
-  upstream workflow at all. Pulling a single workflow without the
-  rest would muddle the ownership story.
-- B-2a therefore stops at "generator ownership + determinism" —
-  see `scripts/sync_claude_trading_skills.py` and the
-  `x-generated:` contract documented in
-  `docs/09-coding-tickets.md` (TICKET-004a).
+- **upstream `workflows/*.yaml` = canonical intent** — 上流 maintainer が
+  review している workflow shape (`required_skills`, `optional_skills`,
+  `artifacts`, `steps`, `decision_gate`, `manual_review`, `when_to_run`)。
+- **`data/skill-mapping.yaml` = Hermes distribution contract** — この
+  profile が実行に使う superset。Hermes 側で追加した skill や、Hermes UX
+  に合わせた `required_outputs` / refined `title` / refined `cadence` を
+  含む。
+- **drift test (`tests/test_upstream_workflow_adapter.py`) = 機械的
+  ガード** — 上流 required/optional が mapping skills の subset、
+  canonical_source marker が一致、upstream `workflows/` 全 slug が
+  overlap か ignore に classify されていることを検証。x-generated 値に
+  関係なく drift check は走る (自動修正なし、operator 判断)。
 
-Adopting upstream `workflows/*.yaml` as a primary source — the
-remaining piece of the original TICKET-004 — is tracked as
-**TICKET-004b** (B-2b). When that lands, the SoT order above
-will move workflows ahead of `data/skill-mapping.yaml`, and the
-generator will gain a workflow→bundle adapter.
+#### projection 対象 (v0.1.x)
+
+| upstream field | mapping field | drift-checked? |
+|---|---|---|
+| `required_skills` + `optional_skills` | `skills` (superset 許可) | yes (subset relation) |
+| canonical_source marker | `canonical_source == claude-trading-skills-workflow` | yes |
+| `display_name` | `title` | **documented but not drift-checked** — mapping may refine upstream for Hermes UX (e.g. `market-regime-daily` upstream `Market Regime Daily` → mapping `15-minute daily market check`) |
+| `cadence` | `cadence` | **documented but not drift-checked** — mapping may refine for Hermes execution semantics (e.g. `swing-opportunity-daily` upstream `daily` → mapping `daily_when_risk_allows`) |
+
+#### Not projected in v0.1.x (B-2c 候補)
+
+- `artifacts` → `required_outputs` の direct 1:1 mapping。上流 artifacts は
+  internal pipeline ID (`market_breadth_report` 等)、Hermes
+  `required_outputs` は user-facing 項目 (`regime_label` 等) で抽象度が
+  違う。
+- `steps` / `decision_gate` の bundle instruction への展開。
+- `manual_review` / `when_to_run` の prompt body への projection。
+
+#### Upstream workflow inventory classification
+
+`scripts/sync_claude_trading_skills.py:UPSTREAM_OVERLAP_SLUGS` と
+`UPSTREAM_IGNORED_WORKFLOW_SLUGS` の 2 frozenset で、上流
+`workflows/*.yaml` 全 slug を classify している。**新規 upstream workflow
+が追加された場合、どちらかへの分類が無いと drift test が fail する** —
+これは feature であり、上流の進化を見逃さないためのガード。
+
+現在の classification:
+
+| upstream slug | classification | 理由 |
+|---|---|---|
+| `market-regime-daily` | overlap | Hermes 同名 bundle として adopt |
+| `swing-opportunity-daily` | overlap | Hermes 同名 bundle として adopt |
+| `monthly-performance-review` | overlap | Hermes 同名 bundle として adopt |
+| `core-portfolio-weekly` | ignored | Hermes は slug を `weekly-portfolio-review` に rename + `required_outputs` を Hermes UX 用に refine。上流 file は reference-only。 |
+| `trade-memory-loop` | ignored | Hermes は bundle 化していない。operator が `trader-memory-core` を `/trade-journal` / `/monthly-performance-review` 経由 (or 直接) で駆動する想定。上流 file は reference-only。 |
+
+`x-generated: false` 維持 — 3 overlap bundles は operator owned
+(TICKET-009 で `swing-opportunity-daily` に escalation pointer 追加など)。
+adapter regen は走らず、drift test だけが両 SoT の整合をガードする。
 
 ## Initial adapter strategy
 

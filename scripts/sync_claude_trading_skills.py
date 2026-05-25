@@ -27,6 +27,44 @@ except ImportError as exc:  # pragma: no cover
     raise SystemExit("PyYAML is required. Install with: pip install pyyaml") from exc
 
 
+UPSTREAM_OVERLAP_SLUGS = frozenset({
+    "market-regime-daily",
+    "swing-opportunity-daily",
+    "monthly-performance-review",
+})
+
+# Upstream workflows present in tradermonty/claude-trading-skills/workflows/
+# that this profile intentionally does NOT adopt as a same-slug bundle.
+# The drift test enforces that every upstream workflow file is either in
+# the overlap set above or in this ignore list — a new upstream file
+# forces an explicit classification decision (see docs/04 "Upstream
+# workflow inventory classification").
+UPSTREAM_IGNORED_WORKFLOW_SLUGS = frozenset({
+    # Hermes uses slug `weekly-portfolio-review` with required_outputs
+    # refined for Hermes UX; the upstream slug `core-portfolio-weekly`
+    # is reference-only at the slug level.
+    "core-portfolio-weekly",
+    # Hermes does not wrap this loop as its own bundle. The operator
+    # drives `trader-memory-core` directly via `/trade-journal` or
+    # `/monthly-performance-review`. Upstream file is reference-only.
+    "trade-memory-loop",
+})
+
+
+def load_upstream_workflow(source: Path, slug: str) -> dict | None:
+    """Read upstream `workflows/<slug>.yaml`; return None when absent.
+
+    Returning None (rather than raising) lets the B-2b drift test
+    parametrize over UPSTREAM_OVERLAP_SLUGS without special-casing the
+    missing-file branch — the file-exists assertion fails first and
+    explains the missing file.
+    """
+    path = source / "workflows" / f"{slug}.yaml"
+    if not path.exists():
+        return None
+    return load_yaml(path)
+
+
 @dataclass
 class SyncResult:
     generated_bundles: list[Path]

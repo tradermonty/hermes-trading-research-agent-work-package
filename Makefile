@@ -27,7 +27,7 @@ sync-external:
 # Safe writer (post-B-2a): only writes new bundles or `x-generated: true` bundles
 # whose rendered content actually differs from disk. Bundles marked
 # `x-generated: false` (or missing the key entirely) are SKIPPED with a stderr
-# WARNING. Against the shipped tip, this target is a no-op: nine SKIP lines and
+# WARNING. Against the shipped tip, this target is a no-op: ten SKIP lines and
 # zero rewrites. Use sync-external-write-force to bypass protection.
 sync-external-write:
 	@test -n "$${REQUIRE_SYNC_WRITE}" || \
