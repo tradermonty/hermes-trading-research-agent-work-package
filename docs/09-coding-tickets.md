@@ -223,8 +223,9 @@ Done when:
 
 ## TICKET-010 — Trade ticket persistence + journal bridge
 
-(On `main`; folds into the next release. Extends TICKET-009 without
-crossing the execution boundary or introducing silent disk writes.)
+(✓ Shipped in v0.1.6 alongside TICKET-004b and the typo-guard polish.
+Extends TICKET-009 without crossing the execution boundary or introducing
+silent disk writes.)
 
 - `.gitignore` adds `tickets/` and `*.ticket.yaml` as a safety net
   for accidental in-repo ticket placement. (`reports/` was already
