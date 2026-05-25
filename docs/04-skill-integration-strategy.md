@@ -92,6 +92,36 @@ Boundaries (codified by the schema, the bundle instruction, and `tests/test_trad
 
 Out of scope for B-3 / TICKET-009 (deferred to a future ticket): multi-session ticket lifecycle, archive directory, id allocator, automatic expiration trigger, broker submission of any kind. The SOUL perimeter (`SOUL.md`) remains authoritative.
 
+## Ticket persistence and journal bridge (as of TICKET-010)
+
+TICKET-010 extends the trade ticket primitive with two contract-level additions that close the **Research → Human Go/No-Go → Trade Ticket → Journal** loop without crossing the execution boundary. The bundle still emits YAML only; persistence and journal handoff remain operator-confirmed.
+
+**Lifecycle figure** (the five statuses unchanged, plus the optional bridge that fires when the operator wants to register / update / postmortem a thesis):
+
+```
+DRAFT ──/trade-ticket review──▶ REVIEW_READY
+          │
+          ├─/trade-ticket APPROVE──▶ APPROVED ──(optional journal_bridge)──▶ trader-memory-core
+          │
+          ├─/trade-ticket REJECT───▶ REJECTED
+          │
+          └─/trade-ticket EXPIRE───▶ EXPIRED
+```
+
+Suggested save filename: `<ticket_id>.ticket.yaml` under `${HERMES_TRADE_TICKET_DIR}` (default `${HOME}/trading-research/tickets`). The operator expands `${HOME}` themselves; the bundle prints the literal. The `.ticket.yaml` suffix matches the repo's `.gitignore` safety net so an accidental in-repo save is caught.
+
+**Three role split for persistence** — no role silently writes on behalf of another:
+
+1. **Bundle** — emits the ticket YAML and a single trailing comment of the form `# Suggested save path: ${HERMES_TRADE_TICKET_DIR}/<ticket_id>.ticket.yaml`. Never writes to disk.
+2. **Operator** — reads the YAML and saves it at the suggested path (or anywhere else they prefer), after expanding `${HOME}` themselves. The Hermes runtime does not bridge bundle output to disk.
+3. **`trader-memory-core`** — when the ticket carries an optional `journal_bridge` block, the operator hands the payload to `trader-memory-core` via its own storage interface to register, update, or postmortem the thesis. The ticket bundle does not call `trader-memory-core` directly.
+
+**`HERMES_TRADE_TICKET_DIR` expansion** — declared as a profile env in `distribution.yaml:env_requires` (optional, default `${HOME}/trading-research/tickets`) and pre-seeded in `.env.EXAMPLE`. The `.env` parser used by `cron/create_cron_jobs.py` (and by extension any helper that reads the same file) returns the literal `${HOME}/...`; consumers expand with `os.path.expandvars(os.path.expanduser(value))`. `tests/test_trade_ticket_schema.py::test_env_expansion_yields_absolute_path` locks that contract.
+
+**`journal_bridge` shape** — optional top-level object on any ticket. `target` is `{"const": "trader-memory-core"}` so typos (`trader_memory_core`) are rejected. `action` is one of `register_thesis | update_thesis | postmortem`. `thesis_status` (optional) is one of `IDEA | ENTRY_READY | ACTIVE | CLOSED`. `notes` (optional) is a non-empty string. Unknown fields inside `journal_bridge` are rejected (`additionalProperties: false`) so a `thesis_statuz` typo fails validation. The field is **recommended on APPROVED tickets but not required** — APPROVED is already heavy with the `confirmed.*` re-type contract, and forcing `journal_bridge` would break v0.1.5 fixtures. A future v0.2 series may add a `JOURNALED` status (6th value) and tighten `journal_bridge` on APPROVED as a deliberate breaking change.
+
+Out of scope for TICKET-010 (deferred): broker submission of any kind; LLM-side silent disk write; runtime ticket files committed to this repo; the cross-check between `journal_bridge.action` and `thesis_status` (e.g. `postmortem` → `CLOSED`); the `JOURNALED` status enum value; making `journal_bridge` required on APPROVED.
+
 ## Vendoring rules
 
 When implementing vendored mode:

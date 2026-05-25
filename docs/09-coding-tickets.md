@@ -121,7 +121,9 @@ Done when:
 
 ## TICKET-009 — `/trade-ticket` bundle + Trade Ticket schema (B-3)
 
-(Shipped on `main`; folds into the next release.)
+(Shipped in v0.1.5 on 2026-05-24; the v0.1.5 release also folded the
+audit-field polish — `reviewer.minLength: 1`, ISO-8601 `pattern` on
+`created_at` / `decided_at`, validator built with `format_checker`.)
 
 - New `schemas/trade-ticket.schema.json` (JSON Schema draft/2020-12).
   Top-level required: `ticket_id`, `created_at`, `status`,
@@ -164,3 +166,69 @@ Done when:
   `SKIP protected bundle:` lines (the new bundle is owned by
   the operator from day one).
 - `make validate-all` is green.
+
+## TICKET-010 — Trade ticket persistence + journal bridge
+
+(On `main`; folds into the next release. Extends TICKET-009 without
+crossing the execution boundary or introducing silent disk writes.)
+
+- `.gitignore` adds `tickets/` and `*.ticket.yaml` as a safety net
+  for accidental in-repo ticket placement. (`reports/` was already
+  ignored, so `reports/trade_tickets/` is implicitly covered.)
+- `.env.EXAMPLE` adds `HERMES_TRADE_TICKET_DIR=${HOME}/trading-research/tickets`
+  with a comment explaining operator-confirmed expansion.
+- `distribution.yaml:env_requires` declares `HERMES_TRADE_TICKET_DIR`
+  (optional, default `${HOME}/trading-research/tickets`) in the same
+  form as `HERMES_TRADING_TIMEZONE`. `tests/test_package_structure.py::test_distribution_manifest_declares_hermes_trade_ticket_dir`
+  locks the declaration.
+- `schemas/trade-ticket.schema.json` adds an optional top-level
+  `journal_bridge` object: `target: const trader-memory-core`,
+  `action: enum [register_thesis, update_thesis, postmortem]`,
+  optional `thesis_status: enum [IDEA, ENTRY_READY, ACTIVE, CLOSED]`,
+  optional `notes: string minLength 1`. `additionalProperties: false`
+  inside `journal_bridge` (typo guard for fields like
+  `thesis_statuz`). Top-level `required` unchanged; `$id` remains
+  absent.
+- `skill-bundles/trade-ticket.yaml` instruction body gains three
+  rule blocks: save path hint (`<ticket_id>.ticket.yaml` suffix),
+  journal bridge handoff (recommended on APPROVED, never required),
+  silent-write prohibition in positive form (`emits YAML only` /
+  `operator-confirmed`).
+- `tests/test_trade_ticket_schema.py` adds 5 new tests plus 1
+  parametrize row: `test_journal_bridge_valid_fixture_accepts`,
+  `test_env_expansion_yields_absolute_path`,
+  `test_bundle_instruction_documents_save_path_hint`,
+  `test_bundle_instruction_documents_journal_bridge_handoff`,
+  `test_bundle_instruction_states_silent_write_prohibited_in_positive_form`,
+  and `bad_journal_bridge_invalid_action.yaml` appended to
+  `test_negative_fixture_fails_schema` (matrix 9 → 10).
+- New fixtures
+  `tests/fixtures/trade_tickets/approved_with_journal_bridge.yaml`
+  (positive) and `bad_journal_bridge_invalid_action.yaml` (negative)
+  bring the fixture count from 14 to 16.
+
+Done when:
+
+- `journal_bridge` is optional and rejects unknown fields (typo
+  guard); `target` is const `trader-memory-core`; `action` enum
+  is exact; the matching positive and negative fixtures load.
+- `.env.EXAMPLE` literal `${HOME}/trading-research/tickets`
+  expands to an absolute path via `expandvars` + `expanduser`.
+- `distribution.yaml:env_requires` declares the env with the
+  canonical default; the manifest test passes.
+- Bundle instruction carries the save path hint, journal bridge
+  handoff, and silent-write positive form; all three contract
+  tests pass.
+- `make validate-all` is green; total suite 155 → 162.
+- `make sync-external-write` SKIP count is still 10 (no
+  `x-generated: false` flip on `/trade-ticket`).
+
+Out of scope (deferred):
+
+- Broker execution, auto-submit, paper / live Alpaca.
+- LLM-side silent disk write.
+- Cross-check between `journal_bridge.action` and `thesis_status`
+  (e.g. `postmortem` → `CLOSED`).
+- `JOURNALED` 6th status enum value.
+- Making `journal_bridge` required on APPROVED (deferred to a
+  future v0.2 breaking change).

@@ -12,3 +12,11 @@ reports/
 .DS_Store
 vendor-manifest.json
 skills/vendor/
+
+# Runtime /trade-ticket output (TICKET-010). Operator-managed; never committed.
+# Default location is HERMES_TRADE_TICKET_DIR=${HOME}/trading-research/tickets,
+# but the *.ticket.yaml suffix matches the bundle's suggested basename
+# (<ticket_id>.ticket.yaml) so an accidental in-repo save is caught here too.
+# `reports/` above already protects the cron output convention.
+tickets/
+*.ticket.yaml

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Trade ticket persistence + journal bridge (TICKET-010). Extends the v0.1.5 `/trade-ticket` primitive with an operator-confirmed save-path convention and an optional `journal_bridge` block for handing APPROVED tickets off to `trader-memory-core`. No execution, no silent disk write, no schema breaking change — `journal_bridge` is optional. Suite grows from 155 to 162.
+
+### Added
+
+- `schemas/trade-ticket.schema.json`: optional top-level `journal_bridge` object. `target: const trader-memory-core` (typo guard), `action: enum [register_thesis, update_thesis, postmortem]`, optional `thesis_status: enum [IDEA, ENTRY_READY, ACTIVE, CLOSED]`, optional `notes: string minLength 1`. `additionalProperties: false` inside `journal_bridge` rejects typos like `thesis_statuz` while leaving the top-level schema's `additionalProperties` stance unchanged. Top-level `required` unchanged; `$id` remains absent.
+- `skill-bundles/trade-ticket.yaml` instruction body: three new rule blocks. (1) Save-path hint — bundle ends every ticket with `# Suggested save path: ${HERMES_TRADE_TICKET_DIR}/<ticket_id>.ticket.yaml` (the `.ticket.yaml` suffix matches the new `.gitignore` safety net). (2) Journal-bridge handoff — recommended on APPROVED tickets, never required. (3) Silent-write prohibition in positive form: `emits YAML only`, persistence is `operator-confirmed`.
+- `distribution.yaml:env_requires`: `HERMES_TRADE_TICKET_DIR` (optional, default `${HOME}/trading-research/tickets`) declared in the same form as `HERMES_TRADING_TIMEZONE` so the installer surfaces it.
+- `.env.EXAMPLE`: `HERMES_TRADE_TICKET_DIR=${HOME}/trading-research/tickets` block with a comment explaining that the `.env` parser returns the literal and consumers expand with `os.path.expandvars` + `os.path.expanduser`.
+- `tests/fixtures/trade_tickets/approved_with_journal_bridge.yaml` (positive) and `bad_journal_bridge_invalid_action.yaml` (negative). Fixture count 14 → 16.
+- `tests/test_trade_ticket_schema.py`: 5 new tests + 1 parametrize row. (1) `test_journal_bridge_valid_fixture_accepts` — positive fixture validates and the business invariant still holds. (2) `bad_journal_bridge_invalid_action.yaml` appended to the existing `test_negative_fixture_fails_schema` parametrize matrix (matrix 9 → 10). (3) `test_env_expansion_yields_absolute_path` — reads `HERMES_TRADE_TICKET_DIR` from `.env.EXAMPLE`, expands with `os.path.expandvars` + `os.path.expanduser`, asserts the result is absolute and no longer contains `${HOME}`. (4) `test_bundle_instruction_documents_save_path_hint` — instruction body literally mentions `HERMES_TRADE_TICKET_DIR`, `Suggested save path`, `<ticket_id>.ticket.yaml`. (5) `test_bundle_instruction_documents_journal_bridge_handoff` — instruction literally mentions `journal_bridge`, `trader-memory-core`, `register_thesis`, `update_thesis`, `postmortem`. (6) `test_bundle_instruction_states_silent_write_prohibited_in_positive_form` — instruction literally mentions `emits yaml only` and `operator-confirmed` (case-insensitive); negation phrases are not grepped (the v0.1.5 positive-boundary discipline is preserved).
+- `tests/test_package_structure.py::test_distribution_manifest_declares_hermes_trade_ticket_dir` — same form as the existing `HERMES_TRADING_TIMEZONE` declaration test; asserts the env is declared optional with the canonical default literal.
+
+### Changed
+
+- `.gitignore`: new `tickets/` and `*.ticket.yaml` entries as a safety net for accidental in-repo ticket placement. The `.ticket.yaml` suffix matches the bundle's suggested basename `<ticket_id>.ticket.yaml`. `reports/` was already ignored, so `reports/trade_tickets/` is implicitly covered.
+- `skill-bundles/trade-ticket.yaml`: `x-generated: false` unchanged; existing 6-concept footer and positive boundary statements unchanged. The three new rule blocks are appended within the existing sections (after Mismatch handling and after the existing boundary paragraph).
+
+### Documentation
+
+- `docs/04-skill-integration-strategy.md`: new "Ticket persistence and journal bridge" subsection immediately after "Trade ticket primitive". Carries the lifecycle figure (DRAFT → REVIEW_READY → {APPROVED + optional journal_bridge → trader-memory-core, REJECTED, EXPIRED}), the three-role split for persistence (bundle / operator / `trader-memory-core` — no role silently writes on behalf of another), the `HERMES_TRADE_TICKET_DIR` expansion contract, the `journal_bridge` shape, and the out-of-scope list (no broker submission, no silent write, no in-repo ticket commit, no action↔thesis_status cross-check, no `JOURNALED` status, no APPROVED-required `journal_bridge`).
+- `docs/09-coding-tickets.md`: new `TICKET-010 — Trade ticket persistence + journal bridge` entry with file-by-file change list, Done conditions, and deferred scope.
+- `README.md` / `README.ja.md`: `/trade-ticket` row Purpose extended with "Persistence is operator-confirmed (`HERMES_TRADE_TICKET_DIR`, suggested save basename `<ticket_id>.ticket.yaml`); optional `journal_bridge` block hands off APPROVED tickets to `trader-memory-core`."
+- `AGENTS.md`: Status table gains a TICKET-010 row; suite count note updated from 155 to 162.
+
 ## [0.1.5] - 2026-05-24
 
 Trade ticket primitive (B-3 / TICKET-009) + Operational soak procedure (D) + B-3 audit-field polish (timestamp pattern, reviewer minLength, format_checker). Bundle count goes from 9 to 10; suite from 127 to 155.

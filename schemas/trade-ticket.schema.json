@@ -134,6 +134,31 @@
           "description": "Stable composite reference to the originating candidate, e.g. NVDA-2026-05-24-VCP."
         }
       }
+    },
+    "journal_bridge": {
+      "type": "object",
+      "description": "Optional handoff payload to trader-memory-core. Present when the operator intends to register / update / postmortem this ticket's thesis. APPROVED tickets are encouraged but not required to carry this block — see docs/04 'Ticket persistence and journal bridge'. additionalProperties is false here (typo guard, e.g. `thesis_statuz`); future field additions are explicit schema changes.",
+      "required": ["target", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "const": "trader-memory-core",
+          "description": "Only trader-memory-core is supported in v0.1.6. Pinning to a const makes the test/schema pair reject future typos like 'trader_memory_core'."
+        },
+        "action": {
+          "enum": ["register_thesis", "update_thesis", "postmortem"],
+          "description": "register_thesis = first time this thesis enters the journal. update_thesis = adjust an existing thesis (e.g. status change, basis adjustment). postmortem = thesis is closed; capture lessons."
+        },
+        "thesis_status": {
+          "enum": ["IDEA", "ENTRY_READY", "ACTIVE", "CLOSED"],
+          "description": "Optional. Lets the journal know the current lifecycle stage of the thesis when this bridge fires. Not cross-checked against action in v0.1.6; a future iteration may add a business-invariant rule (e.g. postmortem action implies thesis_status=CLOSED)."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form operator note that travels with the bridge payload. minLength: 1 so an empty string is rejected (mirrors the v0.1.5 reviewer.minLength polish)."
+        }
+      }
     }
   },
   "allOf": [

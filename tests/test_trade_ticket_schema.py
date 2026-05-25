@@ -27,6 +27,7 @@ and pinned to a Draft2020-12-capable version (>=4.22).
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = REPO_ROOT / "schemas" / "trade-ticket.schema.json"
 BUNDLE_PATH = REPO_ROOT / "skill-bundles" / "trade-ticket.yaml"
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "trade_tickets"
+ENV_EXAMPLE_PATH = REPO_ROOT / ".env.EXAMPLE"
 
 EXPECTED_STATUS_ENUM = ["DRAFT", "REVIEW_READY", "APPROVED", "REJECTED", "EXPIRED"]
 EXPECTED_OPERATOR_VERBS = ["new", "review", "APPROVE", "REJECT", "EXPIRE"]
@@ -222,6 +224,7 @@ def test_expired_fixture_records_decided_at():
         "bad_invalid_timestamp.yaml",
         "bad_rejected_no_reason.yaml",
         "bad_expired_no_decided_at.yaml",
+        "bad_journal_bridge_invalid_action.yaml",
     ],
 )
 def test_negative_fixture_fails_schema(fixture_name: str):
@@ -247,6 +250,50 @@ def test_negative_approved_confirmed_mismatch_caught_by_invariant():
     validator.validate(ticket)  # schema OK by design
     with pytest.raises(AssertionError):
         _assert_confirmed_matches_ticket(ticket)
+
+
+# --- journal_bridge (TICKET-010) --------------------------------------------
+
+
+def test_journal_bridge_valid_fixture_accepts():
+    """approved_with_journal_bridge.yaml carries the optional
+    `journal_bridge` block and must validate against the schema.
+    Sanity-check the three fields the schema requires plus the
+    business invariant (confirmed.* equals ticket body).
+    """
+    validator = _validator()
+    ticket = _load_fixture("approved_with_journal_bridge.yaml")
+    validator.validate(ticket)
+    assert ticket["status"] == "APPROVED"
+    assert ticket["journal_bridge"]["target"] == "trader-memory-core"
+    assert ticket["journal_bridge"]["action"] in {
+        "register_thesis",
+        "update_thesis",
+        "postmortem",
+    }
+    _assert_confirmed_matches_ticket(ticket)
+
+
+def test_env_expansion_yields_absolute_path():
+    """`.env.EXAMPLE` declares
+    `HERMES_TRADE_TICKET_DIR=${HOME}/trading-research/tickets`. The
+    bundle emits the literal; the operator (or a downstream tool)
+    expands it. Lock the expansion contract here so a parser regression
+    that returns the literal unexpanded is caught.
+    """
+    raw = None
+    for line in ENV_EXAMPLE_PATH.read_text(encoding="utf-8").splitlines():
+        if line.startswith("HERMES_TRADE_TICKET_DIR="):
+            raw = line.split("=", 1)[1].strip()
+            break
+    assert raw is not None, ".env.EXAMPLE must declare HERMES_TRADE_TICKET_DIR"
+    assert "${HOME}" in raw, (
+        f"expected literal ${{HOME}} in raw .env value, got {raw!r}"
+    )
+    expanded = os.path.expandvars(os.path.expanduser(raw))
+    assert os.path.isabs(expanded), expanded
+    assert "${HOME}" not in expanded, expanded
+    assert "trading-research/tickets" in expanded, expanded
 
 
 # --- bundle instruction contract -------------------------------------------
@@ -296,3 +343,54 @@ def test_bundle_instruction_documents_confirmed_mismatch_handling():
     assert "REVIEW_READY" in text, (
         "bundle instruction must say it demotes to REVIEW_READY on mismatch"
     )
+
+
+def test_bundle_instruction_documents_save_path_hint():
+    """TICKET-010: the instruction must teach the LLM to append a
+    suggested-save-path comment that uses HERMES_TRADE_TICKET_DIR
+    and the `.ticket.yaml` basename suffix (matches `.gitignore`).
+    """
+    text = _load_bundle_instruction()
+    for needle in (
+        "HERMES_TRADE_TICKET_DIR",
+        "Suggested save path",
+        "<ticket_id>.ticket.yaml",
+    ):
+        assert needle in text, (
+            f"bundle instruction missing save-path-hint literal {needle!r}"
+        )
+
+
+def test_bundle_instruction_documents_journal_bridge_handoff():
+    """TICKET-010: the instruction must document the optional
+    `journal_bridge` block and the three accepted actions so the
+    LLM can guide operators to a structured trader-memory-core
+    handoff without inventing field names.
+    """
+    text = _load_bundle_instruction()
+    for needle in (
+        "journal_bridge",
+        "trader-memory-core",
+        "register_thesis",
+        "update_thesis",
+        "postmortem",
+    ):
+        assert needle in text, (
+            f"bundle instruction missing journal-bridge literal {needle!r}"
+        )
+
+
+def test_bundle_instruction_states_silent_write_prohibited_in_positive_form():
+    """TICKET-010: the instruction must state in *positive* form
+    that the bundle emits YAML only and that persistence is
+    operator-confirmed. The v0.1.5 positive-boundary discipline
+    is preserved — we do not grep for negation phrases like
+    "do not write" because the bundle is allowed to phrase
+    boundary rules either positively or via the existing
+    "ticket output only" boilerplate.
+    """
+    text_lc = _load_bundle_instruction().lower()
+    for needle in ("operator-confirmed", "emits yaml only"):
+        assert needle in text_lc, (
+            f"bundle instruction missing positive silent-write literal {needle!r}"
+        )

@@ -1,0 +1,43 @@
+# Negative fixture: APPROVED ticket with journal_bridge.action
+# outside the enum [register_thesis, update_thesis, postmortem].
+# Schema's journal_bridge.action enum must reject "sell_shares".
+# Every other field mirrors approved.yaml so the rejection is
+# attributable to the journal_bridge.action alone.
+ticket_id: "TKT-20260524-abc123"
+created_at: "2026-05-24T13:30:00Z"
+status: "APPROVED"
+approval:
+  required: true
+  approved: true
+  reviewer: "tradermonty"
+  decided_at: "2026-05-24T14:05:00Z"
+  reason: "approved for test purposes; the violation is in journal_bridge.action."
+  confirmed:
+    ticker: "NVDA"
+    direction: "long"
+    entry: 196.20
+    stop: 192.30
+    risk_per_trade_pct: 0.5
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP base"
+  thesis: "test"
+  invalidation: "test"
+plan:
+  entry: {value: 196.20, basis: "test"}
+  stop:  {value: 192.30, basis: "test"}
+  target: {value: 220.00, basis: "test"}
+risk:
+  risk_per_trade_pct: 0.5
+  exposure_impact: "n/a"
+  data_freshness: "n/a"
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: null
+  source_skills: []
+  source_candidate_ref: "TEST-2026-05-24-VCP"
+journal_bridge:
+  target: trader-memory-core
+  action: "sell_shares"             # <- the violation (enum外)
+  thesis_status: ACTIVE

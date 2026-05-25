@@ -34,6 +34,26 @@ def test_distribution_manifest_declares_hermes_trading_timezone():
     )
 
 
+def test_distribution_manifest_declares_hermes_trade_ticket_dir():
+    """TICKET-010: `/trade-ticket` instructs operators to save the
+    emitted YAML at `${HERMES_TRADE_TICKET_DIR}/<ticket_id>.ticket.yaml`.
+    The manifest must declare the env so installers surface it (same
+    form as HERMES_TRADING_TIMEZONE) with the canonical default."""
+    data = yaml.safe_load((ROOT / "distribution.yaml").read_text())
+    entries = data.get("env_requires") or []
+    by_name = {e.get("name"): e for e in entries if isinstance(e, dict)}
+    entry = by_name.get("HERMES_TRADE_TICKET_DIR")
+    assert entry is not None, "env_requires missing HERMES_TRADE_TICKET_DIR"
+    assert entry.get("required") is False, (
+        "HERMES_TRADE_TICKET_DIR should be optional (required: false)"
+    )
+    assert entry.get("default") == "${HOME}/trading-research/tickets", (
+        "HERMES_TRADE_TICKET_DIR default must be the canonical literal "
+        "${HOME}/trading-research/tickets (operator expands themselves); "
+        f"got {entry.get('default')!r}"
+    )
+
+
 def test_bundles_have_required_shape():
     for path in (ROOT / "skill-bundles").glob("*.yaml"):
         data = yaml.safe_load(path.read_text())

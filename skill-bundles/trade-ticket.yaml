@@ -52,6 +52,20 @@ instruction: |
     the ticket value and the operator-supplied value, and ask
     the operator to either correct their APPROVE input or update
     the ticket body first.
+
+    Journal bridge handoff: when the operator intends to hand
+    the ticket off to trader-memory-core, include a
+    `journal_bridge` block alongside `approval`:
+      journal_bridge:
+        target: trader-memory-core
+        action: register_thesis | update_thesis | postmortem
+        thesis_status: IDEA | ENTRY_READY | ACTIVE | CLOSED   # optional
+        notes: <operator note>                                  # optional
+    This is recommended on APPROVED tickets but not required —
+    operators who maintain their journal manually can omit it.
+    The schema accepts APPROVED tickets without a `journal_bridge`.
+    Unknown fields inside `journal_bridge` are rejected by the
+    schema (typo guard such as `thesis_statuz`).
   - `/trade-ticket REJECT <ticket_id> reason=<text>`: status
     REJECTED, approval.approved=false, approval.reason required
     and non-empty.
@@ -64,7 +78,21 @@ instruction: |
   would commit, submit, sign, or schedule a trade — receive the
   boundary statement ("ticket output only; execution and broker
   submission are out of scope") and the current ticket
-  unchanged. The output stays a ticket YAML in every case.
+  unchanged. The output stays a ticket YAML in every case. This
+  bundle emits YAML only. Disk writes, file commits, and storage
+  backend calls are operator actions; the bundle does not perform
+  them on its own and does not request tool use to perform them.
+  Persistence is operator-confirmed.
+
+  Suggested save path hint: every emitted ticket YAML ends with
+  one comment line of the form
+    # Suggested save path: ${HERMES_TRADE_TICKET_DIR}/<ticket_id>.ticket.yaml
+  The `.ticket.yaml` suffix is intentional so the repo's
+  `.gitignore` safety net (`*.ticket.yaml`) catches the file if
+  the operator accidentally saves it inside the cloned repo. The
+  bundle leaves `${HERMES_TRADE_TICKET_DIR}` as a literal; the
+  operator expands it (via `os.path.expandvars` +
+  `os.path.expanduser` or equivalent) when saving.
 
   Persistence is the operator's responsibility. Either commit
   the emitted YAML under an operator-managed tickets directory

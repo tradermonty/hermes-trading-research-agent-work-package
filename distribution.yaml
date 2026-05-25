@@ -52,6 +52,10 @@ env_requires:
     description: "IANA timezone used to expand `{{TIMEZONE}}` in the cron prompt body. Honored as a report-body label only — does NOT affect the cron scheduler firing time. Override priority: shell env > profile .env > data/schedule-presets.yaml:timezone > America/Los_Angeles."
     required: false
     default: "America/Los_Angeles"
+  - name: HERMES_TRADE_TICKET_DIR
+    description: "Default location where the operator saves /trade-ticket YAML output (TICKET-010). The bundle never writes to disk; this env var only feeds the suggested-save-path hint in the emitted ticket (basename: <ticket_id>.ticket.yaml). Consumers must expand ${HOME} themselves (the .env parser returns the literal). Override priority: shell env > profile .env > distribution default."
+    required: false
+    default: "${HOME}/trading-research/tickets"
 
 # Include skill-bundles and project docs in addition to the Hermes defaults.
 # Installer-owned runtime state, memories, sessions, .env, logs, and auth files must never be overwritten.
