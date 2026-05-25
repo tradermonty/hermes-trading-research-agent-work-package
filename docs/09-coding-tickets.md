@@ -58,10 +58,10 @@ Done when:
 
 ### TICKET-004b — Upstream workflows adapter (✓ shipped in B-2b)
 
-(On `main`; folds into the next release alongside TICKET-010. Closes
-Phase 2 — Bundle generation. Implementation footprint stays small
-because all 3 overlap bundles are `x-generated: false` and the adapter
-is a read-only drift guard, not a regenerator.)
+(✓ Shipped in v0.1.6 alongside TICKET-010 and the typo-guard polish.
+Closes Phase 2 — Bundle generation. Implementation footprint stays
+small because all 3 overlap bundles are `x-generated: false` and the
+adapter is a read-only drift guard, not a regenerator.)
 
 Scope (rev3 final, after rev1 → rev3 review iteration):
 

@@ -114,7 +114,7 @@ Trigger history:
 
 - **v0.1.4** — first soak (B-2a generator-ownership + determinism shipped).
 - **v0.1.5** — `/trade-ticket` added but manual-only; cron/gateway surface unchanged, so the procedure did **not** auto-retrigger.
-- **v0.1.6** — TICKET-010 (`/trade-ticket` persistence + journal bridge) and TICKET-004b (read-only upstream drift guard) both keep the cron/gateway surface untouched (`sync()` write path is unchanged and no scheduled bundle was modified), so the procedure does **not** auto-retrigger here either. Recommended **once** as a latest-tag soak so that the prod-alias version matches the published release tag (see `feedback_operational_soak_protocol.md`); future incidents reference v0.1.6 as the running version.
+- **v0.1.6** — TICKET-010 (`/trade-ticket` persistence + journal bridge) and TICKET-004b (read-only upstream drift guard) both keep the cron/gateway surface untouched (`sync()` write path is unchanged and no scheduled bundle was modified), so the procedure does **not** auto-retrigger here either. Recommended **once** as a latest-tag soak so the prod-alias profile version matches the published release tag — running this once after each release keeps the prod alias and the latest tag in lockstep, which simplifies incident comparison; future incident reports then reference v0.1.6 as the running version.
 - **Next auto-retrigger** — when anything in `cron/` or `scripts/sync_claude_trading_skills.py` write path shifts, or when `data/schedule-presets.yaml` semantics change.
 
 **Cost / time note:** the soak waits for at least one scheduled cron firing in wall-clock time and produces a real LLM-backed brief. Budget at least one trading-day window plus a small per-firing LLM cost.
