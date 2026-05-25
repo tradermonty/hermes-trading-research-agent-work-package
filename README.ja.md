@@ -136,6 +136,14 @@ trading-research-assistant chat
 
 ## cron ジョブの有効化
 
+> **必須手順:** `hermes profile install` / `hermes profile update`
+> だけでは 4 つの cron job は作成されません。下の
+> `bash cron/create_cron_jobs.sh` が登録処理です。これを省略すると
+> profile は install されても scheduled job は一切発火しません。
+> v0.1.6 での観測は
+> `docs/03-hermes-compatibility-notes.md → Profile install does not
+> register cron presets` を参照。
+
 ```bash
 export HERMES_PROFILE_CMD=trading-research-assistant
 export HERMES_CRON_DELIVER=local   # または telegram / discord / slack / origin

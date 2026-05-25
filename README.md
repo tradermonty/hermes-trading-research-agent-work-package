@@ -134,6 +134,13 @@ Each bundle's instruction enforces that the output include **data freshness**, *
 
 ## Enabling scheduled jobs
 
+> **Required step.** `hermes profile install` / `hermes profile update`
+> does not create the four cron jobs. `bash cron/create_cron_jobs.sh`
+> below is what registers them. If you skip it, the profile is
+> installed but no scheduled jobs will fire. See
+> `docs/03-hermes-compatibility-notes.md → Profile install does not
+> register cron presets` for the v0.1.6 observation.
+
 ```bash
 export HERMES_PROFILE_CMD=trading-research-assistant
 export HERMES_CRON_DELIVER=local   # or telegram / discord / slack / origin

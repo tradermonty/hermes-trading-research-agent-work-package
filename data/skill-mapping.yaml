@@ -196,6 +196,7 @@ workflows:
       - trader-memory-core
       - signal-postmortem
       - trade-hypothesis-ideator
+      - trade-performance-coach
       - backtest-expert
       - dual-axis-skill-reviewer
     required_outputs:

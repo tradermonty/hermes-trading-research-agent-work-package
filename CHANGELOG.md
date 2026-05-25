@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `data/skill-mapping.yaml`: added `trade-performance-coach` to `monthly-performance-review.skills` (inserted before `backtest-expert` to follow the upstream `optional_skills` order). Picked up during TICKET-012 implementation — the v0.1.6 drift guard (`tests/test_upstream_workflow_adapter.py::test_upstream_optional_skills_present_in_mapping`) correctly flagged that upstream `tradermonty/claude-trading-skills/workflows/monthly-performance-review.yaml` had gained a new optional skill that the Hermes distribution-contract mapping had not yet adopted. This is exactly the post-release housekeeping the drift guard was built for.
+
+### Documentation
+
+- Recorded v0.1.6 operational soak findings (TICKET-012). `docs/03-hermes-compatibility-notes.md` gains three subsections under Operational findings. (1) **Profile install does not register cron presets** — `hermes profile install` / `update` installs assets only; `bash cron/create_cron_jobs.sh` is what registers the 4 `data/schedule-presets.yaml` jobs. 2026-05-25 macOS profile PASS (`pre-market-routine` fired at 06:13:59 PDT); Linux profile MISS (script never run, `cron list` empty). (2) **Cron tick latency** — the Hermes gateway evaluates expressions on a tick/queue basis; an `actual_fire_ts` within 0–30 min of `expected_fire_ts` is a PASS. Observed value: 06:13:59 PDT against `0 6 * * 1-5` (~14 min). (3) **Forbidden-phrase scan applies to the `## Response` section** — cron output files contain the prompt body above the response, and the prompt deliberately carries safety phrases ("do not place trades", "execution is out of scope") that produce false positives when grep'd against the whole file. Restrict the scan to `## Response`. Observed 0 hits inside response, several in prompt echo on 2026-05-25.
+- `README.md` / `README.ja.md`: added a "Required step" callout above "Enabling scheduled jobs" so a fresh installer cannot miss that `bash cron/create_cron_jobs.sh` is what creates the cron jobs.
+- `docs/08-release-playbook.md` Operational soak inspect step (§3) updated: codified the **0–30 min PASS window** for `actual_fire_ts` vs `expected_fire_ts` (with the macOS observation as the reference data point), and explicitly limited the forbidden-phrase scan to the `## Response` section (prompt echo is bundle safety instruction, not model output).
+
 ## [0.1.6] - 2026-05-24
 
 Trade ticket persistence + journal bridge (TICKET-010), upstream workflows read-only drift guard that closes Phase 2 (TICKET-004b / B-2b), and a small TICKET-010 polish locking in the `journal_bridge.additionalProperties: false` typo guard with a negative fixture. Bundle catalogue stays at 10; suite goes from 155 (v0.1.5) to 176 with `CLAUDE_TRADING_SKILLS_REPO` (162 → 176 net of the +14 B-2b cases + 1 polish case; 175 → 176 from the polish alone).
