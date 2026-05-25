@@ -56,27 +56,81 @@ Done when:
 - Re-run of `make sync-external-write` produces no diff (mtime + content
   invariant) for both `skill-bundles/*.yaml` and `config.yaml`.
 
-### TICKET-004b — Upstream workflows adapter (open, B-2b)
+### TICKET-004b — Upstream workflows adapter (✓ shipped in B-2b)
 
-- Read upstream `workflows/*.yaml` when present and adopt it as the
-  primary source for the workflows it covers (`market-regime-daily`,
-  `swing-opportunity-daily`, `monthly-performance-review`).
-- Define how the upstream `steps[]` / `artifacts[]` shape projects
-  onto our flat `skills[]` + `required_outputs[]` bundle shape.
-- Keep `data/skill-mapping.yaml` as the SoT for the bundles that have
-  no upstream workflow (6 of 9 today).
-- Add validator checks that catch drift between upstream and the
-  generated bundle.
+(On `main`; folds into the next release alongside TICKET-010. Closes
+Phase 2 — Bundle generation. Implementation footprint stays small
+because all 3 overlap bundles are `x-generated: false` and the adapter
+is a read-only drift guard, not a regenerator.)
+
+Scope (rev3 final, after rev1 → rev3 review iteration):
+
+- 3 overlap slugs (`market-regime-daily` / `swing-opportunity-daily` /
+  `monthly-performance-review`) declared in
+  `scripts/sync_claude_trading_skills.py:UPSTREAM_OVERLAP_SLUGS`.
+  Adopted as canonical-intent upstream; mapping is the
+  distribution-contract superset (Hermes adds `ibd-distribution-day-monitor`,
+  `ftd-detector`, `exposure-coach`, `trade-hypothesis-ideator`).
+- 2 ignored slugs (`core-portfolio-weekly` /  `trade-memory-loop`)
+  declared in `UPSTREAM_IGNORED_WORKFLOW_SLUGS` with reasons documented
+  in `docs/04` "Upstream workflow inventory classification" table.
+  (`core-portfolio-weekly` is renamed to `weekly-portfolio-review` in
+  Hermes; `trade-memory-loop` is driven by the operator via
+  `trader-memory-core` directly.)
+- `sync()` write path **unchanged** — adapter does not regenerate
+  bundles. B-2a `x-generated: false` SKIP contract is preserved
+  (10 SKIP / 0 rewrite against the shipped tip).
+
+Drift-check scope (machine-enforced):
+
+- `upstream required_skills ⊆ mapping.skills`
+- `upstream optional_skills ⊆ mapping.skills`
+- `mapping.canonical_source == "claude-trading-skills-workflow"` for
+  the 3 overlap slugs (SoT marker)
+- Every upstream `workflows/*.yaml` file is in
+  `UPSTREAM_OVERLAP_SLUGS ∪ UPSTREAM_IGNORED_WORKFLOW_SLUGS`
+  (filesystem enumeration; new upstream files force an explicit
+  classification decision)
+- `UPSTREAM_OVERLAP_SLUGS ∩ UPSTREAM_IGNORED_WORKFLOW_SLUGS == ∅`
+  (rev3 Low fold; catches accidental dual-classification)
+
+Documented but not drift-checked (mapping refinement is allowed):
+
+- `display_name` ↔ `title`
+- `cadence` (e.g. upstream `daily` → mapping `daily_when_risk_allows`)
+
+Not projected at all in v0.1.x (B-2c candidates):
+
+- `artifacts → required_outputs` direct 1:1 mapping (abstraction
+  mismatch — upstream artifacts are internal pipeline IDs, Hermes
+  required_outputs are user-facing items)
+- `steps` / `decision_gate` / `manual_review` / `when_to_run` bundle
+  instruction projection
+
+Files touched:
+
+- `scripts/sync_claude_trading_skills.py`: +3 public symbols
+  (`UPSTREAM_OVERLAP_SLUGS`, `UPSTREAM_IGNORED_WORKFLOW_SLUGS`,
+  `load_upstream_workflow()`). No write-path change.
+- `tests/test_upstream_workflow_adapter.py` (new): 5 named tests,
+  13 parametrize cases. Module-level skip without
+  `CLAUDE_TRADING_SKILLS_REPO`.
+- `docs/04-skill-integration-strategy.md`: rewrote "Current
+  bundle-composition SoT" subsection from "(as of B-2a)" to
+  "(as of B-2b)" with SoT split + projection table + drift-check
+  table + inventory classification table.
+- `Makefile`: `sync-external-write` comment "nine SKIP lines" →
+  "ten SKIP lines" (stale since TICKET-010 added `/trade-ticket`).
 
 Done when:
 
-- For the three overlap workflows, regenerating from upstream and
-  regenerating from `data/skill-mapping.yaml` produce byte-identical
-  bundles.
-- The other six bundles continue to regenerate from
-  `data/skill-mapping.yaml` only.
-- A test fails when upstream and the local override disagree on
-  fields the bundle exposes.
+- All 13 drift cases pass under `CLAUDE_TRADING_SKILLS_REPO=...`.
+- Without `CLAUDE_TRADING_SKILLS_REPO`, the module skips cleanly
+  (suite stays at 162).
+- `make sync-external-write` SKIP count stays 10 (no `x-generated`
+  flip on any of the 3 overlap bundles).
+- `docs/04` carries the SoT split, the projection-vs-drift-check
+  table, and the upstream inventory classification table.
 
 ## TICKET-005 — Cron UX
 
