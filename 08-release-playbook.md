@@ -108,7 +108,14 @@ For the Anthropic-key path above no `hermes login` is needed — the key is read
 
 The Post-release verification above runs in an isolated temp HOME and triggers cron jobs by hand (`cron run <job_id>`). That validates the install path and the prompt body. It does **not** validate that the Hermes scheduler actually fires a job at its scheduled time, and it does not exercise the production `trading-research-assistant` alias on the real `~/.hermes`.
 
-This section is a separate soak procedure for that. It is **not** part of the per-release pre-flight — run it once per significant gateway / cron change (currently: v0.1.4 + the next time anything in `cron/` or `scripts/sync_claude_trading_skills.py` shifts; v0.1.5 added `/trade-ticket` but that bundle is manual-only, so it does not change the cron / gateway surface and does not retrigger this procedure), then re-run any time a real-user incident points back at the scheduler.
+This section is a separate soak procedure for that. It is **not** part of the per-release pre-flight — run it once per significant gateway / cron change, then re-run any time a real-user incident points back at the scheduler.
+
+Trigger history:
+
+- **v0.1.4** — first soak (B-2a generator-ownership + determinism shipped).
+- **v0.1.5** — `/trade-ticket` added but manual-only; cron/gateway surface unchanged, so the procedure did **not** auto-retrigger.
+- **v0.1.6** — TICKET-010 (`/trade-ticket` persistence + journal bridge) and TICKET-004b (read-only upstream drift guard) both keep the cron/gateway surface untouched (`sync()` write path is unchanged and no scheduled bundle was modified), so the procedure does **not** auto-retrigger here either. Recommended **once** as a latest-tag soak so that the prod-alias version matches the published release tag (see `feedback_operational_soak_protocol.md`); future incidents reference v0.1.6 as the running version.
+- **Next auto-retrigger** — when anything in `cron/` or `scripts/sync_claude_trading_skills.py` write path shifts, or when `data/schedule-presets.yaml` semantics change.
 
 **Cost / time note:** the soak waits for at least one scheduled cron firing in wall-clock time and produces a real LLM-backed brief. Budget at least one trading-day window plus a small per-firing LLM cost.
 
