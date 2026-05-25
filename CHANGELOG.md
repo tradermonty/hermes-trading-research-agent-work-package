@@ -11,6 +11,7 @@ Two changes folded so far:
 
 - **TICKET-010 — Trade ticket persistence + journal bridge.** Extends the v0.1.5 `/trade-ticket` primitive with an operator-confirmed save-path convention and an optional `journal_bridge` block for handing APPROVED tickets off to `trader-memory-core`. No execution, no silent disk write, no schema breaking change — `journal_bridge` is optional. Suite 155 → 162.
 - **TICKET-004b / B-2b — Upstream workflows adapter (closes Phase 2).** Adds a read-only drift guard for the 3 overlap workflows (`market-regime-daily` / `swing-opportunity-daily` / `monthly-performance-review`) without rewriting any bundle. `sync()` write path unchanged (all 3 overlap bundles are `x-generated: false`); the adapter declares upstream as canonical intent, mapping as the Hermes distribution contract, and tests as the mechanical guard. With `CLAUDE_TRADING_SKILLS_REPO` configured: 162 → 175 passing. Without it: still 161 passing (13 new B-2b cases skip cleanly via a module-level fixture; the pre-existing B-2a determinism case `tests/test_sync_determinism.py:363` was already env-gated, so total skipped goes 1 → 14).
+- **TICKET-010 polish — typo-guard negative fixture.** Adds `bad_journal_bridge_unknown_field.yaml` to lock in the `additionalProperties: false` clause inside `journal_bridge`. Parametrize matrix 10 → 11; suite 175 → 176 (with `CLAUDE_TRADING_SKILLS_REPO`).
 
 ### Added
 
@@ -23,6 +24,11 @@ Two changes folded so far:
 - `tests/test_package_structure.py::test_distribution_manifest_declares_hermes_trade_ticket_dir` — same form as the existing `HERMES_TRADING_TIMEZONE` declaration test; asserts the env is declared optional with the canonical default literal.
 - `scripts/sync_claude_trading_skills.py`: 3 new public symbols for B-2b drift checks. (1) `UPSTREAM_OVERLAP_SLUGS` — frozenset of the 3 slugs adopted as same-name Hermes bundles. (2) `UPSTREAM_IGNORED_WORKFLOW_SLUGS` — frozenset of the 2 upstream slugs intentionally not adopted (`core-portfolio-weekly` is renamed to `weekly-portfolio-review` in Hermes with refined `required_outputs`; `trade-memory-loop` is driven by the operator via `trader-memory-core` directly). (3) `load_upstream_workflow(source, slug)` helper that returns the parsed yaml or `None`. The `sync()` write path is unchanged.
 - `tests/test_upstream_workflow_adapter.py` (new): 5 named drift tests, 13 parametrize cases. (1) `test_upstream_workflow_file_exists` × 3 — upstream `workflows/<slug>.yaml` exists for each overlap slug. (2) `test_upstream_required_skills_subset_of_mapping_skills` × 3 — `upstream.required_skills ⊆ mapping.skills`. (3) `test_upstream_optional_skills_present_in_mapping` × 3 — `upstream.optional_skills ⊆ mapping.skills`. (4) `test_upstream_canonical_source_marker_in_mapping` × 3 — `mapping.canonical_source == "claude-trading-skills-workflow"`. (5) `test_upstream_workflow_inventory_is_classified` × 1 — every upstream `workflows/*.yaml` slug is in `UPSTREAM_OVERLAP_SLUGS ∪ UPSTREAM_IGNORED_WORKFLOW_SLUGS`; the two sets are disjoint (rev3 Low fold). Module-level skip when `CLAUDE_TRADING_SKILLS_REPO` is unset.
+
+### Polish (TICKET-010 follow-up — typo-guard negative fixture)
+
+- `tests/fixtures/trade_tickets/bad_journal_bridge_unknown_field.yaml` (new): APPROVED ticket with `journal_bridge.thesis_statuz` (typo of `thesis_status`). Exercises the `additionalProperties: false` clause inside `journal_bridge` that TICKET-010 added — without that clause the fixture would have validated.
+- `tests/test_trade_ticket_schema.py::test_negative_fixture_fails_schema` parametrize matrix grows from 10 to 11 (the new fixture is appended as a row; no new standalone test). Fixture count 16 → 17. Suite total with `CLAUDE_TRADING_SKILLS_REPO`: 175 → 176.
 
 ### Changed
 

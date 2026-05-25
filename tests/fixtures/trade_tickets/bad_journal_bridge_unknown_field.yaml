@@ -1,0 +1,44 @@
+# Negative fixture: TICKET-010 polish — typo guard on
+# journal_bridge.additionalProperties: false. The schema rejects
+# unknown fields inside journal_bridge. Here `thesis_statuz` (typo
+# of thesis_status) is the violation; every other field is valid.
+# Without additionalProperties: false this fixture would pass.
+ticket_id: "TKT-20260524-abc123"
+created_at: "2026-05-24T13:30:00Z"
+status: "APPROVED"
+approval:
+  required: true
+  approved: true
+  reviewer: "tradermonty"
+  decided_at: "2026-05-24T14:05:00Z"
+  reason: "approved for test purposes; the violation is inside journal_bridge."
+  confirmed:
+    ticker: "NVDA"
+    direction: "long"
+    entry: 196.20
+    stop: 192.30
+    risk_per_trade_pct: 0.5
+candidate:
+  ticker: "NVDA"
+  direction: "long"
+  setup: "VCP base"
+  thesis: "test"
+  invalidation: "test"
+plan:
+  entry: {value: 196.20, basis: "test"}
+  stop:  {value: 192.30, basis: "test"}
+  target: {value: 220.00, basis: "test"}
+risk:
+  risk_per_trade_pct: 0.5
+  exposure_impact: "n/a"
+  data_freshness: "n/a"
+provenance:
+  source_bundle: "swing-opportunity-daily"
+  source_session: null
+  source_skills: []
+  source_candidate_ref: "TEST-2026-05-24-VCP"
+journal_bridge:
+  target: trader-memory-core
+  action: register_thesis
+  thesis_statuz: ENTRY_READY            # <- typo of thesis_status (additionalProperties: false rejects)
+  notes: "VCP setup confirmed."

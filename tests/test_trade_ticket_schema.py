@@ -225,6 +225,7 @@ def test_expired_fixture_records_decided_at():
         "bad_rejected_no_reason.yaml",
         "bad_expired_no_decided_at.yaml",
         "bad_journal_bridge_invalid_action.yaml",
+        "bad_journal_bridge_unknown_field.yaml",
     ],
 )
 def test_negative_fixture_fails_schema(fixture_name: str):
