@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Two changes folded so far:
+## [0.1.6] - 2026-05-24
+
+Trade ticket persistence + journal bridge (TICKET-010), upstream workflows read-only drift guard that closes Phase 2 (TICKET-004b / B-2b), and a small TICKET-010 polish locking in the `journal_bridge.additionalProperties: false` typo guard with a negative fixture. Bundle catalogue stays at 10; suite goes from 155 (v0.1.5) to 176 with `CLAUDE_TRADING_SKILLS_REPO` (162 → 176 net of the +14 B-2b cases + 1 polish case; 175 → 176 from the polish alone).
+
+Two main changes plus one polish:
 
 - **TICKET-010 — Trade ticket persistence + journal bridge.** Extends the v0.1.5 `/trade-ticket` primitive with an operator-confirmed save-path convention and an optional `journal_bridge` block for handing APPROVED tickets off to `trader-memory-core`. No execution, no silent disk write, no schema breaking change — `journal_bridge` is optional. Suite 155 → 162.
 - **TICKET-004b / B-2b — Upstream workflows adapter (closes Phase 2).** Adds a read-only drift guard for the 3 overlap workflows (`market-regime-daily` / `swing-opportunity-daily` / `monthly-performance-review`) without rewriting any bundle. `sync()` write path unchanged (all 3 overlap bundles are `x-generated: false`); the adapter declares upstream as canonical intent, mapping as the Hermes distribution contract, and tests as the mechanical guard. With `CLAUDE_TRADING_SKILLS_REPO` configured: 162 → 175 passing. Without it: still 161 passing (13 new B-2b cases skip cleanly via a module-level fixture; the pre-existing B-2a determinism case `tests/test_sync_determinism.py:363` was already env-gated, so total skipped goes 1 → 14).

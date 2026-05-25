@@ -189,7 +189,7 @@ For a reproducible install of a specific release — pinned, no surprise updates
 ```bash
 git clone https://github.com/tradermonty/hermes-trading-research-agent-work-package.git
 cd hermes-trading-research-agent-work-package
-git checkout v0.1.5   # or any tag from `git tag -l`
+git checkout v0.1.6   # or any tag from `git tag -l`
 hermes profile install "$(pwd)" --name trading-research-assistant --alias -y
 ```
 
