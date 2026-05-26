@@ -287,3 +287,63 @@ Out of scope (deferred):
 - `JOURNALED` 6th status enum value.
 - Making `journal_bridge` required on APPROVED (deferred to a
   future v0.2 breaking change).
+
+## TICKET-013 — pre-market-routine session state vs posture basis + provenance heading
+
+(On `main`; folds into the next release alongside TICKET-012. Triggered
+by the v0.1.6 day-2 operational soak (2026-05-26 Tue, post-Memorial-Day
+trading day) where the `pre-market-routine` output rendered
+`Risk posture: risk-off / REDUCE_ONLY` ambiguously — the operator could
+not tell whether that reflected a structural regime change or carry-
+forward from the latest completed regular-session close (2026-05-22 Fri).
+TICKET-013 pins a two-line preamble that separates session state from
+posture basis so the ambiguity cannot recur.)
+
+Scope (rev2 final, after rev1 → rev2 review iteration):
+
+- `skill-bundles/pre-market-routine.yaml` instruction body gains a
+  mandatory two-line preamble rule (`Session state:` / `Posture
+  basis:`) plus a `Source / Skill provenance` sub-heading rule.
+  `x-generated: false` unchanged.
+- `prompts/pre-market-routine.md` (cron prompt body) carries the same
+  rule so the auto-fire path receives it.
+- Three posture-basis labels are defined and are explicitly **not
+  mutually exclusive** in the holiday-bridge case: `based on fresh
+  latest completed regular-session close` (normal day), `carried
+  forward from <YYYY-MM-DD>` (today follows a holiday or weekend),
+  `pending fresh data / degraded` (latest usable close is older than
+  the previous regular cash session or a required source is missing).
+- `tests/test_pre_market_session_state_rule.py` (new): 12 parametrize
+  cases (6 phrases × 2 files: bundle + prompt). Lightweight literal-
+  phrase pin; LLM output is NOT regex-constrained at the contract
+  layer.
+- `docs/04-skill-integration-strategy.md` adds a "Pre-market posture
+  wording contract (TICKET-013)" section documenting the two-line
+  preamble, the three labels, the provenance heading rule, and the
+  pre-market-only scope.
+
+Done when:
+
+- Both files carry the six required literal phrases (`Session state`,
+  `Posture basis`, `latest completed regular-session close`,
+  `carried forward`, `pending fresh data`, `Source / Skill provenance`).
+- `tests/test_pre_market_session_state_rule.py` lands with 12 cases
+  passing.
+- `tests/test_required_sections.py` and `tests/test_output_safety.py`
+  remain green — the new wording is positive form and matches the
+  existing `source_provenance` concept regex.
+- `make sync-external-write` SKIP count stays 10 (pre-market-routine
+  is `x-generated: false`).
+- `make validate-all` is green; env-independent passing count grows
+  by +12 in both with-upstream and without-upstream modes.
+
+Not in scope (TICKET-014 candidate — horizontal rollout):
+
+- Same two-line preamble in `/after-close-review`,
+  `/market-regime-daily`, `/swing-opportunity-daily`. The wording is
+  pinned on `pre-market-routine` first; propagation happens once the
+  language has stabilised in production observation.
+- Holiday calendar API integration. v0.1.6 soak shows the LLM
+  correctly identifies Memorial Day from context.
+- LLM-side rendering regex contract. Bundle/prompt-side literal pin
+  is the only enforcement layer in v0.1.x.

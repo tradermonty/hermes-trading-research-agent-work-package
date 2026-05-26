@@ -151,6 +151,27 @@ Suggested save filename: `<ticket_id>.ticket.yaml` under `${HERMES_TRADE_TICKET_
 
 Out of scope for TICKET-010 (deferred): broker submission of any kind; LLM-side silent disk write; runtime ticket files committed to this repo; the cross-check between `journal_bridge.action` and `thesis_status` (e.g. `postmortem` → `CLOSED`); the `JOURNALED` status enum value; making `journal_bridge` required on APPROVED.
 
+## Pre-market posture wording contract (TICKET-013)
+
+The v0.1.6 day-2 operational soak (2026-05-26 Tue, the trading day after Memorial Day) surfaced a real ambiguity: when the latest completed regular-session close (2026-05-22 Fri) is calendar-old only because Monday 2026-05-25 was a market holiday, the existing `pre-market-routine` output rendered `Risk posture: risk-off / REDUCE_ONLY` in a way that could read either as a structural regime change or as carry-forward pending fresh data. TICKET-013 pins a two-line preamble that separates **session state** from **posture basis** so the operator cannot misread a calendar gap as a structural change.
+
+**Two-line preamble (mandatory before any risk-posture statement):**
+
+1. **`Session state:`** — today's date relative to the US cash market in one of `normal session day` / `US market holiday` / `weekend` / `unknown`. Calendar fact about today, not a regime label.
+2. **`Posture basis:`** — the latest completed regular-session close used for the posture, with date, and one of three labels:
+   - `based on fresh latest completed regular-session close` — expected most recent regular-session close is available with no holiday/weekend bridge (normal Tuesday pre-market where Monday's close is the basis).
+   - `carried forward from <YYYY-MM-DD>` — the close is calendar-old only because today follows a weekend or market holiday. The posture is propagated from the most recent completed session rather than presented as a fresh regime change. **Not mutually exclusive with the underlying truth that the close itself is the latest completed regular-session close** — use this label whenever a holiday/weekend bridge sits between today and that close.
+   - `pending fresh data / degraded` — the latest usable close is older than the previous regular cash-market session, or a required data source is missing.
+
+**Source / Skill provenance** — within the pre-market output's Data freshness / degraded mode section (section 8 in the bundle's section list, section 7 in `prompts/pre-market-routine.md`), render an explicit `Source / Skill provenance` sub-heading so the operator can trace each non-trivial item back to its skill or data source.
+
+**Scope, test contract, and out-of-scope:**
+
+- **`pre-market-routine` only** in TICKET-013. Horizontal rollout to `/after-close-review`, `/market-regime-daily`, and `/swing-opportunity-daily` is **TICKET-014 candidate** (deliberately deferred so we can refine the wording in one bundle before propagating).
+- Both the bundle instruction (`skill-bundles/pre-market-routine.yaml`) and the cron prompt body (`prompts/pre-market-routine.md`) carry the rule — the cron auto-fire path is driven by the prompt body plus attached skills, so the prompt body must carry the rule even if the bundle instruction also does.
+- LLM output is NOT regex-constrained at the contract layer — `tests/test_pre_market_session_state_rule.py` pins literal phrase presence in the bundle and the prompt file (6 phrases × 2 files = 12 parametrize cases). The rendering of the eventual output is left to the LLM so it can adapt while staying inside the pinned contract.
+- Holiday calendar API integration is **out of scope** — the v0.1.6 day-2 output correctly identified Memorial Day from context, so a calendar API is not required for this iteration.
+
 ## Vendoring rules
 
 When implementing vendored mode:
