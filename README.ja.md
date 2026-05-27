@@ -4,6 +4,8 @@ Hermes Agent上で動作する、米国株個人投資家向けのリサーチ�
 
 **ランディングページ:** https://tradermonty.github.io/hermes-trading-research-agent-work-package/
 
+**English version:** [README.md](README.md)
+
 **これは自動売買システムではありません。** リサーチ・記録・リスクレビューの支援ツールであり、最終的な売買判断は常に人間 (利用者) が行います。注文発注も、シグナル配信も、隠しジョブもありません。
 
 - Hermes alias: `trading-research-assistant`

@@ -4,6 +4,8 @@ A Hermes Profile Distribution that turns `tradermonty/claude-trading-skills` int
 
 **Landing page:** https://tradermonty.github.io/hermes-trading-research-agent-work-package/
 
+**日本語版:** [README.ja.md](README.ja.md)
+
 **This is not an automated trading system.** It is a research, journaling, and risk-review assistant. The human reviewer makes all entry and exit decisions. There is no order placement, no signal service, and no hidden scheduled jobs.
 
 - Target Hermes alias: `trading-research-assistant`
