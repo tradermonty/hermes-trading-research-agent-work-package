@@ -165,13 +165,60 @@ Done when:
 
 ## TICKET-008 — Vendored mode
 
-- Copy selected upstream skills.
-- Generate `vendor-manifest.json`.
-- Add drift detection.
+Split into `008a` (scope clarification, docs only) and `008b` (implementation,
+deferred), following the TICKET-004 `004a/004b` precedent.
 
-Done when:
+### TICKET-008a — Vendored mode scope clarification (docs only)
 
-- Profile works without external repo.
+(On `main`; folds into the next release. No code — this entry exists so the
+008b implementation has a written contract.)
+
+- Documents **why** a second mode exists: external-linked mode's
+  `$CLAUDE_TRADING_SKILLS_REPO` clone is simultaneously the upstream mirror,
+  the runtime skill source, and the place Hermes edits skills during
+  troubleshooting. A naive `git pull` over that clone is destructive.
+- Defines the **three-mode model** in `docs/04-skill-integration-strategy.md`
+  → "Vendored mode (TICKET-008)": external-linked (default, vulnerable to
+  pull), vendored (`skills/vendor/`, profile-owned), patches-on-vendored
+  (version-controlled `.patch` files re-applied after re-vendor).
+- Records the **danger note**: the current `copy_vendor_skills()` skeleton
+  `shutil.rmtree`s each `skills/vendor/<skill>/` before re-copying, so
+  `make sync-vendor-write` is destructive for hand-edited vendored skills
+  today. Vendored mode is the *intended* safe mode; the safe writer is 008b.
+- Documents the **`vendor-manifest.json` minimum fields** 008b must write
+  (`source_repo`, `source_commit`, `source_branch`, `vendored_at`, `mode`,
+  `skills`, `patches[]`).
+
+Done when (008a):
+
+- `docs/04` carries the three-mode table, the destructive-skeleton warning in
+  plain language, the per-mode "where do Hermes-edited skills live" notes, and
+  the `vendor-manifest.json` shape.
+- This docs/09 entry is no longer skeletal — a reader can derive the 008b
+  implementation surface from it.
+
+### TICKET-008b — Vendored mode implementation (deferred, plan TBD)
+
+The 008a docs are the contract. Anticipated implementation surface:
+
+- JSON Schema for `vendor-manifest.json` + a validator test.
+- Expand `copy_vendor_skills()` to populate `source_commit`, `source_branch`,
+  `vendored_at`, and `patches[]`, and to **stop destroying hand-edits**
+  (re-vendor must preserve or re-apply `patches/`, not `rmtree` blindly).
+- A `patches/` application pipeline (`scripts/apply_vendored_patches.sh` or a
+  hook into `sync-vendor-write`).
+- Drift detection between the vendored copy and upstream HEAD (analogous to
+  the TICKET-004b workflow drift guard, but for `skills/` contents).
+- Vendored-mode awareness in `make upstream-status` (TICKET-015).
+
+Done when (008b):
+
+- Profile works without the external repo (skills resolved from
+  `skills/vendor/`).
+- `make sync-vendor-write` (or its successor) is non-destructive for
+  hand-edited / patched vendored skills.
+- `vendor-manifest.json` validates against its schema and records provenance
+  + patch lineage.
 
 ## TICKET-009 — `/trade-ticket` bundle + Trade Ticket schema (B-3)
 
