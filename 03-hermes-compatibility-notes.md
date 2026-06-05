@@ -238,6 +238,36 @@ section above it. The prompt echo is the bundle's safety
 instruction, not model output, and must not be treated as a
 violation.
 
+### Upstream status inspection (before pulling skills)
+
+`$CLAUDE_TRADING_SKILLS_REPO` is a single local clone that is at once the
+upstream tracking mirror, the runtime skill source Hermes reads, and the place
+Hermes edits skills when asked to fix one during a session. A blind `git pull`
+of that clone can therefore overwrite local / Hermes-made edits. `make
+upstream-status` (TICKET-015, `scripts/upstream_status.sh`) inspects the
+checkout **before** a pull:
+
+```bash
+CLAUDE_TRADING_SKILLS_REPO=/path/to/claude-trading-skills make upstream-status
+```
+
+It reports branch, resolved upstream ref, dirty files, incoming commits,
+incoming `skills/` + `workflows/` file changes, and a local-edit risk label
+(`NONE` / `LOW` / `MEDIUM` / `HIGH`). It is **working-tree safe**, not fully
+read-only: it runs `git fetch` so remote-tracking refs / `FETCH_HEAD` may be
+updated, but it never pulls, merges, rebases, stashes, or touches a skill
+file. Verified by comparing `git status --porcelain` before and after a run —
+skill files are unchanged.
+
+Relationship to the existing TICKET-004b drift guard: that guard
+(`tests/test_upstream_workflow_adapter.py`, run by `make test` /
+`make validate-all`) catches mapping/upstream divergence **after** the
+checkout has changed. `upstream-status` is the **before-pull** counterpart —
+it tells you what a pull would bring and whether local edits are at risk.
+Neither pulls; both leave the decision to the operator. For permanent
+ownership separation, see vendored mode in
+`docs/04-skill-integration-strategy.md`.
+
 ## Known conservative choices
 
 - `mcp.json` is empty by default; active MCP servers should be configured via `hermes mcp add ...` / `config.yaml:mcp_servers` after validation.

@@ -172,11 +172,77 @@ The v0.1.6 day-2 operational soak (2026-05-26 Tue, the trading day after Memoria
 - LLM output is NOT regex-constrained at the contract layer — `tests/test_pre_market_session_state_rule.py` pins literal phrase presence in the bundle and the prompt file (6 phrases × 2 files = 12 parametrize cases). The rendering of the eventual output is left to the LLM so it can adapt while staying inside the pinned contract.
 - Holiday calendar API integration is **out of scope** — the v0.1.6 day-2 output correctly identified Memorial Day from context, so a calendar API is not required for this iteration.
 
-## Vendoring rules
+## Vendored mode (TICKET-008)
 
-When implementing vendored mode:
+### Why a second mode exists
 
-- Copy skills exactly into `skills/vendor/<skill-name>` or `skills/<skill-name>` after deciding which Hermes path resolves best.
-- Write `vendor-manifest.json` with upstream repo path, commit SHA if available, selected skills, and timestamp.
-- Never silently patch upstream skill files.
-- If compatibility patches are needed, store patch files under `patches/` and apply them explicitly.
+External-linked mode (the v0.1.0 default) reads skills from `$CLAUDE_TRADING_SKILLS_REPO`, which is a single local clone that simultaneously serves three roles:
+
+- the canonical upstream tracking mirror (`git pull` brings new releases),
+- the user's runtime skill source (Hermes reads `SKILL.md` from here),
+- the place Hermes itself edits during troubleshooting ("this skill isn't working, fix it" → Hermes edits `SKILL.md` in place).
+
+Because those three roles share one directory, a naive auto-update (`git pull`) is destructive: it overwrites local and Hermes-made edits without any ownership story. Vendored mode is the design answer — it copies the skills the profile actually uses into the profile itself, so upstream tracking and runtime skill ownership stop sharing a directory.
+
+### Three modes
+
+| Mode | Skill source | User-edit / Hermes-edit ownership | Update path | Status |
+|---|---|---|---|---|
+| **external-linked** (existing default) | `$CLAUDE_TRADING_SKILLS_REPO` (shared local clone) | Lives in the upstream clone; **vulnerable to upstream `git pull`** | Manual `git pull` only; inspect first with `make upstream-status` (TICKET-015) | Shipped since v0.1.0 |
+| **vendored** (designed in TICKET-008a; implemented in TICKET-008b) | `skills/vendor/<skill-name>/` inside this profile | Lives **in the profile**; survives upstream `git pull` of the tracking clone | Explicit re-vendor via an opt-in workflow | Skeleton exists in `scripts/sync_claude_trading_skills.py:copy_vendor_skills()`; **today's skeleton is destructive** (see warning); full safe semantics are TICKET-008b |
+| **patches-on-vendored** (a *modifier* of vendored mode) | vendored base + `patches/claude-trading-skills/<skill>.patch` | Local / Hermes fixes recorded as **explicit version-controlled patch files**, re-applied after each re-vendor | Re-vendor → apply patches → review conflicts | Convention defined here; tooling is TICKET-008b |
+
+> **Important — the current vendored skeleton is NOT yet the safe mode.** The live `copy_vendor_skills()` in `scripts/sync_claude_trading_skills.py` calls `shutil.rmtree(dest)` on each existing `skills/vendor/<skill>/` before re-copying, and `make sync-vendor-write` exposes that writer. **Running `make sync-vendor-write` today silently destroys any hand-edits made directly inside `skills/vendor/`** — the exact failure mode vendored mode is meant to prevent. Until TICKET-008b lands the safe re-vendor + patch-preserving flow: treat `skills/vendor/` as generated output, keep local fixes as `patches/`, and do not hand-edit vendored skills in place. The "survives upstream changes" column above describes the *design*, not today's `sync-vendor-write` behavior.
+
+### Where Hermes-edited skills live in each mode
+
+- **external-linked**: a Hermes edit to `SKILL.md` lands in the upstream clone working tree. It survives until the next `git pull` (which may overwrite it). Run `make upstream-status` before pulling — it flags dirty `skills/`/`workflows/` as HIGH risk.
+- **vendored** (TICKET-008b): a Hermes edit lands in `skills/vendor/<skill>/SKILL.md`, owned by the profile. To keep it across a re-vendor, capture it as a patch under `patches/claude-trading-skills/` (the skeleton's `rmtree` would otherwise drop it).
+- **patches-on-vendored**: the durable home for a fix you want to keep — a version-controlled `.patch` re-applied after every re-vendor.
+
+### `vendor-manifest.json` minimum fields (documented by TICKET-008a; written by TICKET-008b)
+
+The existing `copy_vendor_skills()` writes a minimal `{source_repo, mode, skills}` manifest. TICKET-008b will expand it to record provenance and patch lineage:
+
+```jsonc
+{
+  "source_repo": "<URL or local path>",
+  "source_commit": "<full SHA of upstream HEAD at vendor time>",
+  "source_branch": "<branch name at vendor time>",
+  "vendored_at": "<ISO-8601 UTC timestamp>",
+  "mode": "vendor",
+  "skills": ["<skill-1>", "<skill-2>", "..."],
+  "patches": [
+    {
+      "skill": "<skill-name>",
+      "path": "patches/claude-trading-skills/<skill>.patch",
+      "applied_against": "<commit SHA the patch was made against>"
+    }
+  ]
+}
+```
+
+### Vendoring rules (carry into TICKET-008b)
+
+- Copy skills exactly into `skills/vendor/<skill-name>` — no silent edits to the copy.
+- Write the expanded `vendor-manifest.json` above (commit SHA, branch, timestamp, selected skills, patch lineage).
+- Never silently patch upstream skill files; store compatibility/local fixes as explicit `patches/claude-trading-skills/<skill>.patch` files and apply them as a recorded step.
+- The `x-generated:` ownership contract (TICKET-004a) is the precedent: an explicit ownership marker is what prevents destructive overwrite. TICKET-008b applies the same principle to vendored skills + patches.
+
+See `docs/09-coding-tickets.md` TICKET-008 for the 008a / 008b split and the implementation backlog.
+
+### Three layers that watch upstream
+
+`make upstream-status` (TICKET-015) is one of three layers that keep the
+profile honest about upstream skill changes. They are complementary, not
+redundant:
+
+| Layer | Status | Trigger | What it detects |
+|---|---|---|---|
+| **TICKET-004b drift guard** (`tests/test_upstream_workflow_adapter.py`) | Existing (v0.1.6) | `make test` / `make validate-all` (automated CI) | **After** the upstream checkout changed: `mapping.skills ⊇ upstream required/optional`, `canonical_source` marker, upstream workflow inventory classification |
+| **TICKET-015 upstream-status** (`scripts/upstream_status.sh`) | New | `make upstream-status` (manual) | **Before** updating the working tree: incoming commits, incoming `skills/` + `workflows/` file changes, local-edit risk severity |
+| **TICKET-008b vendored mode** | Deferred | Mode choice at install + future re-vendor workflow | Long-term ownership: upstream tracking ↔ runtime skill source separated so Hermes-edited skills live in the profile, not in a pull-vulnerable clone |
+
+The first two only **report** — neither pulls, and both leave the decision to
+the operator. Vendored mode (008b) is the structural fix that makes the
+report-and-decide loop unnecessary for the skills you have customised.

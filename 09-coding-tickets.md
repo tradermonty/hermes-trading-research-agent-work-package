@@ -165,13 +165,60 @@ Done when:
 
 ## TICKET-008 — Vendored mode
 
-- Copy selected upstream skills.
-- Generate `vendor-manifest.json`.
-- Add drift detection.
+Split into `008a` (scope clarification, docs only) and `008b` (implementation,
+deferred), following the TICKET-004 `004a/004b` precedent.
 
-Done when:
+### TICKET-008a — Vendored mode scope clarification (docs only)
 
-- Profile works without external repo.
+(On `main`; folds into the next release. No code — this entry exists so the
+008b implementation has a written contract.)
+
+- Documents **why** a second mode exists: external-linked mode's
+  `$CLAUDE_TRADING_SKILLS_REPO` clone is simultaneously the upstream mirror,
+  the runtime skill source, and the place Hermes edits skills during
+  troubleshooting. A naive `git pull` over that clone is destructive.
+- Defines the **three-mode model** in `docs/04-skill-integration-strategy.md`
+  → "Vendored mode (TICKET-008)": external-linked (default, vulnerable to
+  pull), vendored (`skills/vendor/`, profile-owned), patches-on-vendored
+  (version-controlled `.patch` files re-applied after re-vendor).
+- Records the **danger note**: the current `copy_vendor_skills()` skeleton
+  `shutil.rmtree`s each `skills/vendor/<skill>/` before re-copying, so
+  `make sync-vendor-write` is destructive for hand-edited vendored skills
+  today. Vendored mode is the *intended* safe mode; the safe writer is 008b.
+- Documents the **`vendor-manifest.json` minimum fields** 008b must write
+  (`source_repo`, `source_commit`, `source_branch`, `vendored_at`, `mode`,
+  `skills`, `patches[]`).
+
+Done when (008a):
+
+- `docs/04` carries the three-mode table, the destructive-skeleton warning in
+  plain language, the per-mode "where do Hermes-edited skills live" notes, and
+  the `vendor-manifest.json` shape.
+- This docs/09 entry is no longer skeletal — a reader can derive the 008b
+  implementation surface from it.
+
+### TICKET-008b — Vendored mode implementation (deferred, plan TBD)
+
+The 008a docs are the contract. Anticipated implementation surface:
+
+- JSON Schema for `vendor-manifest.json` + a validator test.
+- Expand `copy_vendor_skills()` to populate `source_commit`, `source_branch`,
+  `vendored_at`, and `patches[]`, and to **stop destroying hand-edits**
+  (re-vendor must preserve or re-apply `patches/`, not `rmtree` blindly).
+- A `patches/` application pipeline (`scripts/apply_vendored_patches.sh` or a
+  hook into `sync-vendor-write`).
+- Drift detection between the vendored copy and upstream HEAD (analogous to
+  the TICKET-004b workflow drift guard, but for `skills/` contents).
+- Vendored-mode awareness in `make upstream-status` (TICKET-015).
+
+Done when (008b):
+
+- Profile works without the external repo (skills resolved from
+  `skills/vendor/`).
+- `make sync-vendor-write` (or its successor) is non-destructive for
+  hand-edited / patched vendored skills.
+- `vendor-manifest.json` validates against its schema and records provenance
+  + patch lineage.
 
 ## TICKET-009 — `/trade-ticket` bundle + Trade Ticket schema (B-3)
 
@@ -347,3 +394,63 @@ Not in scope (TICKET-014 candidate — horizontal rollout):
   correctly identifies Memorial Day from context.
 - LLM-side rendering regex contract. Bundle/prompt-side literal pin
   is the only enforcement layer in v0.1.x.
+
+## TICKET-015 — Upstream status inspection
+
+(On `main`; folds into the next release. Working-tree-safe pre-pull
+inspection of the external-linked `$CLAUDE_TRADING_SKILLS_REPO`
+checkout, so a user or agent can see what a `git pull` would bring and
+whether local / Hermes-made skill edits are at risk — before pulling.)
+
+- `scripts/upstream_status.sh` (new, bash, no Python deps, committed
+  with the executable bit): resolves the upstream ref
+  (`$UPSTREAM_STATUS_REF` remote-tracking override → branch `@{u}` →
+  `origin/HEAD` short → `UNRESOLVED`), `git fetch`es remote metadata
+  before computing any ref-relative numbers, then reports branch / HEAD /
+  resolved ref / remote URL (display only) / dirty files / local commits
+  ahead / incoming commits / incoming `skills/` + `workflows/` file
+  changes (merge-base range) / a local-edit risk label. Never pulls,
+  merges, rebases, stashes, or touches a skill file. `set -euo pipefail`
+  with per-`git`-call guards so missing refs / failed fetch / failed
+  merge-base degrade to a printed label instead of aborting.
+- Risk severity: HIGH (dirty/untracked under `skills/` or `workflows/`,
+  local commits ahead, or detached HEAD), MEDIUM (dirty outside those
+  dirs, `UNRESOLVED` ref, no tracking upstream resolved only via
+  `origin/HEAD`, override ref with no extractable remote, fetch failed,
+  or merge-base unresolved), LOW (untracked outside those dirs only),
+  NONE (clean + tracked upstream resolved + merge-base resolved + no
+  commits ahead). Severity is the max of all triggered conditions.
+- `Makefile` target `upstream-status` (no `REQUIRE_*` gate — it does not
+  mutate the tree); thin wrapper over the script.
+- `tests/test_upstream_status.py` (new): presence/structure layer
+  (env-independent) + behavioral layer against a self-contained temp git
+  fixture (bare remote + clone in `tmp_path`, no network, never touches
+  the real checkout) covering ref resolution, incoming range, detached
+  HEAD (HIGH + incoming still rendered), no-tracking-upstream (≥ MEDIUM,
+  never NONE), remote-removed (`UNRESOLVED`), override forms, severity
+  classification, and the working-tree-unchanged guarantee.
+- `docs/03-hermes-compatibility-notes.md` "Upstream status inspection"
+  subsection; `docs/04-skill-integration-strategy.md` "Three layers that
+  watch upstream" table; `README.md` / `README.ja.md` "Inspecting
+  upstream skill updates" section.
+
+Done when:
+
+- `make upstream-status` reports branch / ref / dirty / incoming / risk
+  without modifying any skill file (`git status --porcelain` identical
+  before/after).
+- All presence + behavioral cases pass; behavioral layer skips cleanly
+  when `git` is unavailable.
+- `make sync-external-write` SKIP count stays 10; `make validate-all`
+  green.
+- Docs articulate what it does, what it does NOT do, and how it
+  complements the TICKET-004b drift guard (before-pull vs after-pull).
+
+### TICKET-015b — read-only `/upstream-status` slash command (deferred, not predicated)
+
+A read-only `/upstream-status` bundle could surface the same report
+inside Hermes chat if dogfood shows operators want it. Constraints if
+pursued: read-only w.r.t. skill files; no mutation slash commands
+(apply / pull stay terminal-only behind explicit gates); the "thin
+operator-helper that wraps a script" bundle pattern is not yet
+established here. Not predicated — TICKET-015 ships without it.
