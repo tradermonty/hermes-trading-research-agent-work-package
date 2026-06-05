@@ -1,4 +1,4 @@
-.PHONY: validate validate-upstream validate-all test sync-external sync-external-write sync-external-write-force sync-vendor sync-vendor-write
+.PHONY: validate validate-upstream validate-all test sync-external sync-external-write sync-external-write-force sync-vendor sync-vendor-write upstream-status
 
 PYTHON ?= python3
 SYNC_SCRIPT := scripts/sync_claude_trading_skills.py
@@ -49,6 +49,17 @@ sync-external-write-force:
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode external --write --force-overwrite
 	@echo "Re-running safety + required-concepts tests against regenerated bundles..."
 	$(PYTHON) -m pytest -q tests/test_output_safety.py tests/test_required_sections.py
+
+# Working-tree-safe inspection of the external-linked claude-trading-skills
+# checkout BEFORE you pull (TICKET-015). Fetches remote metadata only; never
+# pulls / merges / rebases / stashes or touches any skill file. Prints
+# incoming commits, incoming skills/ + workflows/ file changes, and a
+# local-edit risk label (NONE / LOW / MEDIUM / HIGH). Requires
+# CLAUDE_TRADING_SKILLS_REPO. No write gate — it does not mutate the tree.
+upstream-status:
+	@test -n "$${CLAUDE_TRADING_SKILLS_REPO}" || \
+	  (echo "CLAUDE_TRADING_SKILLS_REPO is required for upstream-status" >&2; exit 2)
+	./scripts/upstream_status.sh
 
 sync-vendor:
 	$(PYTHON) $(SYNC_SCRIPT) --source "$${CLAUDE_TRADING_SKILLS_REPO}" --profile-root . --mode vendor

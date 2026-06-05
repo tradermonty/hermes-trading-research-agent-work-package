@@ -394,3 +394,63 @@ Not in scope (TICKET-014 candidate — horizontal rollout):
   correctly identifies Memorial Day from context.
 - LLM-side rendering regex contract. Bundle/prompt-side literal pin
   is the only enforcement layer in v0.1.x.
+
+## TICKET-015 — Upstream status inspection
+
+(On `main`; folds into the next release. Working-tree-safe pre-pull
+inspection of the external-linked `$CLAUDE_TRADING_SKILLS_REPO`
+checkout, so a user or agent can see what a `git pull` would bring and
+whether local / Hermes-made skill edits are at risk — before pulling.)
+
+- `scripts/upstream_status.sh` (new, bash, no Python deps, committed
+  with the executable bit): resolves the upstream ref
+  (`$UPSTREAM_STATUS_REF` remote-tracking override → branch `@{u}` →
+  `origin/HEAD` short → `UNRESOLVED`), `git fetch`es remote metadata
+  before computing any ref-relative numbers, then reports branch / HEAD /
+  resolved ref / remote URL (display only) / dirty files / local commits
+  ahead / incoming commits / incoming `skills/` + `workflows/` file
+  changes (merge-base range) / a local-edit risk label. Never pulls,
+  merges, rebases, stashes, or touches a skill file. `set -euo pipefail`
+  with per-`git`-call guards so missing refs / failed fetch / failed
+  merge-base degrade to a printed label instead of aborting.
+- Risk severity: HIGH (dirty/untracked under `skills/` or `workflows/`,
+  local commits ahead, or detached HEAD), MEDIUM (dirty outside those
+  dirs, `UNRESOLVED` ref, no tracking upstream resolved only via
+  `origin/HEAD`, override ref with no extractable remote, fetch failed,
+  or merge-base unresolved), LOW (untracked outside those dirs only),
+  NONE (clean + tracked upstream resolved + merge-base resolved + no
+  commits ahead). Severity is the max of all triggered conditions.
+- `Makefile` target `upstream-status` (no `REQUIRE_*` gate — it does not
+  mutate the tree); thin wrapper over the script.
+- `tests/test_upstream_status.py` (new): presence/structure layer
+  (env-independent) + behavioral layer against a self-contained temp git
+  fixture (bare remote + clone in `tmp_path`, no network, never touches
+  the real checkout) covering ref resolution, incoming range, detached
+  HEAD (HIGH + incoming still rendered), no-tracking-upstream (≥ MEDIUM,
+  never NONE), remote-removed (`UNRESOLVED`), override forms, severity
+  classification, and the working-tree-unchanged guarantee.
+- `docs/03-hermes-compatibility-notes.md` "Upstream status inspection"
+  subsection; `docs/04-skill-integration-strategy.md` "Three layers that
+  watch upstream" table; `README.md` / `README.ja.md` "Inspecting
+  upstream skill updates" section.
+
+Done when:
+
+- `make upstream-status` reports branch / ref / dirty / incoming / risk
+  without modifying any skill file (`git status --porcelain` identical
+  before/after).
+- All presence + behavioral cases pass; behavioral layer skips cleanly
+  when `git` is unavailable.
+- `make sync-external-write` SKIP count stays 10; `make validate-all`
+  green.
+- Docs articulate what it does, what it does NOT do, and how it
+  complements the TICKET-004b drift guard (before-pull vs after-pull).
+
+### TICKET-015b — read-only `/upstream-status` slash command (deferred, not predicated)
+
+A read-only `/upstream-status` bundle could surface the same report
+inside Hermes chat if dogfood shows operators want it. Constraints if
+pursued: read-only w.r.t. skill files; no mutation slash commands
+(apply / pull stay terminal-only behind explicit gates); the "thin
+operator-helper that wraps a script" bundle pattern is not yet
+established here. Not predicated — TICKET-015 ships without it.

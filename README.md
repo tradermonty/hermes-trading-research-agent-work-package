@@ -189,6 +189,32 @@ See `cron/README.md` and `docs/03-hermes-compatibility-notes.md`.
 
 ---
 
+## Inspecting upstream skill updates
+
+The skills come from your local `claude-trading-skills` checkout
+(`$CLAUDE_TRADING_SKILLS_REPO`). When upstream ships new releases you update
+that checkout with a plain `git pull` — but that same clone is also where
+Hermes edits skills when you ask it to fix one during a session, so pulling
+blindly can clobber local edits. Before you pull, inspect what is incoming
+and whether you have local edits at risk:
+
+```bash
+make upstream-status
+```
+
+It fetches remote metadata only and prints the current branch, the resolved
+upstream ref, your dirty files, incoming commits, the incoming `skills/` and
+`workflows/` file changes, and a local-edit risk label (`NONE` / `LOW` /
+`MEDIUM` / `HIGH`). It is **working-tree safe**: it never pulls, merges,
+rebases, stashes, or touches a skill file — it only tells you what a pull
+*would* bring and whether it is safe to run. A `HIGH` label means you have
+local edits under `skills/` or `workflows/` (possibly Hermes-made fixes) that
+a pull could overwrite; review them first. This complements the post-pull CI
+drift guard (`make test`); see `docs/04-skill-integration-strategy.md` for the
+relationship and for vendored mode, the longer-term ownership answer.
+
+---
+
 ## Versioning and reproducible installs
 
 Hermes Profile Distribution install (`hermes profile install github.com/<owner>/<repo>`) currently tracks the repository's **default branch**, not a specific tag. GitHub Releases exist for changelog and reference (latest: see https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases), but `github.com/...#<tag>` ref pinning is not (yet) supported by Hermes' installer.

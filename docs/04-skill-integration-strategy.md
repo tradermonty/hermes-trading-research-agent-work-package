@@ -230,3 +230,19 @@ The existing `copy_vendor_skills()` writes a minimal `{source_repo, mode, skills
 - The `x-generated:` ownership contract (TICKET-004a) is the precedent: an explicit ownership marker is what prevents destructive overwrite. TICKET-008b applies the same principle to vendored skills + patches.
 
 See `docs/09-coding-tickets.md` TICKET-008 for the 008a / 008b split and the implementation backlog.
+
+### Three layers that watch upstream
+
+`make upstream-status` (TICKET-015) is one of three layers that keep the
+profile honest about upstream skill changes. They are complementary, not
+redundant:
+
+| Layer | Status | Trigger | What it detects |
+|---|---|---|---|
+| **TICKET-004b drift guard** (`tests/test_upstream_workflow_adapter.py`) | Existing (v0.1.6) | `make test` / `make validate-all` (automated CI) | **After** the upstream checkout changed: `mapping.skills ⊇ upstream required/optional`, `canonical_source` marker, upstream workflow inventory classification |
+| **TICKET-015 upstream-status** (`scripts/upstream_status.sh`) | New | `make upstream-status` (manual) | **Before** updating the working tree: incoming commits, incoming `skills/` + `workflows/` file changes, local-edit risk severity |
+| **TICKET-008b vendored mode** | Deferred | Mode choice at install + future re-vendor workflow | Long-term ownership: upstream tracking ↔ runtime skill source separated so Hermes-edited skills live in the profile, not in a pull-vulnerable clone |
+
+The first two only **report** — neither pulls, and both leave the decision to
+the operator. Vendored mode (008b) is the structural fix that makes the
+report-and-decide loop unnecessary for the skills you have customised.

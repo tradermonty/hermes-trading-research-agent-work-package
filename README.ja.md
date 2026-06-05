@@ -192,6 +192,32 @@ Hermes v0.14.0 の `cron create` には **`--tz` フラグが存在しません*
 
 ---
 
+## 上流スキル更新の確認
+
+スキルはローカルの `claude-trading-skills` checkout (`$CLAUDE_TRADING_SKILLS_REPO`)
+から読み込まれます。上流が新しい release を出したら、その checkout を `git pull`
+で更新します。ただし同じ clone は、セッション中に Hermes へスキル修正を依頼した
+ときに Hermes がスキルを編集する場所でもあるため、無条件に pull するとローカル
+修正を上書きしてしまう恐れがあります。pull する前に、何が入ってくるか・リスクの
+あるローカル修正がないかを確認してください:
+
+```bash
+make upstream-status
+```
+
+remote metadata のみを取得し、現在の branch、解決された upstream ref、dirty な
+ファイル、incoming commits、`skills/` と `workflows/` の incoming 変更、そして
+ローカル修正リスクのラベル (`NONE` / `LOW` / `MEDIUM` / `HIGH`) を表示します。
+**working tree は変更しません**。pull / merge / rebase / stash は一切行わず、
+スキルファイルにも触れません。pull が *もたらすはずのもの* と、pull して安全かを
+教えるだけです。`HIGH` は `skills/` または `workflows/` 配下にローカル修正
+(Hermes が直したスキルを含む可能性) があり、pull で上書きされ得ることを意味します。
+まずそれらを確認してください。これは pull 後の CI drift guard (`make test`) を
+補完します。両者の関係と、長期的な ownership の答えである vendored mode については
+`docs/04-skill-integration-strategy.md` を参照してください。
+
+---
+
 ## バージョニングと再現可能なインストール
 
 Hermes Profile Distribution の install (`hermes profile install github.com/<owner>/<repo>`) は現状、リポジトリの **default branch** を追跡する仕様で、特定タグの pinning には対応していません。GitHub Releases は changelog 用で、最新版は https://github.com/tradermonty/hermes-trading-research-agent-work-package/releases を参照してください。`github.com/...#<tag>` のような ref 指定はまだ Hermes installer には未実装です。
