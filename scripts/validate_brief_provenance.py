@@ -21,7 +21,24 @@ STATUSES = {"fresh", "carried_forward", "stale", "unavailable", "valid_empty", "
 
 
 def _cells(line: str) -> tuple[str, ...]:
-    return tuple(cell.strip() for cell in line.strip().strip("|").split("|"))
+    """Split unescaped pipes, preserving extra empty boundary columns."""
+    line = line.strip()
+    cells: list[str] = []
+    start = 0
+    for index, char in enumerate(line):
+        # GFM tables keep a pipe preceded by a backslash inside the cell,
+        # including after consecutive backslashes (cmark-gfm table scanner).
+        if char == "|" and (index == 0 or line[index - 1] != "\\"):
+            cells.append(line[start:index])
+            start = index + 1
+    cells.append(line[start:])
+    # Markdown permits one optional delimiter at each edge. Removing more
+    # would hide empty columns in malformed rows such as `|| value |`.
+    if line.startswith("|"):
+        cells = cells[1:]
+    if start == len(line) and line.endswith("|"):
+        cells = cells[:-1]
+    return tuple(cell.strip() for cell in cells)
 
 
 def _date(value: str) -> date | None:

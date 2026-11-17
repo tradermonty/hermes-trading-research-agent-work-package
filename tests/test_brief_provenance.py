@@ -87,6 +87,35 @@ def test_only_actual_response_can_satisfy_the_contract():
     assert validate_brief(good + "\n" + good)  # duplicate tables are ambiguous
 
 
+@pytest.mark.parametrize("field", ["source", "impact"])
+@pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
+def test_escaped_pipes_remain_inside_free_text_cells(field, backslashes):
+    text = (FIXTURES / "pre-market-routine_valid_empty.md").read_text()
+    before = "FINVIZ Elite export" if field == "source" else "0 validated rows; expected"
+    after = before + " filter A " + "\\" * backslashes + "| B"
+    assert before in text
+    assert validate_brief(text.replace(before, after)) == []
+
+
+def test_unescaped_pipes_still_add_columns():
+    text = (FIXTURES / "pre-market-routine_valid_empty.md").read_text()
+    after = "FINVIZ Elite export A | B"
+    assert validate_brief(text.replace("FINVIZ Elite export", after))
+
+
+@pytest.mark.parametrize("location", ["start", "end"])
+@pytest.mark.parametrize("extra_pipes", [1, 2])
+def test_extra_boundary_pipes_do_not_hide_empty_columns(location, extra_pipes):
+    text = (FIXTURES / "pre-market-routine_valid_empty.md").read_text()
+    lines = text.splitlines()
+    index = next(i for i, line in enumerate(lines) if line.startswith("| Themes |"))
+    if location == "start":
+        lines[index] = "|" * extra_pipes + lines[index]
+    else:
+        lines[index] += "|" * extra_pipes
+    assert validate_brief("\n".join(lines))
+
+
 def test_cli_without_credentials_or_optional_mcps(tmp_path):
     # Shipped examples retain optional market keys and an empty MCP registry.
     assert json.loads((ROOT / "mcp.json").read_text()) == {"mcpServers": {}}

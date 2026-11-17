@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Provenance table parsing now keeps escaped pipes inside cells and preserves extra empty boundary columns for validation. Regression tests cover escaped delimiters and malformed leading/trailing delimiters (PR #2 review).
+
 ### Added
 
 - **Issue #1 — Morning/evening input provenance.** Pre-market and after-close manual bundles, cron prompts and the local brief writer share a required input table with source/skill, actual skill revision, observation date, expected date, status and impact/recovery steps. Distinguishes stale dashboard inputs, unavailable Elite exports, validated empty screens and unknown metadata; preserves independent data and holiday carry-forward. `scripts/validate_brief_provenance.py` checks declared Markdown table/date consistency offline. Synthetic fixtures cover both routines plus a Memorial Day control. Provider mapping separates local credentials from upstream Finviz lineage; migration verification remains a separately recorded live check.
