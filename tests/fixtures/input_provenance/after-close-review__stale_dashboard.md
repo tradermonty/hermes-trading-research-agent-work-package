@@ -20,5 +20,5 @@ Human decision gate: the human reviewer decides any follow-up or trade action.
 ### Source / Skill provenance
 | Section | Source / upstream dependency | Skill revision | Observation date | Retrieved at | Status | Impact / follow-up |
 |---|---|---|---|---|---|---|
-| Affected section | uptrend-analyzer / public dashboard -> upstream Finviz collection | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; illustrative) | 2026-03-27 | 2026-11-16T16:00:00-08:00 | stale | degraded; no local key required; old row excluded; current coverage unknown; withhold dependent posture change |
-| Independent earnings calendar | earnings-calendar / synthetic local dated calendar | unknown (fixture) | 2026-11-16 | 2026-11-16T16:00:00-08:00 | fresh | Retain independent data; verify events before review |
+| Affected section | uptrend-analyzer / public dashboard -> upstream Finviz collection | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; illustrative) | 2026-03-27 | 2026-11-16T16:00:00-08:00 | stale | Freshness basis: completed regular session; degraded; no local key required; old row excluded; current coverage unknown; withhold dependent posture change |
+| Independent earnings calendar | earnings-calendar / synthetic local dated calendar | unknown (fixture) | 2026-11-16 | 2026-11-16T16:00:00-08:00 | fresh | Freshness basis: dated local calendar covering the report window; Retain independent data; verify events before review |

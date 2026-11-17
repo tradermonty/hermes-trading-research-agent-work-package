@@ -115,12 +115,14 @@ Both pre-market and after-close bundle instructions and cron prompts require a `
 
 | Status | Evidence | Brief behavior |
 |---|---|---|
-| fresh | Validated input for the expected completed regular session | Retain supported observations. |
-| stale | Observation older than the expected completed session | Mark the affected section degraded; withhold dependent conclusions. |
+| fresh | Validated input meeting its declared freshness basis | Retain supported observations. |
+| stale | Observation older than its declared basis permits | Mark the affected section degraded; withhold dependent conclusions. |
 | unavailable | Missing input/key, fetch/auth/schema failure, or unverifiable observation date | Explain the gap; unknown dates stay unknown. |
-| valid-empty | Successful schema-valid current-session screen with zero matches | Report no matches; this alone does not degrade the brief. |
+| valid-empty | Successful schema-valid screen with zero matches meeting its declared basis | Report no matches; this alone does not degrade the brief. |
 
-Freshness is session-based: pre-market uses the latest completed regular close; after-close expects today's completed session once a regular session has closed, or the most recent completed regular session on holidays/weekends. A holiday/weekend bridge preserves the existing pre-market `carried forward from <YYYY-MM-DD>` semantics. An uncertain market calendar or cutoff leaves freshness unknown/unavailable. Independent macro, earnings, breadth, or journal inputs remain usable with their own provenance. A failed screen is never evidence of zero breadth, no candidates, or a bearish posture. Manual/public fallbacks require independent dates and attribution. Missing columns, malformed CSV, and HTML with HTTP 200 are unavailable inputs, not valid-empty screens.
+Completed-close freshness is session-based: pre-market uses the latest completed regular close; after-close expects today's completed session once a regular session has closed, or the most recent completed regular session on holidays/weekends. A holiday/weekend bridge preserves the existing pre-market `carried forward from <YYYY-MM-DD>` semantics. An uncertain market calendar or cutoff leaves freshness unknown/unavailable. Independent macro, earnings, breadth, or journal inputs remain usable with their own provenance. A failed screen is never evidence of zero breadth, no candidates, or a bearish posture. Manual/public fallbacks require independent dates and attribution. Missing columns, malformed CSV, and HTML with HTTP 200 are unavailable inputs, not valid-empty screens.
+
+Every table row declares its **Freshness basis** in `Impact / follow-up`. Completed-close series use the expected completed regular session. News, earnings releases, pre-market/live quotes and screens instead use observation timestamp/timezone, the run cutoff, and an explicit source-specific age limit with its origin; unknown limits or observation times are unavailable rather than guessed. Future observation times beyond the cutoff are invalid. A current-morning input may be fresh while the posture still uses the previous completed close. Unfinished/live information never replaces that close or establishes a completed-session regime change. Event calendars record a verified-as-of timestamp and coverage of the requested event window; future event dates are not observation timestamps.
 
 ### December 7 transition evidence
 
@@ -130,7 +132,26 @@ Offline contract review used the clean local upstream checkout `6e9a635e5259601d
 
 ### Offline acceptance examples
 
-`tests/fixtures/input_provenance/` contains synthetic pre-market and after-close briefs for a stale public dashboard without a local key, a failed Elite screen, a valid empty screen, and a holiday carry-forward. These are contract examples, not captured Hermes output or live data. `tests/test_input_provenance.py` checks the instructions on all four invocation surfaces, the examples' provenance/status distinctions, and the default empty MCP configuration. Real Hermes rendering and the live transition remain operator verification in the release soak; no new Hermes CLI behavior is assumed. Optional MCP templates remain opt-in and the shipped `mcp.json` stays empty.
+`tests/fixtures/input_provenance/` contains synthetic pre-market and after-close briefs for a stale public dashboard without a local key, a failed Elite screen, a valid empty screen, and a holiday carry-forward. These are contract examples, not captured Hermes output or live data. `tests/test_input_provenance.py` checks the instructions on all four invocation surfaces, the examples' provenance/status distinctions, and the default empty MCP configuration. The examples alone do not establish runtime behavior. Controlled real-generation evidence is described below; the live transition remains operator verification in the release soak; no new Hermes CLI behavior is assumed. Optional MCP templates remain opt-in and the shipped `mcp.json` stays empty.
+
+### Controlled Hermes generation and replay audit
+
+`tests/fixtures/input_provenance/*__inputs.json` supplies raw synthetic observations without expected status labels: stale dashboard rows, an authentication failure, a schema-valid zero-match screen, same-day timestamped news, and a verified event calendar with future event dates. Pre-market and after-close use different completed-session cutoffs. The 30-minute news/screen/calendar age limit is an explicitly synthetic acceptance policy, not a new production default.
+
+The opt-in `scripts/run_provenance_acceptance.py` sends these inputs through real Hermes inference. Bundle runs use the installed `build_bundle_invocation_message` (the interactive slash-command builder) including all resolved upstream skills; cron runs use the expanded prompt body. This is controlled rendering, not a scheduler firing, a full install test, or execution of upstream fetchers. The runner pins one Python/source installation for both the zero-tool preflight and CLI generation; it aborts if tools are exposed or the runtime bundle differs from the checkout. Normal profile/cron state is not used.
+
+Prepare a disposable Hermes home with a working inference provider, this checkout's `SOUL.md`, `skills/`, `skill-bundles/`, empty `mcp.json`, and external skill discovery pointed at the reviewed upstream checkout. Keep inference credentials only in that private temporary home; never add them or its logs to Git. Do not enable hooks or MCPs. Then invoke, once for each workflow/surface pair:
+
+```bash
+python scripts/run_provenance_acceptance.py \
+  --runtime-home /tmp/isolated-hermes-home \
+  --hermes-source /path/to/hermes-agent \
+  --hermes-python /path/to/hermes-agent/venv/bin/python \
+  --workflow pre-market-routine --surface bundle \
+  --output-dir /tmp/provenance-generation
+```
+
+The runner records raw stdout, source/query/response SHA-256 hashes, and the actual Hermes version. It checks the generated provenance rows and inline sections against raw input outcomes, including basis kind, expected session or cutoff/age-policy/window, timestamps, source, skill revision, failure reason, and independent fresh information. The expected labels are calculated by the auditor and are not included in the model request. Queries remain local because expanded upstream skill text is large. Check responses before archiving them. CI replays the archived actual model responses and rejects deliberately corrupted statuses, dates, bases and missing inline disclosures in `tests/test_generated_provenance.py`; this offline replay is distinct from a fresh model call.
 
 ## Trade ticket primitive (as of B-3 / TICKET-009)
 
