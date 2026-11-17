@@ -1,0 +1,101 @@
+{
+  "retrieved_at_utc": "2026-11-17T06:43:36.699399+00:00",
+  "dashboard_revision": "be3ef00168bee14adc406a7ab64e77922d60540f",
+  "sector_summary.csv": {
+    "source": "https://raw.githubusercontent.com/tradermonty/uptrend-dashboard/be3ef00168bee14adc406a7ab64e77922d60540f/data/sector_summary.csv",
+    "sha256": "90e3a3bdc875c69362254b3e66e7244ec2eb2de7992a565f1064a5b56f8366ee",
+    "columns": [
+      "Sector",
+      "Ratio",
+      "10MA",
+      "Trend",
+      "Slope",
+      "Status"
+    ],
+    "row_count": 11,
+    "observation_date": "unknown"
+  },
+  "independent_spy_daily": {
+    "source": "FMP stable historical-price-eod/light (SPY)",
+    "http_status": 200,
+    "rows": [
+      {
+        "symbol": "SPY",
+        "date": "2026-11-16",
+        "price": 739.95,
+        "volume": 69207282
+      },
+      {
+        "symbol": "SPY",
+        "date": "2026-11-13",
+        "price": 754.37,
+        "volume": 38720038
+      }
+    ]
+  },
+  "verified_nyse_sessions": {
+    "2026-11-09": {
+      "open_utc": "2026-11-09 14:30:00+00:00",
+      "close_utc": "2026-11-09 21:00:00+00:00"
+    },
+    "2026-11-10": {
+      "open_utc": "2026-11-10 14:30:00+00:00",
+      "close_utc": "2026-11-10 21:00:00+00:00"
+    },
+    "2026-11-11": {
+      "open_utc": "2026-11-11 14:30:00+00:00",
+      "close_utc": "2026-11-11 21:00:00+00:00"
+    },
+    "2026-11-12": {
+      "open_utc": "2026-11-12 14:30:00+00:00",
+      "close_utc": "2026-11-12 21:00:00+00:00"
+    },
+    "2026-11-13": {
+      "open_utc": "2026-11-13 14:30:00+00:00",
+      "close_utc": "2026-11-13 21:00:00+00:00"
+    },
+    "2026-11-16": {
+      "open_utc": "2026-11-16 14:30:00+00:00",
+      "close_utc": "2026-11-16 21:00:00+00:00"
+    },
+    "2026-11-17": {
+      "open_utc": "2026-11-17 14:30:00+00:00",
+      "close_utc": "2026-11-17 21:00:00+00:00"
+    }
+  },
+  "overall_timeseries": {
+    "source": "https://raw.githubusercontent.com/tradermonty/uptrend-dashboard/be3ef00168bee14adc406a7ab64e77922d60540f/data/uptrend_ratio_timeseries.csv",
+    "sha256": "ab5f6b40f1333163b97c9e19e8f595a23ce8f6700863068414106141920f8f18",
+    "columns": [
+      "worksheet",
+      "date",
+      "count",
+      "total",
+      "ratio",
+      "ma_10",
+      "slope",
+      "trend"
+    ],
+    "row_count": 34476,
+    "premarket_observation": {
+      "worksheet": "all",
+      "date": "2026-11-13",
+      "count": "626",
+      "total": "2775",
+      "ratio": "0.22558558558558559",
+      "ma_10": "0.2314838414262527",
+      "slope": "-0.005173437141907211",
+      "trend": "down"
+    },
+    "after_close_observation": {
+      "worksheet": "all",
+      "date": "2026-11-16",
+      "count": "508",
+      "total": "2730",
+      "ratio": "0.18608058608058609",
+      "ma_10": "0.22475028429728994",
+      "slope": "-0.004619148338395801",
+      "trend": "down"
+    }
+  }
+}

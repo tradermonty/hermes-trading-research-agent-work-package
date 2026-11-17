@@ -1,0 +1,275 @@
+{
+  "tested_at_utc": "2026-11-17T06:40:34.290457+00:00",
+  "upstream_revision": "d604308942bc606523ff90dfeb9bcc727055ed3a",
+  "upstream_dirty": false,
+  "source": "upstream PR #806 candidate; not merged main or production installed checkout",
+  "cutover_phase": "before 2026-12-07; post-cutover verification not yet possible",
+  "cases": [
+    {
+      "skill": "value-dividend-screener",
+      "new_request": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "cap_midover,fa_div_o3,fa_divgrowth_3yo5,fa_eps3years_pos,fa_pb_u2,fa_pe_u20,fa_sales3years_pos,geo_usa",
+          "ft": "4"
+        }
+      },
+      "new": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:34.550620+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 20,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "a392cb8d158a337baf09b8e3285d955dc834a1314689b06d9276a95d90df12a4"
+      },
+      "legacy": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:35.789776+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 20,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "a392cb8d158a337baf09b8e3285d955dc834a1314689b06d9276a95d90df12a4"
+      },
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "dividend-growth-pullback-screener",
+      "new_request": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "cap_midover,fa_div_0.5to3,fa_divgrowth_3yo10,fa_eps3years_o5,fa_sales3years_o5,geo_usa,ta_rsi_os40",
+          "ft": "4"
+        }
+      },
+      "new": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:36.956425+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 7,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "5513bb7160117f5aed2a3ec184be8b8db8dd68b868fc549396c5d8d59b7822ca"
+      },
+      "legacy": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:38.178822+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 7,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "5513bb7160117f5aed2a3ec184be8b8db8dd68b868fc549396c5d8d59b7822ca"
+      },
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Semiconductors",
+      "bearish": false,
+      "new_request": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "ind_semiconductors,cap_smallover,sh_avgvol_o100,sh_price_o10,ta_perf2_4wup",
+          "c": "1,6,66",
+          "ft": "4"
+        }
+      },
+      "new": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:39.347702+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 12,
+        "columns": [
+          "Ticker",
+          "Market Cap",
+          "Change"
+        ],
+        "ticker_sha256": "ea3da24d6c1ee99c9ef7e5c7560e3f4ee500656326f75faec33b25689d686c9f"
+      },
+      "legacy": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:40.572450+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 12,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "ea3da24d6c1ee99c9ef7e5c7560e3f4ee500656326f75faec33b25689d686c9f"
+      },
+      "ticker_sets_equal": true,
+      "ranked_values_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Software - Application",
+      "bearish": true,
+      "new_request": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "ind_softwareapplication,cap_smallover,sh_avgvol_o100,sh_price_o10,ta_perf2_4wdown",
+          "c": "1,6,66",
+          "ft": "4"
+        }
+      },
+      "new": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:41.710414+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 39,
+        "columns": [
+          "Ticker",
+          "Market Cap",
+          "Change"
+        ],
+        "ticker_sha256": "d5be8616e9f5c1ba84a6234670d01a6169e0dd56f775ac7c56b0db7e0a55bfb7"
+      },
+      "legacy": {
+        "http_status": 200,
+        "retrieved_at_utc": "2026-11-17T06:40:42.965285+00:00",
+        "observation_date": "unknown",
+        "date_note": "Export provides no verified session/as-of metadata; retrieval time is separate.",
+        "outcome": "schema_valid",
+        "rows": 39,
+        "columns": [
+          "No.",
+          "Ticker",
+          "Company",
+          "Industry",
+          "Market Cap",
+          "EPS Growth This Year",
+          "EPS Growth Next Year",
+          "Sales Growth Past 5 Years",
+          "Sales Growth Quarter Over Quarter",
+          "EPS Growth Quarter Over Quarter",
+          "EPS Surprise",
+          "Revenue Surprise",
+          "Performance (Week)",
+          "Performance (YTD)",
+          "Earnings Date",
+          "Relative Volume",
+          "Change",
+          "After-Hours Change"
+        ],
+        "ticker_sha256": "d5be8616e9f5c1ba84a6234670d01a6169e0dd56f775ac7c56b0db7e0a55bfb7"
+      },
+      "ticker_sets_equal": true,
+      "ranked_values_equal": true,
+      "patched_result_matches_csv": true
+    }
+  ]
+}

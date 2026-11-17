@@ -98,6 +98,105 @@ This repo should not rewrite all trading skills for Hermes. Instead, it adds:
 
 ## Degraded mode behavior
 
+### Morning/evening input provenance (Issue #1)
+
+`data/api-requirements.yaml:no_key_or_local_data` describes credentials on the
+operator's machine, not upstream independence or freshness. In particular,
+`uptrend-analyzer` reads published GitHub CSVs from `uptrend-dashboard`, whose
+collection depends on Finviz. Keeping it in the no-local-key list is correct;
+adding a local key cannot repair an old published observation. The separate
+`input_provenance` mapping records this lineage.
+
+Both `/pre-market-routine` and `/after-close-review`, their cron prompt bodies,
+and `trading-cron-brief-writer` require a `Source / Skill provenance` table:
+
+| Field | Meaning |
+|---|---|
+| Input / section | Every used or attempted input, including unavailable components. |
+| Source / Skill | Actual provider/artifact and consuming skill; include indirect Finviz lineage. Use redacted source identifiers, never auth URLs or secret values. |
+| Skill revision | Actual external checkout commit plus dirty state; `unknown` if unverifiable. Multiple checkouts need their own revisions. |
+| Observation date | Underlying session/as-of date (`YYYY-MM-DD`), not fetch time, generated report date or filename. Use the literal `unknown` when unverified; no dashes, date ranges or prose in date cells. |
+| Expected observation date | Latest observation due under the verified market calendar and that input's publication schedule; `unknown` when unverified. |
+| Status | One of the six states below. |
+| Impact / next step | Affected conclusions, calendar/publication basis, and recovery or review step. |
+
+| Status | Required interpretation |
+|---|---|
+| `fresh` | Known observation equals the observation due. |
+| `carried_forward` | Latest completed session remains current across a weekend/holiday bridge. Preserve the pre-market `Session state` / `Posture basis` preamble. |
+| `stale` | Observation is older than the expected observation, measured in sessions/publication cadence rather than wall-clock age. |
+| `unavailable` | Missing credentials/skill, failed/auth request, invalid response or missing required columns. This cannot establish a candidate count. |
+| `valid_empty` | Successful, schema-validated screen with expected observation metadata and **0 validated rows**. A login page, empty response, parse error or stale empty screen does not qualify. |
+| `unknown` | Date, publication basis, or outcome cannot be verified. Keep the affected section degraded. |
+
+Assess overall, sector and industry data separately. An aggregate date cannot
+establish freshness for an undated component or an older row. Unknown coverage
+stays explicit until upstream publishes adequate metadata. Repeat status and
+observation date in each affected section; maintain independently available
+inputs and avoid a fresh posture-change conclusion dependent on missing data.
+For after-close, expect today's completed session only when publication is due;
+on a holiday/weekend use the latest completed session. If the calendar or
+publication schedule cannot be verified, say `unknown`, rather than assuming
+the newest downloaded file is current. Report-generation/retrieval timestamps
+may be included separately, with timezone, but never replace observation dates.
+
+#### Finviz December 7 transition verification record
+
+Related upstream work: [claude-trading-skills #799](https://github.com/tradermonty/claude-trading-skills/issues/799)
+and [uptrend-dashboard #6](https://github.com/tradermonty/uptrend-dashboard/issues/6).
+The first tracks the 2026-12-07 Elite export migration for
+`theme-detector`, `value-dividend-screener` and
+`dividend-growth-pullback-screener`; the second tracks published observation
+and collection-outcome metadata. This package does not patch either upstream.
+
+On 2026-11-16, the locally inspected external checkout was clean at
+`6e9a635e5259601d79bb7a97085784f8b37742b5` (2026-10-11). Its
+`uptrend-analyzer/SKILL.md` and CSV fetcher confirm the no-local-key GitHub CSV
+path. The synthetic fixtures use this revision as a traceability example;
+they are **not** live screener runs or proof of December 7 compatibility.
+A subsequent pre-cutover live comparison used the actual migration candidate
+`d604308942bc606523ff90dfeb9bcc727055ed3a` from upstream PR #806. See
+[the verification record](verification/2026-11-16-finviz-migration.md) for results
+and actual Hermes output evidence. Post-cutover verification remains pending.
+
+For each real migration test, record:
+
+1. Actual execution timestamp/timezone, external checkout path and
+   `git -C "$CLAUDE_TRADING_SKILLS_REPO" rev-parse HEAD` plus
+   `git -C "$CLAUDE_TRADING_SKILLS_REPO" status --short`. For a dirty tree,
+   retain a reviewed patch/hash; a commit alone cannot identify executed code.
+2. Skill names and the revision actually invoked (including vendored copies,
+   when applicable). A successful HTTP response or configured key does not
+   establish that the migrated skill was loaded.
+3. Redacted source/endpoint, observation and expected session dates, export
+   validation/columns, row count, and outcome. Follow upstream #799's live-diff
+   procedure with the updated upstream revision; compare ticker sets and
+   required values before and after 2026-12-07.
+4. Morning and evening output paths and provenance-validator results, plus
+   human review of affected-section warnings, independent data and posture.
+
+The actual pre-cutover migration-test revision is now recorded above; the
+inspected October checkout remains unverified for migration. Upstream PR #806
+is a candidate, not merged main or the installed production checkout. A
+post-2026-12-07 run must record the revision actually used at that time.
+Optional MCPs stay disabled (`mcp.json` remains an empty registry); this
+contract adds no local key requirement or automatic upstream update.
+
+#### Offline report check
+
+From the profile root:
+
+```bash
+python3 scripts/validate_brief_provenance.py /path/to/brief.md
+```
+
+The standard-library-only checker validates the declared table shape, required
+fields, states and date consistency. For cron artifacts with prompt echo, only
+`## Response` is checked. It does not fetch data, infer market calendars,
+establish CSV validity, verify revisions, or prove coverage and conclusions.
+Human review and live bundle execution remain separate acceptance evidence.
+Synthetic output examples are in `tests/fixtures/brief_provenance/`.
+
 | Missing component | Behavior |
 |---|---|
 | `CLAUDE_TRADING_SKILLS_REPO` | Use only Hermes adapter skills; instruct user to set path. |
