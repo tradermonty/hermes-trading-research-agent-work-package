@@ -39,29 +39,41 @@ def expected_status(item: dict, cutoff: str) -> str:
         return "unavailable"
     if delta > basis["max_age_minutes"] * 60:
         return "stale"
-    if basis["kind"] == "event-calendar" and not (
-        item["coverage_start"] <= basis["requested_start"]
-        and item["coverage_end"] >= basis["requested_end"]
+    if basis["kind"] == "event-calendar" and (
+        not basis.get("event_domain")
+        or not (
+            item["coverage_start"] <= basis["requested_start"]
+            and item["coverage_end"] >= basis["requested_end"]
+        )
     ):
         return "unavailable"
     return "valid-empty" if item.get("row_count") == 0 else "fresh"
 
 
+def parse_provenance_rows(text: str) -> dict[str, list[str]]:
+    rows = {}
+    shared = re.search(r"(?im)^Skill revision for all rows:\s*(.+)$", text)
+    for line in text.splitlines():
+        if "|" not in line:
+            continue
+        cells = [
+            cell.strip().replace("**", "").replace("`", "")
+            for cell in line.strip().strip("|").split("|")
+        ]
+        if len(cells) == 6 and shared:
+            cells.insert(2, shared.group(1))
+        if len(cells) == 7:
+            rows[cells[0]] = cells
+    return rows
+
+
 def audit_response(text: str, case: dict) -> None:
     """Check observed status/date/basis in actual provenance rows, fail closed."""
-    rows = {}
+    rows = parse_provenance_rows(text)
     prose = "\n".join(line for line in text.splitlines() if "|" not in line)
     # Inspect the affected content sections, not status summaries in the footer.
     main_prose = re.split(r"(?im)^#{1,4}[^\n]*data freshness", prose)[0]
     blocks = re.split(r"(?m)^#{1,4} ", main_prose)[1:]
-    for line in text.splitlines():
-        if "|" in line:
-            cells = [
-                cell.strip().replace("**", "").replace("`", "")
-                for cell in line.strip().strip("|").split("|")
-            ]
-            if len(cells) == 7:
-                rows[cells[0]] = cells
     for item in case["inputs"]:
         label = item["section"]
         assert label in rows, f"Missing provenance row: {label}"
@@ -100,6 +112,9 @@ def audit_response(text: str, case: dict) -> None:
             assert str(basis["max_age_minutes"]) in impact, f"{label}: missing age limit"
             assert basis["policy_source"] in impact, f"{label}: missing policy source"
             if basis["kind"] == "event-calendar":
+                assert basis["event_domain"] in impact.lower(), (
+                    f"{label}: calendar domain missing/wrong"
+                )
                 for key in ("requested_start", "requested_end"):
                     assert basis[key] in impact, f"{label}: missing event window"
         if item["fetch"] != "success":
@@ -118,9 +133,17 @@ def audit_response(text: str, case: dict) -> None:
                 if anchor.lower() in block.lower() or label.lower() in block.lower()
             ]
             assert relevant, f"{label}: missing inline disclosure"
-            assert any(expected in block.lower() for block in relevant), (
-                f"{label}: wrong inline status"
+            explicit_status = any(expected in block.lower() for block in relevant)
+            unavailable_context = (
+                expected == "unavailable"
+                and item["fetch"] != "success"
+                and any("degraded" in block.lower() for block in relevant)
+                and any(
+                    "auth" in block.lower() and "no observation" in block.lower()
+                    for block in relevant
+                )
             )
+            assert explicit_status or unavailable_context, f"{label}: wrong inline status"
             if expected == "stale":
                 assert any(observation in block for block in relevant), (
                     f"{label}: inline date missing"
@@ -129,10 +152,53 @@ def audit_response(text: str, case: dict) -> None:
                 assert any("auth" in block.lower() for block in relevant), (
                     f"{label}: inline failure reason missing"
                 )
+    audit_calendar_scope(text, case)
+    audit_unobserved_outcomes(text, case)
     assert "Source / Skill provenance" in text
     assert "degraded" in text.lower()
-    assert "no matches" in text.lower()
     assert "human" in text.lower()
+
+
+def audit_calendar_scope(text: str, case: dict) -> None:
+    prose = "\n".join(line for line in text.splitlines() if "|" not in line)
+    main_prose = re.split(r"(?im)^#{1,4}[^\n]*data freshness", prose)[0]
+    blocks = re.split(r"(?m)^#{1,4} ", main_prose)[1:]
+    if case.get("workflow") == "pre-market-routine" and not any(
+        item["basis"].get("event_domain") == "economic"
+        and expected_status(item, case["run_cutoff"]) in ("fresh", "valid-empty")
+        for item in case["inputs"]
+    ):
+        macro = [block for block in blocks if "macro calendar" in block.splitlines()[0].lower()]
+        assert macro, "Missing economic-calendar availability disclosure"
+        economic = "\n".join(macro).lower()
+        assert "economic" in economic and re.search(r"\b(unknown|unavailable)\b", economic), (
+            "Missing economic-calendar availability disclosure"
+        )
+        for line in economic.splitlines():
+            if re.search(
+                r"no scheduled high-impact events|high-impact events today:\s*(none|no events)",
+                line,
+            ):
+                assert re.search(
+                    r"never as|do not (claim|infer|assume)|must not (claim|infer|assume)", line
+                ), "Earnings coverage cannot establish absence of economic events"
+
+
+def audit_unobserved_outcomes(text: str, case: dict) -> None:
+    # These controlled cases provide no reaction series or signal comparisons.
+    # Missing records cannot establish a zero-count/change outcome.
+    if case.get("workflow") != "after-close-review":
+        return
+    pattern = r"no earnings reactions occurred|no signals improved|no signals degraded|nothing is invalidated"
+    for line in text.splitlines():
+        if re.search(pattern, line, re.IGNORECASE) and not re.search(
+            r"unknown|not assessable|cannot|do not (assume|claim|infer)|must not (assume|claim|infer)|must not be (read|interpreted|treated) as",
+            line,
+            re.IGNORECASE,
+        ):
+            raise AssertionError(
+                "Missing observations cannot prove zero reactions or signal changes"
+            )
 
 
 def main() -> None:
@@ -169,7 +235,8 @@ def main() -> None:
         "section using a heading '### <exact section name>' and a 'Status: <status>' line. "
         "For each Impact cell include the basis.kind literally; completed-close includes "
         "expected_session, other bases include the full run cutoff, max age in minutes, "
-        "and policy source; event-calendar also includes the requested coverage window. "
+        "and policy source; event-calendar also includes the event domain and requested coverage window. "
+        "For Macro calendar, report economic-calendar availability separately from earnings-calendar availability. "
         "Explain failures and degraded consequences. State synthetic data and that supplied upstream skills were not executed.\n"
         + json.dumps(case, indent=2)
     )

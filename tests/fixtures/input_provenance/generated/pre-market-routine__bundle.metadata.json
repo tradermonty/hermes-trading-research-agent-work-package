@@ -2,11 +2,11 @@
   "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
   "workflow": "pre-market-routine",
   "surface": "bundle",
-  "generated_at": "2026-11-16T22:45:48.314381-08:00",
-  "query_sha256": "f27e4b9ef59289ce6cc29ac324d8566591215e7705c4e876ab7d3b753a147db1",
-  "response_sha256": "22071b8de7cb6ff03b6a6b3757d15a3315e57ed161278dadb7bcb6eaed03a9ed",
+  "generated_at": "2026-11-16T23:02:00.647831-08:00",
+  "query_sha256": "24c3d3db47cbbc98a814ba8d1c1e86d11c4ac23d74c032bc954d87994baab995",
+  "response_sha256": "0842591c89d52f2231c9cc0a9c6dfc2c872974e25d9e6e0c12df39f0fe08e814",
   "source_sha256": {
-    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "905d3cdf3f4bb559f7e527e5685164cee6d4cc605722c5128a1d57601942f6ee",
-    "skill-bundles/pre-market-routine.yaml": "141e2d35dfc728a85c716f94a0be41cfd7d9b1c649748510199b6ca39bb2bfa2"
+    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "9cba27bc248d6bdc661ae244aec41c4fcc56f630fc5a37e38990ad2dbf96ebc5",
+    "skill-bundles/pre-market-routine.yaml": "3806b5218c7052f0157be5a98fb29330173ee594f082b84fdc3ff871e5705e1c"
   }
 }

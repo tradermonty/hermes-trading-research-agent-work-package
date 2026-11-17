@@ -84,8 +84,10 @@
         "requested_start": "2026-11-17",
         "requested_end": "2026-11-20",
         "max_age_minutes": 30,
-        "policy_source": "synthetic acceptance policy"
+        "policy_source": "synthetic acceptance policy",
+        "event_domain": "earnings"
       }
     }
-  ]
+  ],
+  "workflow": "after-close-review"
 }

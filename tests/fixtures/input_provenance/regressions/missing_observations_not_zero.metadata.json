@@ -1,0 +1,12 @@
+{
+  "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
+  "workflow": "after-close-review",
+  "surface": "bundle",
+  "generated_at": "2026-11-16T23:00:34.991041-08:00",
+  "query_sha256": "66dc1fc14b81c075a0ce2b054c93927b96466c36c8a563451f879f56d1836cda",
+  "response_sha256": "f7d63d786e685604a27da67383e6e3856668cb56bb204ca702a4800c04c7b86b",
+  "source_sha256": {
+    "tests/fixtures/input_provenance/after-close-review__inputs.json": "7ddd119626b59cf95bf53cfdae09eddbc1cdd577d7d5124e6a19c448c6f8f208",
+    "skill-bundles/after-close-review.yaml": "0f0a168c1f43ea849644077c319a693dd008a8d53f606e331733ac776789a2a6"
+  }
+}

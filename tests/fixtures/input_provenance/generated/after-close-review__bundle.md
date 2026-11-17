@@ -1,136 +1,106 @@
 Warning: Unknown toolsets: acceptance-no-tools
-AFTER-CLOSE REVIEW — US EQUITIES
-Session: 2026-11-17 (normal session day, expected completed session per supplied calendar)
-Run cutoff: 2026-11-17T16:00:00-08:00
+AFTER-CLOSE REVIEW — 2026-11-17 (synthetic acceptance run)
 
-*** CONTROLLED SYNTHETIC ACCEPTANCE RUN ***
-All observations are synthetic fixtures. No tools were run, nothing was fetched, and the supplied upstream skills (uptrend-analyzer, theme-detector/FINVIZ screens, market-news-analyst, earnings-calendar) were NOT executed. This brief exercises the reporting/provenance contract only. It does not place orders and does not make entry/exit decisions — all decisions remain with the human reviewer.
+Risk posture: indeterminate — no fresh market-regime inputs; do not change exposure on this brief.
 
-Risk posture: UNDETERMINED / BLOCKED — no fresh completed-close regime input is available for the expected session (2026-11-17), so no posture change can be supported.
+SYNTHETIC RUN NOTICE: All observations in this brief are controlled synthetic fixtures. The supplied run cutoff (2026-11-17T16:00:00-08:00) and market calendar override the real clock. The supplied upstream skills (uptrend-analyzer, theme-detector, market-news-analyst, earnings-calendar, etc.) were NOT executed; their revision SHA and outputs are fixture-provided. No tools, fetching, or file changes were used.
 
---------------------------------------------------------------------
-1. WHAT CHANGED TODAY (INDICES, BREADTH, SECTORS, THEMES)
+### What changed today in indices, breadth, sectors, and themes
 Status: degraded
 
-- Index moves: unknown. No index OHLC/close input was supplied for 2026-11-17. No level, % change, or volume can be reported.
-- Breadth: cannot be assessed for today. The only breadth/dashboard input carries observation date 2026-03-27, which does not satisfy the completed-close basis (expected_session 2026-11-17). It is stale and is not used as today's reading.
-- Sectors: cannot be assessed. No sector dataset was supplied.
-- Themes: the only theme input is the "Empty Elite" screen, which is schema-valid with zero rows observed at 2026-11-17T15:55:00-08:00. This is a valid-empty result ("no matches for the screen criteria as of that timestamp") — it is NOT a failed screen, NOT zero breadth, and NOT a bearish signal. The second Elite screen (A) failed authentication and yields no theme information at all.
+- Indices (SPY/QQQ/DJI levels, volume, day change): no observation supplied. Whether the indices rose, fell, or were flat on 2026-11-17 is unknown.
+- Breadth (advance/decline, up/down volume, new highs/lows): no fresh observation supplied. The only breadth-adjacent input (Dashboard) has observation date 2026-03-27, ~8 months before the expected completed session 2026-11-17. It cannot describe today.
+- Sectors: no fresh observation supplied. Sector rotation on 2026-11-17 is unknown.
+- Themes: theme screening partially failed and partially returned empty.
+  - Direct FINVIZ Elite screen A: authentication failure; schema invalid; no observation date. This is a failed screen, not a zero-match result.
+  - Direct FINVIZ Elite screen B (observation 2026-11-17T15:55:00-08:00, schema-valid, 0 rows): a valid-empty screen. It establishes zero matches for that specific screen only. It does NOT establish that no themes moved, that breadth was zero, or that nothing changed today.
+- News: one synthetic afternoon headline ("Synthetic company research update; no trade recommendation") observed at 2026-11-17T15:55:00-08:00. It is fresh and current-session but carries no market-level content usable for regime or sector conclusions.
 
-Consequence: the "what changed today" summary is empty of substantive market content by design. Nothing is inferred to fill the gaps.
+Consequence: no regime call, no sector-rotation call, and no "what changed today" summary can be honestly produced from these inputs. Treat today's tape as unobserved.
 
---------------------------------------------------------------------
-2. BREADTH / UPTREND IMPROVEMENT OR DETERIORATION
-Status: degraded (stale input)
+### Breadth / uptrend improvement or deterioration
+Status: degraded
 
-- Dashboard observation date: 2026-03-27. Expected completed session: 2026-11-17. Age ≈ 8 months on a completed-close basis → stale; do not compare against any prior run, do not compute a trend, and do not carry the March reading forward as a proxy for November.
-- Partial coverage: the fixture states "current dates for other rows unavailable," so even within the dashboard some rows lack a known observation date. Those rows are treated as unknown-age and excluded from any freshness claim.
-- No improvement/deterioration determination is possible this run. Pending fresh data.
+- The Dashboard input (uptrend-analyzer / public dashboard -> upstream Finviz collection) is valid schema-wise but its observation date is 2026-03-27, against an expected completed session of 2026-11-17. It is stale for a completed-close basis and its own coverage note says "partial; current dates for other rows unavailable."
+- Whether breadth/uptrend participation improved or deteriorated today (or on any recent session) cannot be assessed: there is no fresh prior-vs-current comparison baseline supplied.
+- The 2026-03-27 dashboard data is retained only as an old historical snapshot; it must not be presented as today's breadth, and no composite score, zone, or exposure guidance is derived from it.
+- No distribution-day count (ibd-distribution-day-monitor input absent), no 50DMA/200DMA breadth, and no put/call or VIX term-structure data was supplied; those risk components are unknown, not zero.
 
---------------------------------------------------------------------
-3. EARNINGS REACTIONS WORTH TRACKING
-Status: degraded (calendar fresh; reaction data absent)
+### Earnings reactions worth tracking
+Status: unknown / not assessable
 
-- No earnings-trade-analyzer output was supplied for this run, so there are no scored post-earnings reactions, grades, or candidates. Do not fabricate names.
-- The supplied event calendar is fresh (verified_as_of 2026-11-17T15:55:00-08:00) and covers the requested window 2026-11-17 through 2026-11-20, with event dates 2026-11-18 and 2026-11-19 (both future dates — they are calendar entries, not observations). Tomorrow's session carries scheduled earnings events; prepare for event risk rather than reacting to unverified reactions.
+- No scored earnings-reaction observations (earnings-trade-analyzer output) were supplied. Whether any earnings reactions occurred today, and whether any were notable, cannot be assessed. No graded A/B/C/D candidates exist in this brief.
+- The valid-empty Elite screen (screen B) is a thematic screen, not an earnings screen; it must not be read as "no earnings reactions occurred."
+- Fresh supporting data that IS available (earnings domain only):
+  - Earnings calendar verified as of 2026-11-17T15:55:00-08:00, coverage 2026-11-17 through 2026-11-20, event domain: earnings. Reported earnings dates within coverage: 2026-11-18 and 2026-11-19. No earnings dates are listed for 2026-11-17 within this calendar's coverage — that is a calendar fact for the earnings domain only, not evidence about today's realized reactions.
+  - This calendar says nothing about economic/macro events (see Data freshness).
 
---------------------------------------------------------------------
-4. SIGNALS IMPROVED / DEGRADED / INVALIDATED
-Status: unavailable
+### Signals that improved, degraded, or invalidated
+Status: unknown / not assessable
 
-- No signal records, thesis state, or prior-run outputs were supplied. No signal can be promoted, demoted, or invalidated. Prior theses/signals cannot be evaluated against today's close because today's close data itself is absent. This is an explicit gap, not a clean signal.
+- No signal observations or comparison baselines were supplied (no signal-postmortem records, no prior signal states). Whether any signals improved, degraded, or were invalidated today cannot be assessed.
+- In particular, it is NOT established that "no signals invalidated" — that conclusion is unavailable, not confirmed.
+- No thesis store state was supplied; thesis lifecycle statuses (IDEA/ACTIVE/CLOSED etc.) are unknown for this run.
 
---------------------------------------------------------------------
-5. OPEN TRADE REVIEW CHECKLIST
-Status: degraded (checklist usable; verification inputs absent)
+### Open trade review checklist
+Status: unknown / not assessable
 
-For each open position, the human reviewer should confirm:
-1. Position thesis statement still intact (no thesis-level invalidation observed — but note: no market data this run to confirm either way).
-2. Stop level and trailing logic unchanged; no data-driven adjustment possible this run.
-3. Event exposure: does the position have an earnings date on 2026-11-18 or 2026-11-19? The fresh calendar shows events on those dates; check your own holdings against them before tomorrow's open.
-4. Size/exposure: no regime signal is available to justify any exposure change; default is to make no change pending fresh data.
-5. Journal any decision made tonight with the data caveat recorded (see section 6).
+No open-trade state (trader-memory-core store, positions, stops, review dates) was supplied, so an actual review of open trades cannot be performed. Checklist to run once state is available:
 
---------------------------------------------------------------------
-6. JOURNAL PROMPTS FOR TODAY'S DECISIONS
-Status: available (process section, not data-dependent)
+1. For each open position: is the original thesis statement still intact, or has an invalidation condition been met? (Cannot be assessed this run.)
+2. Are any stops within 1 ATR of price, or any positions below their trailing-stop level? (Unknown.)
+3. Are any positions exposed to the 2026-11-18 and 2026-11-19 earnings dates confirmed above? Flag them for an explicit hold/trim decision before tomorrow's open. (Dates are fresh; position exposure is unknown.)
+4. Is any position due for review per its next_review_date? (Unknown — no store supplied.)
+5. Exposure check against a regime signal: deferred — no fresh regime input exists; do not resize on this brief.
 
-- Did I make any decision today based on the 2026-03-27 dashboard? If so, flag it — that input was stale and should not have driven anything.
-- What would I have needed to see (breadth, Elite screen output, index close) before changing exposure — and did I have it?
-- The Elite screen A failed on authentication, not on logic. Does my workflow have a fallback that I trust, and is it labelled as a fallback?
-- The empty Elite screen returned zero rows. Did I (or would I) have misread "no matches" as a market signal? Record the distinction.
-- With earnings on 11-18/11-19: which positions or watchlist names have event risk, and what is my plan for each?
+### Journal prompts for today's decisions
+Status: ok (no data dependency)
 
---------------------------------------------------------------------
-7. TOMORROW PREPARATION LIST
-Status: available (process section)
+1. What decision did I make today without fresh data, and what would I have needed to see to decide differently?
+2. The only fresh market inputs today were one news headline, one empty thematic screen, and an earnings calendar. Did I act on any of them, and if so, what was my stated thesis and invalidation at the time?
+3. What is my pre-planned reaction to the 2026-11-18/11-19 earnings dates if a held name gaps against me?
+4. Did I feel pressure to act because of missing data (FOMO/anchor risk), or was I genuinely waiting for confirmation?
+5. What single data source, once restored, would most improve tomorrow's review? (Candidate: breadth dashboard refresh.)
 
-1. Fix FINVIZ Elite authentication (screen A failed auth) and re-run the theme screen after the next close; treat the re-run as the first valid theme observation.
-2. Obtain a completed-close breadth/uptrend dataset with observation date 2026-11-17 (or the then-current expected session) before any regime or posture conclusion.
-3. Re-check the earnings calendar for updates; events are scheduled for 2026-11-18 and 2026-11-19 — verify names/timings before the open.
-4. If the news pipeline produces only low-impact single-name items again, note that in the routine rather than inflating it.
-5. Do not act on the 2026-03-27 dashboard; replace it.
+### Tomorrow preparation list
+Status: partial (fresh earnings calendar only; all market-state prep is degraded)
 
---------------------------------------------------------------------
-8. DATA FRESHNESS AND MISSING-DATA WARNINGS
+1. Refresh the breadth/uptrend dashboard so a current completed-close observation (expected session 2026-11-17 or later) exists before the next review. Current snapshot is 2026-03-27 — stale.
+2. Fix the direct FINVIZ Elite authentication failure (screen A) before tomorrow's theme screen; rerun and confirm a schema-valid observation date.
+3. Confirm earnings reporters for 2026-11-18 (calendar: fresh, earnings domain, verified 2026-11-17T15:55:00-08:00). Identify any held names among them; decide hold/trim with a human decision gate.
+4. Pre-check 2026-11-19 reporters as well.
+5. Obtain an economic calendar before tomorrow: economic/high-impact macro events for 2026-11-18 are currently UNKNOWN, not "none."
+6. Re-run distribution-day monitoring (QQQ/SPY) once OHLCV access is available; current distribution-day counts are unknown.
+7. Do not enter new positions off this brief: no fresh regime, breadth, or candidate data supports one.
 
-Per-input status:
-- Dashboard: STALE — observation 2026-03-27 vs expected completed session 2026-11-17; partial coverage (some row dates unknown). Excluded from all conclusions.
-- Failed Elite (screen A): UNAVAILABLE — authentication_failure, schema invalid, no observation timestamp. Not a zero-match result. Requires credential fix.
-- Empty Elite (screen B): FRESH / VALID-EMPTY — schema-valid, 0 rows, observed 2026-11-17T15:55:00-08:00 (5 min before retrieval; within the 30-minute timestamp basis). Means "no screen matches," nothing more.
-- Afternoon news: FRESH — timestamped 2026-11-17T15:55:00-08:00, within 30-minute basis. Single synthetic company-research headline; no market-level or trade content.
-- Earnings calendar: FRESH — verified_as_of 2026-11-17T15:55:00-08:00, coverage 2026-11-17 to 2026-11-20 fully covering the requested window; event dates 2026-11-18, 2026-11-19 are future schedule entries, not observations.
+### Data freshness and missing-data warnings
 
-Missing entirely (not supplied, not inferred): index closes/volume for 2026-11-17, distribution-day counts, market-top score, sector ratios, scored earnings reactions, open thesis state.
+Data status by input:
 
---------------------------------------------------------------------
-### Dashboard
-Status: stale
+- Dashboard — STALE. Observation date 2026-03-27 vs expected completed session 2026-11-17 (normal session day per supplied calendar). ~8 months old; partial coverage; current dates for other rows unavailable. Cannot support any current regime or breadth conclusion.
+- Failed Elite (screen A) — UNAVAILABLE. Authentication failure; schema invalid; no observation date. Not a zero-match result. Thematic screening is degraded until credentials/fetch are repaired.
+- Empty Elite (screen B) — FRESH / VALID-EMPTY. Observation 2026-11-17T15:55:00-08:00 (5 minutes before cutoff; within the 30-minute basis). Establishes zero matches for that screen only.
+- Afternoon news — FRESH. Observation 2026-11-17T15:55:00-08:00 (within 30-minute basis). Single synthetic headline; market-level significance not assessable from it.
+- Earnings calendar — FRESH. Verified as of 2026-11-17T15:55:00-08:00; coverage 2026-11-17 to 2026-11-20 fully contains the requested window; event domain: earnings only. It does NOT cover economic/macro events.
+- Economic calendar — UNAVAILABLE. No economic-calendar-fetcher output or separately dated economic-calendar source was supplied. Economic/high-impact macro events for tomorrow and this week remain unknown; do not treat them as "none scheduled."
+- Missing entirely: index OHLCV/quotes, distribution-day counts, sector uptrend ratios (current), VIX/put-call sentiment, earnings-reaction scores, signal postmortem records, open-position/thesis state. Each is unknown, not zero.
 
-Observation date 2026-03-27 against a completed-close basis expecting session 2026-11-17. Coverage partial (other row dates unavailable). Impact: no breadth/uptrend/sector conclusion is drawn; breadth and regime sections are degraded and marked pending fresh data.
-
-### Failed Elite
-Status: unavailable
-
-Direct FINVIZ Elite screen A failed authentication (no valid observation timestamp, schema invalid). Impact: no theme observation from this screen; the failure is NOT converted into "no matches," zero breadth, or any directional signal. Follow-up: fix FINVIZ_API_KEY / credentials and re-run.
-
-### Empty Elite
-Status: fresh (valid-empty)
-
-Schema-valid screen with 0 rows observed 2026-11-17T15:55:00-08:00, retrieved 2026-11-17T16:00:00-08:00. Impact: recorded as "no matches for the screen criteria"; contributes no theme candidates and no market signal. A valid-empty screen alone does not degrade the brief.
-
-### Afternoon news
-Status: fresh
-
-Timestamped 2026-11-17T15:55:00-08:00 (within the 30-minute basis). Content: "Synthetic company research update; no trade recommendation." Impact: single low-impact item; no market regime inference; no watchlist addition.
-
-### Earnings calendar
-Status: fresh
-
-Verified as of 2026-11-17T15:55:00-08:00; coverage 2026-11-17 through 2026-11-20 fully satisfies the requested window; events listed for 2026-11-18 and 2026-11-19 (future dates = schedule, not observations). Impact: earnings section is limited to forward event risk; no reactions to track without analyzer output.
-
---------------------------------------------------------------------
 Source / Skill provenance
 
-| Section | Source / upstream dependency | Skill revision | Observation date | Retrieved at | Status | Impact / follow-up |
+| Section | Source / Skill provenance | Skill revision | Observation date | Retrieved at | Status | Impact / follow-up |
 |---|---|---|---|---|---|---|
-| Dashboard | uptrend-analyzer / public dashboard -> upstream Finviz collection | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-03-27 (partial; current dates for other rows unavailable) | 2026-11-17T16:00:00-08:00 | stale | Freshness basis: completed-close, expected_session 2026-11-17. Observation predates expected session by ~8 months and does not satisfy the basis; partial row-date coverage. All breadth/uptrend/sector conclusions withheld; regime posture UNDETERMINED; replace dataset before next run. |
-| Failed Elite | theme-detector / direct FINVIZ Elite screen A | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | unknown (authentication_failure — no observation possible) | 2026-11-17T16:00:00-08:00 | unavailable | Freshness basis: timestamp, run cutoff 2026-11-17T16:00:00-08:00, max age 30 minutes, policy source: synthetic acceptance policy. Auth failure → schema invalid → no data. Consequences: no theme signal from screen A; do not interpret as valid-empty; fix credentials and re-run. |
-| Empty Elite | theme-detector / direct FINVIZ Elite screen B | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-11-17T15:55:00-08:00 (observation timestamp) | 2026-11-17T16:00:00-08:00 | fresh (valid-empty, 0 rows) | Freshness basis: timestamp, run cutoff 2026-11-17T16:00:00-08:00, max age 30 minutes, policy source: synthetic acceptance policy. Observation is 5 minutes old → fresh. Zero rows = no matches for screen criteria only; contributes no theme candidates and no directional signal. |
-| Afternoon news | market-news-analyst / synthetic timestamped news | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-11-17T15:55:00-08:00 (observation timestamp) | 2026-11-17T16:00:00-08:00 | fresh | Freshness basis: timestamp, run cutoff 2026-11-17T16:00:00-08:00, max age 30 minutes, policy source: synthetic acceptance policy. Headline explicitly carries no trade recommendation; single-name item only — no market/regime inference drawn. |
-| Earnings calendar | earnings-calendar / synthetic local event calendar | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | verified_as_of 2026-11-17T15:55:00-08:00 (event dates 2026-11-18, 2026-11-19 are future schedule entries, not observations) | 2026-11-17T16:00:00-08:00 | fresh | Freshness basis: event-calendar, verified-as-of within run cutoff 2026-11-17T16:00:00-08:00, max age 30 minutes, policy source: synthetic acceptance policy, requested coverage window 2026-11-17 to 2026-11-20 — fully covered. Used only for forward event-risk preparation; no reaction data exists, so the earnings-reactions section stays degraded. |
+| Dashboard | uptrend-analyzer / public dashboard -> upstream Finviz collection | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-03-27 | 2026-11-17T16:00:00-08:00 | stale | basis.kind=completed-close, expected_session=2026-11-17. Observation predates expected session by ~8 months; partial coverage. All breadth/regime conclusions degraded; refresh dashboard before next review. Public-dashboard path (upstream Finviz collection) kept distinct from direct FINVIZ Elite screens; no local key required for this input. |
+| Failed Elite | theme-detector / direct FINVIZ Elite screen A | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | unknown | 2026-11-17T16:00:00-08:00 | unavailable | basis.kind=timestamp, run cutoff 2026-11-17T16:00:00-08:00, max_age_minutes=30, policy_source=synthetic acceptance policy. Authentication failure, schema invalid; failed screen is not zero matches. Thematic screening unavailable; repair credentials and rerun. |
+| Empty Elite | theme-detector / direct FINVIZ Elite screen B | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-11-17T15:55:00-08:00 | 2026-11-17T16:00:00-08:00 | valid-empty | basis.kind=timestamp, run cutoff 2026-11-17T16:00:00-08:00, max_age_minutes=30, policy_source=synthetic acceptance policy. Schema-valid, 0 rows, observed 5 min before cutoff: fresh. Zero matches apply to this screen only; no inference to earnings reactions, breadth, or signals. |
+| Afternoon news | market-news-analyst / synthetic timestamped news | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-11-17T15:55:00-08:00 | 2026-11-17T16:00:00-08:00 | fresh | basis.kind=timestamp, run cutoff 2026-11-17T16:00:00-08:00, max_age_minutes=30, policy_source=synthetic acceptance policy. Current-session headline, within age limit; no market-level content; no trade recommendation derivable. |
+| Earnings calendar | earnings-calendar / synthetic local event calendar | 6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed) | 2026-11-17T15:55:00-08:00 (verified_as_of) | 2026-11-17T16:00:00-08:00 | fresh | basis.kind=event-calendar, event domain: earnings, requested coverage window 2026-11-17 to 2026-11-20, run cutoff 2026-11-17T16:00:00-08:00, max_age_minutes=30, policy_source=synthetic acceptance policy. Coverage contains requested window; events 2026-11-18, 2026-11-19. Earnings domain only — economic/macro events NOT covered and remain unknown. |
+| Economic calendar | not supplied (no economic-calendar-fetcher output; no separately dated economic-calendar source) | unknown | unknown | unknown | unavailable | No freshness basis can be declared. Economic/high-impact macro events for 2026-11-18 and the week are unknown, not "none." Obtain a dated economic calendar before tomorrow's open. |
 
-Provenance notes:
-- Public dashboard path (uptrend-analyzer → TraderMonty/public dashboard → upstream Finviz collection) is recorded separately from the direct FINVIZ Elite screens (theme-detector), as required; a dashboard observation and an Elite screen are independent inputs with independent freshness.
-- The installed claude-trading-skills revision is recorded exactly as supplied: 6e9a635e5259601d79bb7a97085784f8b37742b5, clean, fixture-provided, not executed. No local modifications claimed beyond what the fixture states.
-- No credentials, auth strings, or non-public URLs are included. No optional MCPs were enabled.
+Watchlist / candidates: none produced. No fresh market data supports any research candidate, and no item is proposed without a thesis, invalidation criteria, and risk notes as required. Any future candidate will be presented as research with an explicit human decision gate.
 
---------------------------------------------------------------------
-Risk considerations (run-level)
-- Exposure impact: with regime UNDETERMINED, no data-driven exposure change is supportable in either direction; default is hold-and-wait.
-- Drawdown sensitivity: absent fresh breadth/distribution inputs, drawdown-control triggers (stops, trailing logic) must run on position-level rules only, not market-regime signals.
-- Event risk: confirmed scheduled earnings on 2026-11-18 and 2026-11-19; any position or candidate overlapping those dates carries gap risk that this run could not quantify.
+Risk considerations:
+- Exposure impact: with regime inputs stale/unavailable, maintaining or adding exposure based on this brief would be an unsupported decision. Default action is no change and no new entries.
+- Drawdown sensitivity: distribution-day counts and market-top components are unknown; a hidden deterioration in breadth cannot be ruled in or out from this data.
+- Event risk: confirmed earnings dates 2026-11-18 and 2026-11-19 (earnings domain, fresh calendar). Economic event risk is unknown — treat as unbounded until an economic calendar is obtained.
 
-Human decision gate: this bundle produces research and checklists only. All entry, exit, sizing, and exposure decisions are made by the human reviewer. No orders were placed or proposed for execution.
-
-Synthetic data disclaimer: every observation above is a supplied synthetic fixture for acceptance testing; the upstream skills were not executed, and no real market data was accessed.
+Human decision gate: all entry, exit, hold, and sizing decisions remain with the human reviewer. This bundle does not place orders, and nothing in this brief constitutes a buy/sell instruction.

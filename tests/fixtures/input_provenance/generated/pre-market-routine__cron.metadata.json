@@ -2,11 +2,11 @@
   "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
   "workflow": "pre-market-routine",
   "surface": "cron",
-  "generated_at": "2026-11-16T22:54:44.330467-08:00",
-  "query_sha256": "87979e9eb05ab3f999f9d533ba3ec13e692710c8046b936835b0abebe5b0d833",
-  "response_sha256": "3a505f1d1afed925d531d4ab88cce766ccd7346d106c0168b4d7d754a3515d92",
+  "generated_at": "2026-11-16T23:05:21.239792-08:00",
+  "query_sha256": "181ce7fbbffb3308aca17362ed02039d8d1a0e98df74974beccd1cd7f43873ba",
+  "response_sha256": "e14778071ecae6bda9e44be3b1c809b6057f06e56bf11c93104d4e6ec922a020",
   "source_sha256": {
-    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "905d3cdf3f4bb559f7e527e5685164cee6d4cc605722c5128a1d57601942f6ee",
-    "prompts/pre-market-routine.md": "b1a658ab03ccd7cdf6a2f907f192ce11ec020dd4ada50493df438a8ed7dedd57"
+    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "9cba27bc248d6bdc661ae244aec41c4fcc56f630fc5a37e38990ad2dbf96ebc5",
+    "prompts/pre-market-routine.md": "733af76393d750e91a28a370c5fa677eb420a66e6d34c5139b4c272433536189"
   }
 }

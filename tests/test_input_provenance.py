@@ -30,6 +30,10 @@ def instructions(workflow: str, surface: str) -> str:
 @pytest.mark.parametrize("surface", ("bundle", "cron"))
 def test_input_contract_reaches_each_invocation(workflow, surface):
     text = instructions(workflow, surface)
+    if workflow == "after-close-review" and surface == "bundle":
+        assert "Missing-observation guard" in text
+        assert "unknown / not assessable" in text
+        assert "Missing observations do not establish zero reactions or zero changes" in text
     for rule in (
         "Section | Source / upstream dependency | Skill revision | Observation date | "
         "Retrieved at | Status | Impact / follow-up",
@@ -39,6 +43,8 @@ def test_input_contract_reaches_each_invocation(workflow, surface):
         "Declare Freshness basis",
         "source-specific age limit",
         "future event dates are not observation timestamps",
+        "event domain (earnings, economic, etc.)",
+        "economic/high-impact macro events remain unknown / unavailable",
         "Reject future observation timestamps",
         "keep it separate from completed-close posture",
         "mixed-age rows",

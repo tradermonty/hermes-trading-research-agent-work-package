@@ -13,7 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from scripts.run_provenance_acceptance import audit_response, expected_status
+from scripts.run_provenance_acceptance import (
+    audit_calendar_scope,
+    audit_response,
+    audit_unobserved_outcomes,
+    expected_status,
+    parse_provenance_rows,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/input_provenance"
@@ -55,7 +61,8 @@ def test_actual_response_audit_rejects_bad_outcomes(section, column, replacement
             cell.strip().replace("**", "").replace("`", "")
             for cell in line.strip().strip("|").split("|")
         ]
-        if len(cells) == 7 and cells[0] == section:
+        if len(cells) in (6, 7) and cells[0] == section:
+            cells = list(parse_provenance_rows(text)[section])
             cells[column] = replacement
             line = "| " + " | ".join(cells) + " |"
         mutated.append(line)
@@ -96,7 +103,11 @@ def test_actual_response_audit_requires_inline_disclosure():
     audit_response(text, case)
     table_only = (
         "Source / Skill provenance\n"
-        + "\n".join(line for line in text.splitlines() if "|" in line)
+        + "\n".join(
+            line
+            for line in text.splitlines()
+            if "|" in line or line.startswith("Skill revision for all rows:")
+        )
         + "\nDegraded, no matches, human decision gate, invalidation."
     )
     with pytest.raises(AssertionError, match="inline disclosure"):
@@ -120,3 +131,25 @@ def test_empty_completed_close_screen_respects_its_basis(observed, expected):
         basis={"kind": "completed-close", "expected_session": "2026-11-16"},
     )
     assert expected_status(item, "2026-11-17T06:00:00-08:00") == expected
+
+
+def test_real_regression_earnings_does_not_prove_macro_events_absent():
+    case = json.loads((FIXTURES / "pre-market-routine__inputs.json").read_text())
+    text = (FIXTURES / "regressions/earnings_not_economic.md").read_text()
+    metadata = json.loads(
+        (FIXTURES / "regressions/earnings_not_economic.metadata.json").read_text()
+    )
+    assert hashlib.sha256(text.encode()).hexdigest() == metadata["response_sha256"]
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text, case)
+
+
+def test_real_regression_missing_signal_inputs_are_not_zero_changes():
+    case = json.loads((FIXTURES / "after-close-review__inputs.json").read_text())
+    text = (FIXTURES / "regressions/missing_observations_not_zero.md").read_text()
+    metadata = json.loads(
+        (FIXTURES / "regressions/missing_observations_not_zero.metadata.json").read_text()
+    )
+    assert hashlib.sha256(text.encode()).hexdigest() == metadata["response_sha256"]
+    with pytest.raises(AssertionError, match="Missing observations"):
+        audit_unobserved_outcomes(text, case)

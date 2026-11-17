@@ -1,0 +1,12 @@
+{
+  "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
+  "workflow": "pre-market-routine",
+  "surface": "cron",
+  "generated_at": "2026-11-16T22:54:44.330467-08:00",
+  "query_sha256": "87979e9eb05ab3f999f9d533ba3ec13e692710c8046b936835b0abebe5b0d833",
+  "response_sha256": "3a505f1d1afed925d531d4ab88cce766ccd7346d106c0168b4d7d754a3515d92",
+  "source_sha256": {
+    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "905d3cdf3f4bb559f7e527e5685164cee6d4cc605722c5128a1d57601942f6ee",
+    "prompts/pre-market-routine.md": "b1a658ab03ccd7cdf6a2f907f192ce11ec020dd4ada50493df438a8ed7dedd57"
+  }
+}
