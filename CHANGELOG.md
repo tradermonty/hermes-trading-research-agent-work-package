@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Live Hermes rendering guidance now requires scalar date cells (`YYYY-MM-DD` or `unknown`), consistent holiday/weekend carry-forward labels, and an explicit distinction between unexecuted analyses and verified missing credentials. Supplied numerical facts must be copied exactly or omitted.
 - Provenance table parsing now keeps escaped pipes inside cells and preserves extra empty boundary columns for validation. Regression tests cover escaped delimiters and malformed leading/trailing delimiters (PR #2 review).
 
 ### Added

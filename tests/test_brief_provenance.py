@@ -43,7 +43,8 @@ def test_scenarios_keep_distinct_states_and_independent_data(routine, scenario, 
     text = (FIXTURES / f"{routine}_{scenario}.md").read_text()
     assert validate_brief(text) == []
     assert f"| {status} |" in text
-    assert "| fresh |" in text  # independent input survives the degraded section
+    independent_state = "carried_forward" if routine == "pre-market-routine" else "fresh"
+    assert f"| {independent_state} |" in text  # independent input survives the degraded section
     assert "observation date" in text
     if scenario == "stale_dashboard":
         assert "No local key is required" in text
@@ -69,6 +70,8 @@ def test_holiday_latest_completed_session_is_carried_forward():
     ("2026-11-12", "2026-02-30"),
     ("2026-11-12", "2026-11-17"),
     ("2026-11-12", "unknown"),
+    ("| unknown | 2026-11-13 | unknown |", "| — | 2026-11-13 | unknown |"),
+    ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 / week ahead | unknown |"),
     ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 | fresh |"),
     ("### Source / Skill provenance", "### Other"),
     ("| Source / Skill |", "| Source |"),
@@ -101,6 +104,17 @@ def test_unescaped_pipes_still_add_columns():
     text = (FIXTURES / "pre-market-routine_valid_empty.md").read_text()
     after = "FINVIZ Elite export A | B"
     assert validate_brief(text.replace("FINVIZ Elite export", after))
+
+
+@pytest.mark.parametrize("routine", ["pre-market-routine", "after-close-review"])
+def test_live_rendering_corrections_are_in_both_invocation_paths(routine):
+    prompt = (ROOT / f"prompts/{routine}.md").read_text()
+    instruction = yaml.safe_load((ROOT / f"skill-bundles/{routine}.yaml").read_text())["instruction"]
+    for text in [prompt, instruction]:
+        assert "Em dashes, N/A, date ranges, and prose are invalid in date cells" in text
+        assert "use `carried_forward` consistently" in text
+        assert "Report a missing key only when its absence is verified" in text
+        assert "Copy supplied numeric facts exactly or omit them" in text
 
 
 @pytest.mark.parametrize("location", ["start", "end"])

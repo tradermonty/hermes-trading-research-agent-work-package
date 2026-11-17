@@ -17,7 +17,7 @@ Fixture scope: no additional market claims; human review pending.
 Fixture scope: no additional market claims; human review pending.
 
 ## 4. Themes and sectors
-Themes: valid_empty; observation date 2026-11-13. 0 validated rows after a successful schema-validated screen; no matching candidates for these filters. This says nothing about other screens. Independent distribution signals: fresh; observation date 2026-11-13.
+Themes: valid_empty; observation date 2026-11-13. 0 validated rows after a successful schema-validated screen; no matching candidates for these filters. This says nothing about other screens. Independent distribution signals: carried_forward; observation date 2026-11-13.
 
 ## 5. Watchlist candidates
 Thesis: wait for verified coverage; invalidation: refreshed inputs contradict the review premise. Risk: incomplete participation/theme evidence. No candidate is ready for confirmation.
@@ -31,6 +31,6 @@ Fixture scope: no additional market claims; human review pending.
 | Input / section | Source / Skill | Skill revision | Observation date | Expected observation date | Status | Impact / next step |
 |---|---|---|---|---|---|---|
 | Themes | FINVIZ Elite export -> theme-detector | 6e9a635e5259601d79bb7a97085784f8b37742b5 | 2026-11-13 | 2026-11-13 | valid_empty | 0 validated rows; expected completed-session snapshot verified; human reviews filters if needed. |
-| Independent distribution signals | FMP daily bars -> ibd-distribution-day-monitor | 6e9a635e5259601d79bb7a97085784f8b37742b5 | 2026-11-13 | 2026-11-13 | fresh | Latest completed session due under verified calendar; independent result retained for human review. |
+| Independent distribution signals | FMP daily bars -> ibd-distribution-day-monitor | 6e9a635e5259601d79bb7a97085784f8b37742b5 | 2026-11-13 | 2026-11-13 | carried_forward | Latest completed session due under verified calendar; independent result retained for human review. |
 
 Human decision gate: the human reviewer makes all entry and exit decisions.

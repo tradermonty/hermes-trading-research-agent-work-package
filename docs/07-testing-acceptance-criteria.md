@@ -148,6 +148,7 @@ source's observation date and expected publication against original artifacts
 and calendar; the offline checker cannot establish those facts. For the
 December 7 migration, retain the actual upstream revision and live comparisons
 as described in docs/04. Synthetic fixture PASS is not a live Hermes or
-migration PASS.
+migration PASS. Actual pre-cutover provider comparisons and isolated Hermes
+rendering evidence are recorded in [the verification record](verification/2026-11-16-finviz-migration.md).
 
 MVP is done when a new user can install, configure `.env`, run `/pre-market-routine`, run `/after-close-review`, and use `/trade-journal` without knowing the internal skill list.

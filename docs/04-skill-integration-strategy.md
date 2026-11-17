@@ -115,7 +115,7 @@ and `trading-cron-brief-writer` require a `Source / Skill provenance` table:
 | Input / section | Every used or attempted input, including unavailable components. |
 | Source / Skill | Actual provider/artifact and consuming skill; include indirect Finviz lineage. Use redacted source identifiers, never auth URLs or secret values. |
 | Skill revision | Actual external checkout commit plus dirty state; `unknown` if unverifiable. Multiple checkouts need their own revisions. |
-| Observation date | Underlying session/as-of date (`YYYY-MM-DD`), not fetch time, generated report date or filename. |
+| Observation date | Underlying session/as-of date (`YYYY-MM-DD`), not fetch time, generated report date or filename. Use the literal `unknown` when unverified; no dashes, date ranges or prose in date cells. |
 | Expected observation date | Latest observation due under the verified market calendar and that input's publication schedule; `unknown` when unverified. |
 | Status | One of the six states below. |
 | Impact / next step | Affected conclusions, calendar/publication basis, and recovery or review step. |
@@ -154,7 +154,10 @@ On 2026-11-16, the locally inspected external checkout was clean at
 `uptrend-analyzer/SKILL.md` and CSV fetcher confirm the no-local-key GitHub CSV
 path. The synthetic fixtures use this revision as a traceability example;
 they are **not** live screener runs or proof of December 7 compatibility.
-No pre-/post-transition live comparison has been performed in this change.
+A subsequent pre-cutover live comparison used the actual migration candidate
+`d604308942bc606523ff90dfeb9bcc727055ed3a` from upstream PR #806. See
+[the verification record](verification/2026-11-16-finviz-migration.md) for results
+and actual Hermes output evidence. Post-cutover verification remains pending.
 
 For each real migration test, record:
 
@@ -172,8 +175,10 @@ For each real migration test, record:
 4. Morning and evening output paths and provenance-validator results, plus
    human review of affected-section warnings, independent data and posture.
 
-The actual migration-test revision remains **pending** until that test runs;
-the inspected October checkout must not be recorded as migration-verified.
+The actual pre-cutover migration-test revision is now recorded above; the
+inspected October checkout remains unverified for migration. Upstream PR #806
+is a candidate, not merged main or the installed production checkout. A
+post-2026-12-07 run must record the revision actually used at that time.
 Optional MCPs stay disabled (`mcp.json` remains an empty registry); this
 contract adds no local key requirement or automatic upstream update.
 
