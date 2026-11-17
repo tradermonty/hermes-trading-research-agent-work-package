@@ -107,6 +107,31 @@ This repo should not rewrite all trading skills for Hermes. Instead, it adds:
 | Chart image | Ask user to upload screenshot or skip chart interpretation. |
 | `jsonschema` Python module missing | `trader-memory-core` CLI degrades. Install via `python3 -m pip install jsonschema` (or `uv pip install jsonschema`). Skill output continues with reduced validation. |
 
+## Input provenance and freshness (Issue #1)
+
+`data/api-requirements.yaml` describes **local credentials**, not upstream data lineage or fitness for a particular session. `uptrend-analyzer` remains in `no_key_or_local_data`: downloading its public dashboard needs no local Finviz key, but the dashboard's underlying collection depends on Finviz. A download timestamp cannot certify the observation date, coverage, or correctness of that collection. Direct Elite screens have a separate local-key requirement. A missing Elite key does not invalidate an independently verified public dashboard.
+
+Both pre-market and after-close bundle instructions and cron prompts require a `Source / Skill provenance` table and an inline status for affected sections. Each input records its safe source and upstream dependency, installed skill revision (plus dirty/local modification state, or package version/hash), observation session/date, retrieval time, status, and impact/follow-up. Unknown dates, versions, and partial coverage remain explicit. Per-row or per-series dates take precedence over a dashboard-wide timestamp. A mixed-age summary cannot be labelled wholly fresh.
+
+| Status | Evidence | Brief behavior |
+|---|---|---|
+| fresh | Validated input for the expected completed regular session | Retain supported observations. |
+| stale | Observation older than the expected completed session | Mark the affected section degraded; withhold dependent conclusions. |
+| unavailable | Missing input/key, fetch/auth/schema failure, or unverifiable observation date | Explain the gap; unknown dates stay unknown. |
+| valid-empty | Successful schema-valid current-session screen with zero matches | Report no matches; this alone does not degrade the brief. |
+
+Freshness is session-based: pre-market uses the latest completed regular close; after-close expects today's completed session once a regular session has closed, or the most recent completed regular session on holidays/weekends. A holiday/weekend bridge preserves the existing pre-market `carried forward from <YYYY-MM-DD>` semantics. An uncertain market calendar or cutoff leaves freshness unknown/unavailable. Independent macro, earnings, breadth, or journal inputs remain usable with their own provenance. A failed screen is never evidence of zero breadth, no candidates, or a bearish posture. Manual/public fallbacks require independent dates and attribution. Missing columns, malformed CSV, and HTML with HTTP 200 are unavailable inputs, not valid-empty screens.
+
+### December 7 transition evidence
+
+The planned 2026-12-07 Finviz export transition is tracked in [claude-trading-skills #799](https://github.com/tradermonty/claude-trading-skills/issues/799); dashboard coverage/freshness gaps are tracked in [uptrend-dashboard #6](https://github.com/tradermonty/uptrend-dashboard/issues/6). This package orchestrates those skills; it does not certify or silently patch their CSV readers.
+
+Offline contract review used the clean local upstream checkout `6e9a635e5259601d79bb7a97085784f8b37742b5` (full SHA), inspecting `skills/uptrend-analyzer/SKILL.md` and its analyzer script. This identifies the inspected revision, **not a completed live migration test**. No December 7 before/after live comparison has been performed here. When running that comparison, record each actual installed SHA/package hash and local modifications alongside run date/cutoff, endpoint (credentials removed), filters/columns, observation dates, schema validity, counts and ticker/value differences. Re-record revisions after any update; a key or successful download does not prove the new screener version was used.
+
+### Offline acceptance examples
+
+`tests/fixtures/input_provenance/` contains synthetic pre-market and after-close briefs for a stale public dashboard without a local key, a failed Elite screen, a valid empty screen, and a holiday carry-forward. These are contract examples, not captured Hermes output or live data. `tests/test_input_provenance.py` checks the instructions on all four invocation surfaces, the examples' provenance/status distinctions, and the default empty MCP configuration. Real Hermes rendering and the live transition remain operator verification in the release soak; no new Hermes CLI behavior is assumed. Optional MCP templates remain opt-in and the shipped `mcp.json` stays empty.
+
 ## Trade ticket primitive (as of B-3 / TICKET-009)
 
 The `/trade-ticket` bundle introduces a single operator-visible primitive between research output and post-hoc journaling: the **trade ticket**. A ticket is a JSON-Schema-validated YAML object (`schemas/trade-ticket.schema.json`) that captures one candidate, the operator-confirmed plan and risk, and an explicit `approval` state (`DRAFT` / `REVIEW_READY` / `APPROVED` / `REJECTED` / `EXPIRED`).

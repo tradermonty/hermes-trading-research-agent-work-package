@@ -38,6 +38,9 @@ providers:
       - portfolio-manager
       - parabolic-short-trade-planner
 
+# Local credentials only; this list does not certify upstream independence or freshness.
+# uptrend-analyzer reads a public dashboard backed by upstream Finviz collection.
+# See docs/04-skill-integration-strategy.md: Input provenance and freshness.
 no_key_or_local_data:
   - market-breadth-analyzer
   - uptrend-analyzer
