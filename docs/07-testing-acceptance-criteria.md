@@ -129,4 +129,26 @@ Notes:
 
 ## Release acceptance
 
+### Morning/evening provenance acceptance (Issue #1)
+
+Run `python3 -m pytest -q tests/test_brief_provenance.py`. Synthetic fixtures
+exercise stale no-local-key dashboard data, failed Elite export and valid empty
+screen for both routines, plus a Memorial Day carry-forward control. Negative
+checks reject stale/unknown observations labelled fresh, empty or carried
+forward, malformed dates, missing fields and prompt-echo-only provenance.
+The CLI test runs with an empty environment; shipped API keys remain optional
+and `mcp.json` remains empty. Static tests also check that manual bundles, cron
+prompts and the attached writer carry the same rule.
+
+For actual Hermes output, run both routines in the isolated test profile above,
+then check each response with `scripts/validate_brief_provenance.py`. Review
+that every affected section repeats status/date, independent data remains
+usable, and thesis/invalidation/risk/human gate remain present. Confirm the
+source's observation date and expected publication against original artifacts
+and calendar; the offline checker cannot establish those facts. For the
+December 7 migration, retain the actual upstream revision and live comparisons
+as described in docs/04. Synthetic fixture PASS is not a live Hermes or
+migration PASS. Actual pre-cutover provider comparisons and isolated Hermes
+rendering evidence are recorded in [the verification record](verification/2026-11-16-finviz-migration.md).
+
 MVP is done when a new user can install, configure `.env`, run `/pre-market-routine`, run `/after-close-review`, and use `/trade-journal` without knowing the internal skill list.

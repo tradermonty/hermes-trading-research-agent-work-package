@@ -95,6 +95,8 @@ trading-research-assistant chat
 
 ---
 
+朝夕レポートには入力ごとの取得元・スキル版・観測日・期待観測日と、欠損／古いデータ／正常0件の状態を表示します。ローカル API キーが不要でも上流データの鮮度確認は必要です。[取得元と Finviz 移行の検証手順](docs/04-skill-integration-strategy.md#morningevening-input-provenance-issue-1)を参照してください。
+
 ## 前提条件
 
 | 必要なもの | 備考 |

@@ -38,6 +38,8 @@ providers:
       - portfolio-manager
       - parabolic-short-trade-planner
 
+# Local credential requirements only; not a guarantee of independent or fresh data.
+# See input_provenance and docs/04-skill-integration-strategy.md.
 no_key_or_local_data:
   - market-breadth-analyzer
   - uptrend-analyzer
@@ -46,3 +48,26 @@ no_key_or_local_data:
   - signal-postmortem
   - trader-memory-core
   - trading-skills-navigator
+
+# Separate data lineage from credentials required on this machine.
+input_provenance:
+  uptrend-analyzer:
+    local_key_required: false
+    source_chain:
+      - Finviz collection upstream
+      - tradermonty/uptrend-dashboard published CSV
+      - uptrend-analyzer
+    freshness_basis: underlying per-input session date, not fetch time
+    missing_observation_date: unknown_degraded
+    stale_observation: affected_section_degraded
+  elite_screens:
+    skills:
+      - theme-detector
+      - value-dividend-screener
+      - dividend-growth-pullback-screener
+    source_chain:
+      - FINVIZ Elite screener export
+      - external skill checkout
+    revision_evidence: actual checkout commit and dirty state, or unknown
+    valid_empty_requires: successful schema-validated screen with expected observation date
+    transition_guidance: docs/04-skill-integration-strategy.md
