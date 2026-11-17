@@ -1,0 +1,105 @@
+"""Issue #1: static instructions plus offline checks of synthetic brief outputs.
+
+These tests do not imply Hermes generation or live-provider migration acceptance.
+"""
+from pathlib import Path
+import json
+import subprocess
+import sys
+
+import pytest
+import yaml
+
+from scripts.validate_brief_provenance import HEADER, validate_brief
+
+ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "tests/fixtures/brief_provenance"
+
+
+@pytest.mark.parametrize("routine", ["pre-market-routine", "after-close-review"])
+def test_manual_and_cron_paths_share_writer_contract(routine):
+    writer = (ROOT / "skills/trading-cron-brief-writer/SKILL.md").read_text()
+    marker = "Input provenance contract (morning and evening briefs):"
+    contract = writer.split(marker, 1)[1].strip()
+    prompt = (ROOT / f"prompts/{routine}.md").read_text()
+    bundle = yaml.safe_load((ROOT / f"skill-bundles/{routine}.yaml").read_text())
+    for text in (prompt, bundle["instruction"]):
+        assert marker in text
+        assert contract in text
+    assert " | ".join(HEADER) in contract
+    assert bundle["x-generated"] is False
+    presets = yaml.safe_load((ROOT / "data/schedule-presets.yaml").read_text())
+    preset = next(p for p in presets["presets"].values()
+                  if p["prompt_file"] == f"prompts/{routine}.md")
+    assert "trading-cron-brief-writer" in preset["skills"]
+
+
+@pytest.mark.parametrize("routine", ["pre-market-routine", "after-close-review"])
+@pytest.mark.parametrize("scenario,status", [
+    ("stale_dashboard", "stale"), ("failed_elite", "unavailable"),
+    ("valid_empty", "valid_empty"),
+])
+def test_scenarios_keep_distinct_states_and_independent_data(routine, scenario, status):
+    text = (FIXTURES / f"{routine}_{scenario}.md").read_text()
+    assert validate_brief(text) == []
+    assert f"| {status} |" in text
+    assert "| fresh |" in text  # independent input survives the degraded section
+    assert "observation date" in text
+    if scenario == "stale_dashboard":
+        assert "No local key is required" in text
+        assert "| unknown |" in text  # undated sector data cannot borrow overall date
+    if scenario == "valid_empty":
+        assert "0 validated rows" in text
+
+
+def test_holiday_latest_completed_session_is_carried_forward():
+    text = (FIXTURES / "holiday_carry_forward.md").read_text()
+    assert validate_brief(text) == []
+    assert "carried forward from 2026-05-22" in text
+    assert "| carried_forward |" in text
+    assert "| stale |" not in text
+    assert text.index("Session state:") < text.index("Posture basis:") < text.index("Risk posture:")
+
+
+@pytest.mark.parametrize("before,after", [
+    ("| stale |", "| fresh |"),
+    ("| stale |", "| carried_forward |"),
+    ("| stale |", "| valid_empty |"),
+    ("| stale |", "| success |"),
+    ("2026-11-12", "2026-02-30"),
+    ("2026-11-12", "2026-11-17"),
+    ("2026-11-12", "unknown"),
+    ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 | fresh |"),
+    ("### Source / Skill provenance", "### Other"),
+    ("| Source / Skill |", "| Source |"),
+    ("| stale |", "| |"),
+])
+def test_inconsistent_or_incomplete_tables_fail(before, after):
+    text = (FIXTURES / "pre-market-routine_stale_dashboard.md").read_text()
+    assert before in text
+    assert validate_brief(text.replace(before, after))
+
+
+def test_only_actual_response_can_satisfy_the_contract():
+    good = (FIXTURES / "after-close-review_valid_empty.md").read_text()
+    assert validate_brief(good + "\n## Response\nMissing all provenance.")
+    assert validate_brief("Prompt without table\n## Response\n" + good) == []
+    assert validate_brief(good + "\n" + good)  # duplicate tables are ambiguous
+
+
+def test_cli_without_credentials_or_optional_mcps(tmp_path):
+    # Shipped examples retain optional market keys and an empty MCP registry.
+    assert json.loads((ROOT / "mcp.json").read_text()) == {"mcpServers": {}}
+    distribution = yaml.safe_load((ROOT / "distribution.yaml").read_text())
+    assert all(not entry["required"] for entry in distribution["env_requires"])
+    example = (ROOT / ".env.EXAMPLE").read_text()
+    assert "FMP_API_KEY=\n" in example and "FINVIZ_API_KEY=\n" in example
+    script = ROOT / "scripts/validate_brief_provenance.py"
+    for name, expected_code in [("after-close-review_failed_elite.md", 0), ("bad.md", 1)]:
+        path = FIXTURES / name
+        if name == "bad.md":
+            path = tmp_path / name
+            path.write_text("No provenance")
+        result = subprocess.run([sys.executable, str(script), str(path)],
+                                env={}, capture_output=True, text=True)
+        assert result.returncode == expected_code, result.stderr
