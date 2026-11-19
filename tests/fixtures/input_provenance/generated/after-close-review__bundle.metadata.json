@@ -1,0 +1,13 @@
+{
+  "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
+  "workflow": "after-close-review",
+  "surface": "bundle",
+  "generated_at": "2026-11-16T23:06:59.250483-08:00",
+  "query_sha256": "7989372f5d67c23125380397bcb8e3204d2f3cb68858def7e82fb554aad45966",
+  "response_sha256": "a32229260886e5fee23685d09ffe1d634b03f4f1a72b27161f75cb16bc8fcb0c",
+  "source_sha256": {
+    "tests/fixtures/input_provenance/after-close-review__inputs.json": "7ddd119626b59cf95bf53cfdae09eddbc1cdd577d7d5124e6a19c448c6f8f208",
+    "tests/fixtures/input_provenance/generated/source_snapshot/skill-bundles/after-close-review.yaml": "827905c41cc5f3e031e88c92ff7a22a9a15eb7f477e6805bda390350242545bb"
+  },
+  "evidence_scope": "Historical pre-merge rendering; source_snapshot preserves the exact instruction source. Not current merged-contract inference."
+}

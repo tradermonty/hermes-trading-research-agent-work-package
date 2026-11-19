@@ -206,6 +206,43 @@ Synthetic output examples are in `tests/fixtures/brief_provenance/`.
 | Chart image | Ask user to upload screenshot or skip chart interpretation. |
 | `jsonschema` Python module missing | `trader-memory-core` CLI degrades. Install via `python3 -m pip install jsonschema` (or `uv pip install jsonschema`). Skill output continues with reduced validation. |
 
+## Input provenance and freshness (Issue #1)
+
+`data/api-requirements.yaml` describes **local credentials**, not upstream data lineage or fitness for a particular session. `uptrend-analyzer` remains in `no_key_or_local_data`: downloading its public dashboard needs no local Finviz key, but the dashboard's underlying collection depends on Finviz. A download timestamp cannot certify the observation date, coverage, or correctness of that collection. Direct Elite screens have a separate local-key requirement. A missing Elite key does not invalidate an independently verified public dashboard.
+
+The canonical table and six status values are defined under **Morning/evening input provenance** above and shared verbatim by the writer skill, both bundles and both cron prompts. Use `valid_empty` and `carried_forward`; keep date cells as `YYYY-MM-DD` or `unknown`. Full observation timestamps, retrieval timestamps, run cutoff, freshness basis and timing policy belong in `Impact / next step`. Per-row or per-series dates take precedence over dashboard-wide timestamps.
+
+Completed-close inputs follow the expected regular session and the source publication schedule, including holiday/weekend carry-forward. Timestamp-based news, releases, quotes and screens instead require a source-specific age limit and its origin; same-day expired data is stale even when the two date cells match. Unknown observation times or policies remain `unknown` and degraded; future observation times beyond the cutoff are unavailable. Unfinished/live information never replaces a completed close or establishes a completed-session regime change.
+
+Event calendars record verified-as-of time, requested-window coverage and event domain. Future event dates are not observation timestamps. An earnings calendar cannot establish economic-event coverage: without an independently dated economic-calendar input, high-impact macro events remain unknown/unavailable rather than none. State economic-calendar availability separately. Missing reaction or signal-comparison inputs cannot establish zero reactions or unchanged signals.
+
+A failed screen never establishes zero breadth, no candidates or bearish posture. Valid-empty semantics use the canonical `valid_empty` status and require both schema-valid zero rows and the declared timing basis. Preserve independent fresh inputs and label manual/public fallbacks with their own source and date. The December 7 migration evidence and outstanding live verification are recorded above.
+
+### Offline acceptance examples
+
+`tests/fixtures/input_provenance/` contains synthetic pre-market and after-close briefs for a stale public dashboard without a local key, a failed Elite screen, a valid empty screen, and a holiday carry-forward. These are historical pre-merge contract examples, not captured Hermes output or live data; they retain the earlier table and status spellings. Current table examples live in `tests/fixtures/brief_provenance/`. `tests/test_input_provenance.py` checks the instructions on all four invocation surfaces, the examples' provenance/status distinctions, and the default empty MCP configuration. The examples alone do not establish runtime behavior. Controlled real-generation evidence is described below; the live transition remains operator verification in the release soak; no new Hermes CLI behavior is assumed. Optional MCP templates remain opt-in and the shipped `mcp.json` stays empty.
+
+### Controlled Hermes generation and replay audit
+
+`tests/fixtures/input_provenance/*__inputs.json` supplies raw synthetic observations without expected status labels: stale dashboard rows, an authentication failure, a schema-valid zero-match screen, same-day timestamped news, and a verified event calendar with future event dates. Pre-market and after-close use different completed-session cutoffs. The 30-minute news/screen/calendar age limit is an explicitly synthetic acceptance policy, not a new production default.
+
+The opt-in `scripts/run_provenance_acceptance.py` sends these inputs through real Hermes inference. Bundle runs use the installed `build_bundle_invocation_message` (the interactive slash-command builder) including all resolved upstream skills; cron runs use the expanded prompt body. This is controlled rendering, not a scheduler firing, a full install test, or execution of upstream fetchers. The runner pins one Python/source installation for both the zero-tool preflight and CLI generation; it aborts if tools are exposed or the runtime bundle differs from the checkout. Normal profile/cron state is not used.
+
+Prepare a disposable Hermes home with a working inference provider, this checkout's `SOUL.md`, `skills/`, `skill-bundles/`, empty `mcp.json`, and external skill discovery pointed at the reviewed upstream checkout. Keep inference credentials only in that private temporary home; never add them or its logs to Git. Do not enable hooks or MCPs. Then invoke, once for each workflow/surface pair:
+
+```bash
+python scripts/run_provenance_acceptance.py \
+  --runtime-home /tmp/isolated-hermes-home \
+  --hermes-source /path/to/hermes-agent \
+  --hermes-python /path/to/hermes-agent/venv/bin/python \
+  --workflow pre-market-routine --surface bundle \
+  --output-dir /tmp/provenance-generation
+```
+
+The archived captures predate the merge with PR #2: their exact instruction sources are preserved under `generated/source_snapshot/`, with the original hashes. They demonstrate historical rendering only, not inference with the current merged contract. New runner calls require the current table contract as well as semantic audit. No fresh merged-contract inference was performed for this conflict-resolution change.
+
+The runner records raw stdout, source/query/response SHA-256 hashes, and the actual Hermes version. It checks the generated provenance rows and inline sections against raw input outcomes, including basis kind, expected session or cutoff/age-policy/window, timestamps, source, skill revision, failure reason, and independent fresh information. The expected labels are calculated by the auditor and are not included in the model request. Queries remain local because expanded upstream skill text is large. Check responses before archiving them. Rejected real pre-market cron and after-close bundle responses are retained in `tests/fixtures/input_provenance/regressions/`: they incorrectly inferred no high-impact macro events from an earnings-only calendar and no signal changes from missing comparisons. Negative tests exercise those exact failures and checks economic-calendar availability separately. CI replays the archived actual model responses and rejects deliberately corrupted statuses, dates, bases and missing inline disclosures in `tests/test_generated_provenance.py`; this offline replay is distinct from a fresh model call.
+
 ## Trade ticket primitive (as of B-3 / TICKET-009)
 
 The `/trade-ticket` bundle introduces a single operator-visible primitive between research output and post-hoc journaling: the **trade ticket**. A ticket is a JSON-Schema-validated YAML object (`schemas/trade-ticket.schema.json`) that captures one candidate, the operator-confirmed plan and risk, and an explicit `approval` state (`DRAFT` / `REVIEW_READY` / `APPROVED` / `REJECTED` / `EXPIRED`).

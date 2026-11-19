@@ -2,6 +2,7 @@
 
 These tests do not imply Hermes generation or live-provider migration acceptance.
 """
+
 from pathlib import Path
 import json
 import subprocess
@@ -29,16 +30,21 @@ def test_manual_and_cron_paths_share_writer_contract(routine):
     assert " | ".join(HEADER) in contract
     assert bundle["x-generated"] is False
     presets = yaml.safe_load((ROOT / "data/schedule-presets.yaml").read_text())
-    preset = next(p for p in presets["presets"].values()
-                  if p["prompt_file"] == f"prompts/{routine}.md")
+    preset = next(
+        p for p in presets["presets"].values() if p["prompt_file"] == f"prompts/{routine}.md"
+    )
     assert "trading-cron-brief-writer" in preset["skills"]
 
 
 @pytest.mark.parametrize("routine", ["pre-market-routine", "after-close-review"])
-@pytest.mark.parametrize("scenario,status", [
-    ("stale_dashboard", "stale"), ("failed_elite", "unavailable"),
-    ("valid_empty", "valid_empty"),
-])
+@pytest.mark.parametrize(
+    "scenario,status",
+    [
+        ("stale_dashboard", "stale"),
+        ("failed_elite", "unavailable"),
+        ("valid_empty", "valid_empty"),
+    ],
+)
 def test_scenarios_keep_distinct_states_and_independent_data(routine, scenario, status):
     text = (FIXTURES / f"{routine}_{scenario}.md").read_text()
     assert validate_brief(text) == []
@@ -62,21 +68,24 @@ def test_holiday_latest_completed_session_is_carried_forward():
     assert text.index("Session state:") < text.index("Posture basis:") < text.index("Risk posture:")
 
 
-@pytest.mark.parametrize("before,after", [
-    ("| stale |", "| fresh |"),
-    ("| stale |", "| carried_forward |"),
-    ("| stale |", "| valid_empty |"),
-    ("| stale |", "| success |"),
-    ("2026-11-12", "2026-02-30"),
-    ("2026-11-12", "2026-11-17"),
-    ("2026-11-12", "unknown"),
-    ("| unknown | 2026-11-13 | unknown |", "| — | 2026-11-13 | unknown |"),
-    ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 / week ahead | unknown |"),
-    ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 | fresh |"),
-    ("### Source / Skill provenance", "### Other"),
-    ("| Source / Skill |", "| Source |"),
-    ("| stale |", "| |"),
-])
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        ("| stale |", "| fresh |"),
+        ("| stale |", "| carried_forward |"),
+        ("| stale |", "| valid_empty |"),
+        ("| stale |", "| success |"),
+        ("2026-11-12", "2026-02-30"),
+        ("2026-11-12", "2026-11-17"),
+        ("2026-11-12", "unknown"),
+        ("| unknown | 2026-11-13 | unknown |", "| — | 2026-11-13 | unknown |"),
+        ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 / week ahead | unknown |"),
+        ("| unknown | 2026-11-13 | unknown |", "| unknown | 2026-11-13 | fresh |"),
+        ("### Source / Skill provenance", "### Other"),
+        ("| Source / Skill |", "| Source |"),
+        ("| stale |", "| |"),
+    ],
+)
 def test_inconsistent_or_incomplete_tables_fail(before, after):
     text = (FIXTURES / "pre-market-routine_stale_dashboard.md").read_text()
     assert before in text
@@ -109,7 +118,9 @@ def test_unescaped_pipes_still_add_columns():
 @pytest.mark.parametrize("routine", ["pre-market-routine", "after-close-review"])
 def test_live_rendering_corrections_are_in_both_invocation_paths(routine):
     prompt = (ROOT / f"prompts/{routine}.md").read_text()
-    instruction = yaml.safe_load((ROOT / f"skill-bundles/{routine}.yaml").read_text())["instruction"]
+    instruction = yaml.safe_load((ROOT / f"skill-bundles/{routine}.yaml").read_text())[
+        "instruction"
+    ]
     for text in [prompt, instruction]:
         assert "Em dashes, N/A, date ranges, and prose are invalid in date cells" in text
         assert "use `carried_forward` consistently" in text
@@ -143,6 +154,18 @@ def test_cli_without_credentials_or_optional_mcps(tmp_path):
         if name == "bad.md":
             path = tmp_path / name
             path.write_text("No provenance")
-        result = subprocess.run([sys.executable, str(script), str(path)],
-                                env={}, capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, str(script), str(path)], env={}, capture_output=True, text=True
+        )
         assert result.returncode == expected_code, result.stderr
+
+
+@pytest.mark.parametrize("status", ["fresh", "stale", "valid_empty"])
+def test_same_day_timestamp_basis_keeps_current_table(status):
+    text = (FIXTURES / "pre-market-routine_valid_empty.md").read_text()
+    text = text.replace("| valid_empty |", f"| {status} |")
+    text = text.replace(
+        "0 validated rows; expected",
+        "Freshness basis: timestamp; observation 2026-11-13T05:00:00-08:00; cutoff 2026-11-13T06:00:00-08:00; policy 30 minutes; 0 validated rows; expected",
+    )
+    assert validate_brief(text) == []

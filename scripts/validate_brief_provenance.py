@@ -5,6 +5,7 @@ This checks report consistency, not provider truth or calendar correctness.
 Expected observation dates must come from the input's schedule/session calendar.
 No credentials, network access, Hermes, or optional MCPs are needed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,8 +15,13 @@ import re
 import sys
 
 HEADER = (
-    "Input / section", "Source / Skill", "Skill revision", "Observation date",
-    "Expected observation date", "Status", "Impact / next step",
+    "Input / section",
+    "Source / Skill",
+    "Skill revision",
+    "Observation date",
+    "Expected observation date",
+    "Status",
+    "Impact / next step",
 )
 STATUSES = {"fresh", "carried_forward", "stale", "unavailable", "valid_empty", "unknown"}
 
@@ -61,13 +67,15 @@ def validate_brief(text: str) -> list[str]:
     start = headers[0]
     if not any(line.strip() == "### Source / Skill provenance" for line in lines[:start]):
         return ["missing ### Source / Skill provenance heading"]
-    if start + 1 >= len(lines) or not all(
-        re.fullmatch(r":?-{3,}:?", cell) for cell in _cells(lines[start + 1])
-    ) or len(_cells(lines[start + 1])) != len(HEADER):
+    if (
+        start + 1 >= len(lines)
+        or not all(re.fullmatch(r":?-{3,}:?", cell) for cell in _cells(lines[start + 1]))
+        or len(_cells(lines[start + 1])) != len(HEADER)
+    ):
         return ["missing Markdown table separator"]
     errors: list[str] = []
     count = 0
-    for line in lines[start + 2:]:
+    for line in lines[start + 2 :]:
         if not line.strip().startswith("|"):
             break
         count += 1
@@ -89,8 +97,21 @@ def validate_brief(text: str) -> list[str]:
             if observed_date is None or expected_date is None or observed_date != expected_date:
                 errors.append(f"{label}: {status} requires the expected observation date")
         elif status == "stale":
-            if observed_date is None or expected_date is None or observed_date >= expected_date:
-                errors.append(f"{label}: stale requires an observation older than expected")
+            # Same-day timestamp expiry cannot be determined from date cells.
+            # Require an explicit timing basis; the actual age policy still
+            # needs source/human verification, like the declared calendar.
+            timestamp_basis = "timestamp" in cells[6].lower() and re.search(
+                r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", cells[6]
+            )
+            if (
+                observed_date is None
+                or expected_date is None
+                or observed_date > expected_date
+                or (observed_date == expected_date and not timestamp_basis)
+            ):
+                errors.append(
+                    f"{label}: stale requires an older observation or an explicit same-day timestamp basis"
+                )
         if observed_date and expected_date and observed_date > expected_date:
             errors.append(f"{label}: observation is later than the expected observation date")
     if not count:

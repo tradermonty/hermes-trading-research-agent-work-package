@@ -1,0 +1,13 @@
+{
+  "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
+  "workflow": "pre-market-routine",
+  "surface": "cron",
+  "generated_at": "2026-11-16T23:05:21.239792-08:00",
+  "query_sha256": "181ce7fbbffb3308aca17362ed02039d8d1a0e98df74974beccd1cd7f43873ba",
+  "response_sha256": "e14778071ecae6bda9e44be3b1c809b6057f06e56bf11c93104d4e6ec922a020",
+  "source_sha256": {
+    "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "9cba27bc248d6bdc661ae244aec41c4fcc56f630fc5a37e38990ad2dbf96ebc5",
+    "tests/fixtures/input_provenance/generated/source_snapshot/prompts/pre-market-routine.md": "733af76393d750e91a28a370c5fa677eb420a66e6d34c5139b4c272433536189"
+  },
+  "evidence_scope": "Historical pre-merge rendering; source_snapshot preserves the exact instruction source. Not current merged-contract inference."
+}
