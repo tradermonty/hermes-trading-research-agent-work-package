@@ -193,6 +193,17 @@ def test_current_table_semantic_audit_and_expected_date(workflow):
     )
     text = text.replace("valid-empty", "valid_empty")
     audit_response(text, case, current_contract=True)
+    # Free-text cells may contain escaped pipes without adding table columns.
+    for column in (1, 6):
+        for backslashes in (1, 2, 3, 4):
+            escaped_lines = []
+            for line in text.splitlines():
+                if line.startswith("| Dashboard |"):
+                    cells = list(parse_provenance_rows(text)["Dashboard"])
+                    cells[column] += " additional caveat A " + "\\" * backslashes + "| B"
+                    line = "| " + " | ".join(cells) + " |"
+                escaped_lines.append(line)
+            audit_response("\n".join(escaped_lines), case, current_contract=True)
     # A correct timestamp in impact must not hide an incorrect date cell.
     with pytest.raises(AssertionError, match="wrong observation date"):
         audit_response(

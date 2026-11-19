@@ -17,6 +17,12 @@ import re
 from pathlib import Path
 import subprocess
 
+try:
+    from scripts.validate_brief_provenance import _cells as split_table_cells, validate_brief
+except ModuleNotFoundError:
+    from validate_brief_provenance import _cells as split_table_cells, validate_brief
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -57,8 +63,7 @@ def parse_provenance_rows(text: str) -> dict[str, list[str]]:
         if "|" not in line:
             continue
         cells = [
-            cell.strip().replace("**", "").replace("`", "")
-            for cell in line.strip().strip("|").split("|")
+            cell.strip().replace("**", "").replace("`", "") for cell in split_table_cells(line)
         ]
         if len(cells) == 6 and shared:
             cells.insert(2, shared.group(1))
@@ -71,11 +76,6 @@ def audit_response(text: str, case: dict, *, current_contract: bool = False) -> 
     """Check observed status/date/basis in actual provenance rows, fail closed."""
     if current_contract:
         text = re.split(r"(?m)^## Response\s*$", text)[-1]
-        try:
-            from scripts.validate_brief_provenance import validate_brief
-        except ModuleNotFoundError:
-            from validate_brief_provenance import validate_brief
-
         errors = validate_brief(text)
         assert not errors, errors
     rows = parse_provenance_rows(text)
