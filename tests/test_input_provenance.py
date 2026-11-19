@@ -35,8 +35,8 @@ def test_input_contract_reaches_each_invocation(workflow, surface):
         assert "unknown / not assessable" in text
         assert "Missing observations do not establish zero reactions or zero changes" in text
     for rule in (
-        "Section | Source / upstream dependency | Skill revision | Observation date | "
-        "Retrieved at | Status | Impact / follow-up",
+        "Input / section | Source / Skill | Skill revision | Observation date | "
+        "Expected observation date | Status | Impact / next step",
         "installed claude-trading-skills commit SHA and local modifications",
         "omit auth query strings and credentials",
         "per row/series",
@@ -48,31 +48,27 @@ def test_input_contract_reaches_each_invocation(workflow, surface):
         "Reject future observation timestamps",
         "keep it separate from completed-close posture",
         "mixed-age rows",
-        "fresh (validated input meeting",
-        "stale (observation older",
-        "unavailable (fetch/auth/schema failure",
-        "valid-empty (successful, schema-valid screen with zero matches meeting its declared freshness basis)",
         "Before the close use the latest completed regular session",
-        "after the close expect today's completed session",
+        "after the close expect today's completed session only once publication is due",
         "holiday/weekend carry-forward rule",
-        "retain independent fresh data",
-        "A valid-empty screen alone does not degrade the brief",
+        "Retain independent fresh data",
+        "A valid_empty screen alone does not degrade the brief",
         "Missing FINVIZ_API_KEY affects direct Elite screens",
         "not independently validated dashboard data",
         "Manual/public fallback needs its own source and observation date",
         "Do not enable optional MCPs",
+        "same-day expired data is `stale`",
     ):
         assert rule in text
 
 
 def test_contract_is_identical_on_manual_and_cron_paths():
-    blocks = []
+    writer = (ROOT / "skills/trading-cron-brief-writer/SKILL.md").read_text()
+    marker = "Input provenance contract (morning and evening briefs):"
+    contract = writer.split(marker, 1)[1].strip()
     for workflow in WORKFLOWS:
         for surface in ("bundle", "cron"):
-            text = instructions(workflow, surface)
-            block = text.split("Input provenance and freshness (required", 1)[1]
-            blocks.append(block.split("\n\n", 2)[:2])
-    assert all(block == blocks[0] for block in blocks)
+            assert contract in instructions(workflow, surface)
 
 
 def provenance_rows(text: str) -> dict[str, list[str]]:

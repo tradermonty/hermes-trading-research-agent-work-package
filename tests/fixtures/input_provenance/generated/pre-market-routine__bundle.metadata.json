@@ -7,6 +7,7 @@
   "response_sha256": "0842591c89d52f2231c9cc0a9c6dfc2c872974e25d9e6e0c12df39f0fe08e814",
   "source_sha256": {
     "tests/fixtures/input_provenance/pre-market-routine__inputs.json": "9cba27bc248d6bdc661ae244aec41c4fcc56f630fc5a37e38990ad2dbf96ebc5",
-    "skill-bundles/pre-market-routine.yaml": "3806b5218c7052f0157be5a98fb29330173ee594f082b84fdc3ff871e5705e1c"
-  }
+    "tests/fixtures/input_provenance/generated/source_snapshot/skill-bundles/pre-market-routine.yaml": "3806b5218c7052f0157be5a98fb29330173ee594f082b84fdc3ff871e5705e1c"
+  },
+  "evidence_scope": "Historical pre-merge rendering; source_snapshot preserves the exact instruction source. Not current merged-contract inference."
 }

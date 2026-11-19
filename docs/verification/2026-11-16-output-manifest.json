@@ -1,0 +1,25 @@
+{
+  "model": "gpt-5.5",
+  "provider": "custom:openai-direct",
+  "hermes_version": "0.17.0",
+  "records": [
+    {
+      "routine": "pre-market",
+      "artifact": "/private/tmp/hermes-migration-runtime/profiles/migration-check/cron/output/8888845e88fb/2026-11-16_23-00-34.md",
+      "artifact_sha256": "7fac2565746935aa3753313fe5d9551676ff6c5fa75c0d4637f3ae1a4d94fac9",
+      "response_file": "2026-11-16-pre-market-response.md",
+      "original_response_sha256": "579c026b9f87f8bd31c5d0e0b4945f10561d0332a16b0f144bc10065e3715160",
+      "published_response_sha256": "f162debcb2eaeeb9d9d86453f82df89aa57027c7b2d583dd5de4d799fcfc5083",
+      "normalization": "Trailing whitespace removed for publication; original cron artifact and response hashes retained."
+    },
+    {
+      "routine": "after-close",
+      "artifact": "/private/tmp/hermes-migration-runtime/profiles/migration-check/cron/output/07ae940b1638/2026-11-16_23-00-35.md",
+      "artifact_sha256": "a3c670f5c29bd2929d0504d02be4bbeeeed5ff8425dcd23a069c9fab5ebc4cfe",
+      "response_file": "2026-11-16-after-close-response.md",
+      "original_response_sha256": "c833c3da3e25b31173e9f38e9ec68a8d6b4e6b2b8529c2462d2b51c8308bb162",
+      "published_response_sha256": "e5a465d0ccfbbcf8dca14ffec72c35f0b8173e8632b21b388d2422a75ca84182",
+      "normalization": "Trailing whitespace removed for publication; original cron artifact and response hashes retained."
+    }
+  ]
+}

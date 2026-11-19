@@ -153,3 +153,55 @@ def test_real_regression_missing_signal_inputs_are_not_zero_changes():
     assert hashlib.sha256(text.encode()).hexdigest() == metadata["response_sha256"]
     with pytest.raises(AssertionError, match="Missing observations"):
         audit_unobserved_outcomes(text, case)
+
+
+@pytest.mark.parametrize("workflow", ("pre-market-routine", "after-close-review"))
+def test_current_table_semantic_audit_and_expected_date(workflow):
+    # Deterministic adaptation exercises the merged auditor, not new inference.
+    from scripts.validate_brief_provenance import HEADER
+
+    case = json.loads((FIXTURES / f"{workflow}__inputs.json").read_text())
+    text = (GENERATED / f"{workflow}__bundle.md").read_text()
+    rows = parse_provenance_rows(text)
+    normalized_rows = []
+    for item in case["inputs"]:
+        row = rows[item["section"]]
+        observed = (
+            item.get("observation_date")
+            or item.get("observation_timestamp")
+            or item.get("verified_as_of")
+            or "unknown"
+        )
+        expected = item["basis"].get("expected_session", case["run_cutoff"][:10])
+        normalized = [
+            *row[:3],
+            observed[:10] if observed != "unknown" else observed,
+            expected,
+            expected_status(item, case["run_cutoff"]).replace("-", "_"),
+            row[6] + f"; observation timestamp {observed}; Retrieved at {item['retrieved_at']}",
+        ]
+        normalized_rows.append("| " + " | ".join(normalized) + " |")
+    prose = "\n".join(line for line in text.splitlines() if "|" not in line)
+    text = (
+        prose
+        + "\n### Source / Skill provenance\n| "
+        + " | ".join(HEADER)
+        + " |\n|"
+        + "---|" * 7
+        + "\n"
+        + "\n".join(normalized_rows)
+    )
+    text = text.replace("valid-empty", "valid_empty")
+    audit_response(text, case, current_contract=True)
+    bad = text.replace("| unavailable |", "| valid_empty |")
+    with pytest.raises(AssertionError):
+        audit_response(bad, case, current_contract=True)
+    with pytest.raises(AssertionError):
+        audit_response(
+            text.replace(
+                f"| {case['calendar']['expected_completed_session']} | stale |",
+                "| 2026-11-15 | stale |",
+            ),
+            case,
+            current_contract=True,
+        )

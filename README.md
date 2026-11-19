@@ -93,6 +93,8 @@ trading-research-assistant chat
 
 ---
 
+Morning and evening briefs show each input’s source/skill revision, observation date, expected date and missing/stale/empty status. No local API key does not imply fresh upstream data. See [input provenance and Finviz transition verification](docs/04-skill-integration-strategy.md#morningevening-input-provenance-issue-1).
+
 ## Prerequisites
 
 | Requirement | Notes |

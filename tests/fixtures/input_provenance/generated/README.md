@@ -25,3 +25,5 @@ SOUL.md (`deception_hide`); that file was not changed or the filter bypassed.
 Consequently these captures demonstrate bundle/prompt rendering and provenance
 classification, **not SOUL loading, full-profile acceptance, scheduler behavior,
 or the December 7 live migration**. The latter checks remain separate gates.
+
+These captures are historical pre-merge evidence. `source_snapshot/` preserves the exact prompt/bundle bytes checked by the original source hashes. They are not inference evidence for the current merged contract; new runs validate the current table plus semantic requirements.

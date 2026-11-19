@@ -67,10 +67,38 @@ def parse_provenance_rows(text: str) -> dict[str, list[str]]:
     return rows
 
 
-def audit_response(text: str, case: dict) -> None:
+def audit_response(text: str, case: dict, *, current_contract: bool = False) -> None:
     """Check observed status/date/basis in actual provenance rows, fail closed."""
+    if current_contract:
+        try:
+            from scripts.validate_brief_provenance import validate_brief
+        except ModuleNotFoundError:
+            from validate_brief_provenance import validate_brief
+
+        errors = validate_brief(text)
+        assert not errors, errors
     rows = parse_provenance_rows(text)
+    if current_contract:
+        for item in case["inputs"]:
+            row = rows.get(item["section"])
+            assert row is not None, f"Missing provenance row: {item['section']}"
+            expected_date = item["basis"].get("expected_session", case["run_cutoff"][:10])
+            assert row[4] == expected_date, f"{item['section']}: wrong expected date"
+        # Normalize the current seven-column table to the historical auditor's
+        # internal layout. Full timestamps and retrieval time live in impact.
+        rows = {
+            label: [
+                *row[:3],
+                row[3] + " " + row[6],
+                row[6],
+                row[5].replace("valid_empty", "valid-empty"),
+                row[6],
+            ]
+            for label, row in rows.items()
+        }
     prose = "\n".join(line for line in text.splitlines() if "|" not in line)
+    if current_contract:
+        prose = prose.replace("valid_empty", "valid-empty")
     # Inspect the affected content sections, not status summaries in the footer.
     main_prose = re.split(r"(?im)^#{1,4}[^\n]*data freshness", prose)[0]
     blocks = re.split(r"(?m)^#{1,4} ", main_prose)[1:]
@@ -354,7 +382,7 @@ def main() -> None:
     }
     (args.output_dir / (stem + ".metadata.json")).write_text(json.dumps(metadata, indent=2) + "\n")
     # stderr is deliberately not persisted: backend diagnostics can carry URLs.
-    audit_response(response, case)
+    audit_response(response, case, current_contract=True)
     print(f"PASS: {stem}; response: {args.output_dir / (stem + '.md')}")
 
 
