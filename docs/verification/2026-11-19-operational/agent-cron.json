@@ -1,0 +1,22 @@
+[
+  {
+    "workflow": "pre-market-routine",
+    "job_id": "bf7e265dd3b8",
+    "result": "FAIL",
+    "audit_error": "Failed Elite: missing inline disclosure",
+    "artifact_sha256": "10e2142515a86c818700bb9709b29831fe30a82bd95d28d31a211ac6c22d1c9a",
+    "deliver": "local",
+    "tools": 0,
+    "mode": "isolated scheduled real model generation; no cron run; not production gateway soak"
+  },
+  {
+    "workflow": "after-close-review",
+    "job_id": "c01d4dc4f399",
+    "result": "PASS",
+    "audit_error": null,
+    "artifact_sha256": "f1f7e1b04214a92cc721d7854e06719b33b2a370133ba3caf1d4d3bec7884aa9",
+    "deliver": "local",
+    "tools": 0,
+    "mode": "isolated scheduled real model generation; no cron run; not production gateway soak"
+  }
+]

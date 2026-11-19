@@ -143,7 +143,7 @@ def audit_response(text: str, case: dict, *, current_contract: bool = False) -> 
             assert basis["expected_session"] in impact, f"{label}: missing expected session"
         else:
             # One report-wide cutoff can apply to several timestamp inputs.
-            assert re.search(r"(?i)run cutoff[ :=]*" + re.escape(case["run_cutoff"]), text), (
+            assert re.search(r"(?i)run[ _]cutoff[ :=]*" + re.escape(case["run_cutoff"]), text), (
                 f"{label}: missing declared report cutoff"
             )
             assert str(basis["max_age_minutes"]) in impact, f"{label}: missing age limit"
@@ -199,13 +199,27 @@ def audit_response(text: str, case: dict, *, current_contract: bool = False) -> 
 def audit_calendar_scope(text: str, case: dict) -> None:
     prose = "\n".join(line for line in text.splitlines() if "|" not in line)
     main_prose = re.split(r"(?im)^#{1,4}[^\n]*data freshness", prose)[0]
-    blocks = re.split(r"(?m)^#{1,4} ", main_prose)[1:]
     if case.get("workflow") == "pre-market-routine" and not any(
         item["basis"].get("event_domain") == "economic"
         and expected_status(item, case["run_cutoff"]) in ("fresh", "valid-empty")
         for item in case["inputs"]
     ):
-        macro = [block for block in blocks if "macro calendar" in block.splitlines()[0].lower()]
+        # Keep nested Economic/Earnings headings within their parent section.
+        # Splitting at every heading would discard the availability disclosure.
+        macro = []
+        headings = list(re.finditer(r"(?m)^(#{1,4}) ([^\n]+)$", main_prose))
+        for index, heading in enumerate(headings):
+            if "macro calendar" not in heading.group(2).lower():
+                continue
+            end = next(
+                (
+                    later.start()
+                    for later in headings[index + 1 :]
+                    if len(later.group(1)) <= len(heading.group(1))
+                ),
+                len(main_prose),
+            )
+            macro.append(main_prose[heading.start() : end])
         assert macro, "Missing economic-calendar availability disclosure"
         economic = "\n".join(macro).lower()
         assert "economic" in economic and re.search(r"\b(unknown|unavailable)\b", economic), (
@@ -229,7 +243,7 @@ def audit_unobserved_outcomes(text: str, case: dict) -> None:
     pattern = r"no earnings reactions occurred|no signals improved|no signals degraded|nothing is invalidated"
     for line in text.splitlines():
         if re.search(pattern, line, re.IGNORECASE) and not re.search(
-            r"unknown|not assessable|cannot|do not (assume|claim|infer)|must not (assume|claim|infer)|must not be (read|interpreted|treated) as",
+            r"unknown|not assessable|cannot|do not (assume|claim|infer|conclude)|must not (assume|claim|infer)|must not be (read|interpreted|treated) as|no [“\"']no earnings reactions occurred[”\"'] conclusion can be made",
             line,
             re.IGNORECASE,
         ):
@@ -251,7 +265,8 @@ def build_acceptance_request(case: dict) -> str:
         "Impact / next step. Use the current seven-column table and six status values "
         "from the shared contract, including valid_empty and carried_forward. "
         "Include an inline status for each affected "
-        "section using a heading '### <exact section name>' and a 'Status: <status>' line. "
+        "section before the Data freshness heading; a footer-only summary is insufficient. "
+        "Use a heading '### <exact section name>' and a 'Status: <status>' line. "
         "For each Impact cell include the basis.kind literally; completed-close includes "
         "expected_session, other bases include the full run cutoff, max age in minutes, "
         "and policy source; event-calendar also includes the event domain and requested coverage window. "

@@ -1,0 +1,9 @@
+{
+  "workflow": "pre-market-routine",
+  "job_id": "7f600d210c51",
+  "artifact": "/private/tmp/hermes-operational-runtime-20261119/cron/output/7f600d210c51/2026-11-19_08-12-14.md",
+  "result": "PASS",
+  "audit_error": null,
+  "artifact_sha256": "47f4cf9f995856677553a82495d8f527b4bb9c67b57a63a3c1840573e842edb8",
+  "mode": "isolated scheduled real model generation; no cron run; one job expected and fired; local runner expected-count assertion was incorrectly still 2 after reducing retry scope to 1; analyzed original output without rerunning or editing it"
+}

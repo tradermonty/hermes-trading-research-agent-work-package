@@ -1,0 +1,13 @@
+{
+  "hermes_version": "Hermes Agent v0.17.0 (2026.6.19) \u00b7 upstream 5db1430a",
+  "workflow": "after-close-review",
+  "surface": "cron",
+  "generated_at": "2026-11-19T08:05:41.156984-08:00",
+  "query_sha256": "7974c7c1f9b722642923114310ee701a8a7833e58f3957798962c5610beaf377",
+  "response_sha256": "f98f722920aa7889f50eb6f987bf623d26fc67059e7569a7874f1a37dd02ed29",
+  "source_sha256": {
+    "docs/verification/2026-11-19-operational/source_snapshot/tests/fixtures/input_provenance/after-close-review__inputs.json": "7ddd119626b59cf95bf53cfdae09eddbc1cdd577d7d5124e6a19c448c6f8f208",
+    "docs/verification/2026-11-19-operational/source_snapshot/prompts/after-close-review.md": "4def8cabfcd997da69db0d93a0c87652d54c0beb52aeee01e26403200b42bfa5"
+  },
+  "scope": "Fresh generation against merged PR3 plus SOUL wording fix; captured before inline screen disclosure follow-up. Auditor was corrected for nested headings, explicit negations and run_cutoff spelling; raw output unchanged."
+}
