@@ -193,6 +193,14 @@ def test_current_table_semantic_audit_and_expected_date(workflow):
     )
     text = text.replace("valid-empty", "valid_empty")
     audit_response(text, case, current_contract=True)
+    # A correct timestamp in impact must not hide an incorrect date cell.
+    with pytest.raises(AssertionError, match="wrong observation date"):
+        audit_response(
+            text.replace("| 2026-03-27 |", "| 2026-03-26 |"), case, current_contract=True
+        )
+    # Prompt echo cannot supply provenance missing from the actual response.
+    with pytest.raises(AssertionError):
+        audit_response(text + "\n## Response\nNo provenance provided.", case, current_contract=True)
     bad = text.replace("| unavailable |", "| valid_empty |")
     with pytest.raises(AssertionError):
         audit_response(bad, case, current_contract=True)
@@ -205,3 +213,17 @@ def test_current_table_semantic_audit_and_expected_date(workflow):
             case,
             current_contract=True,
         )
+
+
+def test_generation_request_uses_current_date_cells_without_expected_labels():
+    from scripts.run_provenance_acceptance import build_acceptance_request
+
+    case = json.loads((FIXTURES / "pre-market-routine__inputs.json").read_text())
+    request = build_acceptance_request(case)
+    assert (
+        "Keep Observation date and Expected observation date cells as YYYY-MM-DD or unknown"
+        in request
+    )
+    assert "Put full ISO observation/retrieval timestamps" in request
+    assert "in Impact / next step" in request
+    assert request.endswith(json.dumps(case, indent=2))

@@ -70,6 +70,7 @@ def parse_provenance_rows(text: str) -> dict[str, list[str]]:
 def audit_response(text: str, case: dict, *, current_contract: bool = False) -> None:
     """Check observed status/date/basis in actual provenance rows, fail closed."""
     if current_contract:
+        text = re.split(r"(?m)^## Response\s*$", text)[-1]
         try:
             from scripts.validate_brief_provenance import validate_brief
         except ModuleNotFoundError:
@@ -84,6 +85,14 @@ def audit_response(text: str, case: dict, *, current_contract: bool = False) -> 
             assert row is not None, f"Missing provenance row: {item['section']}"
             expected_date = item["basis"].get("expected_session", case["run_cutoff"][:10])
             assert row[4] == expected_date, f"{item['section']}: wrong expected date"
+            observed = (
+                item.get("observation_date")
+                or item.get("observation_timestamp")
+                or item.get("verified_as_of")
+                or "unknown"
+            )
+            expected_observation_date = observed[:10] if observed != "unknown" else "unknown"
+            assert row[3] == expected_observation_date, f"{item['section']}: wrong observation date"
         # Normalize the current seven-column table to the historical auditor's
         # internal layout. Full timestamps and retrieval time live in impact.
         rows = {
@@ -229,6 +238,29 @@ def audit_unobserved_outcomes(text: str, case: dict) -> None:
             )
 
 
+def build_acceptance_request(case: dict) -> str:
+    """Describe raw inputs without overriding the current output contract."""
+    return (
+        "Controlled synthetic acceptance run. Use only the supplied observations; "
+        "no tools, browsing, fetching, file changes, or execution. The supplied run cutoff "
+        "and market calendar override the real clock for this simulation. Produce the "
+        "complete research brief. All other inputs are unavailable. In the final provenance "
+        "table use the exact supplied section names, source strings and revision SHA. "
+        "Keep Observation date and Expected observation date cells as YYYY-MM-DD or unknown. "
+        "Put full ISO observation/retrieval timestamps, Freshness basis and impact in "
+        "Impact / next step. Use the current seven-column table and six status values "
+        "from the shared contract, including valid_empty and carried_forward. "
+        "Include an inline status for each affected "
+        "section using a heading '### <exact section name>' and a 'Status: <status>' line. "
+        "For each Impact cell include the basis.kind literally; completed-close includes "
+        "expected_session, other bases include the full run cutoff, max age in minutes, "
+        "and policy source; event-calendar also includes the event domain and requested coverage window. "
+        "For Macro calendar, report economic-calendar availability separately from earnings-calendar availability. "
+        "Explain failures and degraded consequences. State synthetic data and that supplied upstream skills were not executed.\n"
+        + json.dumps(case, indent=2)
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtime-home", required=True, type=Path)
@@ -252,22 +284,7 @@ def main() -> None:
     case = json.loads(
         (ROOT / "tests/fixtures/input_provenance" / f"{args.workflow}__inputs.json").read_text()
     )
-    request = (
-        "Controlled synthetic acceptance run. Use only the supplied observations; "
-        "no tools, browsing, fetching, file changes, or execution. The supplied run cutoff "
-        "and market calendar override the real clock for this simulation. Produce the "
-        "complete research brief. All other inputs are unavailable. In the final provenance "
-        "table use the exact supplied section names, source strings, revision SHA, and full "
-        "ISO observation/retrieval timestamps (unknown for absent dates); place Freshness "
-        "basis and impact in the last column. Include an inline status for each affected "
-        "section using a heading '### <exact section name>' and a 'Status: <status>' line. "
-        "For each Impact cell include the basis.kind literally; completed-close includes "
-        "expected_session, other bases include the full run cutoff, max age in minutes, "
-        "and policy source; event-calendar also includes the event domain and requested coverage window. "
-        "For Macro calendar, report economic-calendar availability separately from earnings-calendar availability. "
-        "Explain failures and degraded consequences. State synthetic data and that supplied upstream skills were not executed.\n"
-        + json.dumps(case, indent=2)
-    )
+    request = build_acceptance_request(case)
     env = dict(os.environ, HERMES_HOME=str(runtime), HERMES_INFERENCE_MAX_RETRIES="0")
     entrypoint = [
         str(args.hermes_python),
