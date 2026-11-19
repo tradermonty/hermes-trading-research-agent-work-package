@@ -1,0 +1,93 @@
+{
+  "synthetic": true,
+  "run_cutoff": "2026-11-17T06:00:00-08:00",
+  "calendar": {
+    "session_state": "normal session day",
+    "expected_completed_session": "2026-11-16"
+  },
+  "inputs": [
+    {
+      "section": "Dashboard",
+      "source": "uptrend-analyzer / public dashboard -> upstream Finviz collection",
+      "skill_revision": "6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed)",
+      "fetch": "success",
+      "schema_valid": true,
+      "local_key_required": false,
+      "observation_date": "2026-03-27",
+      "retrieved_at": "2026-11-17T06:00:00-08:00",
+      "basis": {
+        "kind": "completed-close",
+        "expected_session": "2026-11-16"
+      },
+      "coverage": "partial; current dates for other rows unavailable"
+    },
+    {
+      "section": "Failed Elite",
+      "source": "theme-detector / direct FINVIZ Elite screen A",
+      "skill_revision": "6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed)",
+      "fetch": "authentication_failure",
+      "schema_valid": false,
+      "observation_date": null,
+      "retrieved_at": "2026-11-17T06:00:00-08:00",
+      "basis": {
+        "kind": "timestamp",
+        "max_age_minutes": 30,
+        "policy_source": "synthetic acceptance policy"
+      }
+    },
+    {
+      "section": "Empty Elite",
+      "source": "theme-detector / direct FINVIZ Elite screen B",
+      "skill_revision": "6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed)",
+      "fetch": "success",
+      "schema_valid": true,
+      "row_count": 0,
+      "observation_timestamp": "2026-11-17T05:55:00-08:00",
+      "retrieved_at": "2026-11-17T06:00:00-08:00",
+      "basis": {
+        "kind": "timestamp",
+        "max_age_minutes": 30,
+        "policy_source": "synthetic acceptance policy"
+      }
+    },
+    {
+      "section": "Morning news",
+      "source": "market-news-analyst / synthetic timestamped news",
+      "skill_revision": "6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed)",
+      "fetch": "success",
+      "schema_valid": true,
+      "observation_timestamp": "2026-11-17T05:55:00-08:00",
+      "retrieved_at": "2026-11-17T06:00:00-08:00",
+      "basis": {
+        "kind": "timestamp",
+        "max_age_minutes": 30,
+        "policy_source": "synthetic acceptance policy"
+      },
+      "headline": "Synthetic company research update; no trade recommendation"
+    },
+    {
+      "section": "Earnings calendar",
+      "source": "earnings-calendar / synthetic local event calendar",
+      "skill_revision": "6e9a635e5259601d79bb7a97085784f8b37742b5 (clean; fixture-provided, not executed)",
+      "fetch": "success",
+      "schema_valid": true,
+      "verified_as_of": "2026-11-17T05:55:00-08:00",
+      "event_dates": [
+        "2026-11-18",
+        "2026-11-19"
+      ],
+      "coverage_start": "2026-11-17",
+      "coverage_end": "2026-11-20",
+      "retrieved_at": "2026-11-17T06:00:00-08:00",
+      "basis": {
+        "kind": "event-calendar",
+        "requested_start": "2026-11-17",
+        "requested_end": "2026-11-20",
+        "max_age_minutes": 30,
+        "policy_source": "synthetic acceptance policy",
+        "event_domain": "earnings"
+      }
+    }
+  ],
+  "workflow": "pre-market-routine"
+}

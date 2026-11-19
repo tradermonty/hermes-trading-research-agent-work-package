@@ -1,0 +1,153 @@
+{
+  "tested_at_utc": "2026-11-19T16:09:45.796330+00:00",
+  "upstream_revision": "f95e770591b56fd83b9917175f5a7e8fe9ac47dc",
+  "upstream_dirty": false,
+  "cutover_phase": "before 2026-12-07; post-cutover verification not yet possible",
+  "original_evidence_sha256": "218d148d5eb08729c20a1fbd9f4a5dd8a1eef35833f28e994989bdac0ea85749",
+  "cases": [
+    {
+      "skill": "value-dividend-screener",
+      "industry": null,
+      "new_rows": 23,
+      "legacy_rows": 23,
+      "new_http": 200,
+      "legacy_http": 200,
+      "new_columns": [
+        "No.",
+        "Ticker",
+        "Company",
+        "Industry",
+        "Market Cap",
+        "EPS Growth This Year",
+        "EPS Growth Next Year",
+        "Sales Growth Past 5 Years",
+        "Sales Growth Quarter Over Quarter",
+        "EPS Growth Quarter Over Quarter",
+        "EPS Surprise",
+        "Revenue Surprise",
+        "Performance (Week)",
+        "Performance (YTD)",
+        "Earnings Date",
+        "Relative Volume",
+        "Change",
+        "After-Hours Change"
+      ],
+      "source": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "cap_midover,fa_div_o3,fa_divgrowth_3yo5,fa_eps3years_pos,fa_pb_u2,fa_pe_u20,fa_sales3years_pos,geo_usa",
+          "ft": "4"
+        }
+      },
+      "observation_date": "unknown",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "dividend-growth-pullback-screener",
+      "industry": null,
+      "new_rows": 12,
+      "legacy_rows": 12,
+      "new_http": 200,
+      "legacy_http": 200,
+      "new_columns": [
+        "No.",
+        "Ticker",
+        "Company",
+        "Industry",
+        "Market Cap",
+        "EPS Growth This Year",
+        "EPS Growth Next Year",
+        "Sales Growth Past 5 Years",
+        "Sales Growth Quarter Over Quarter",
+        "EPS Growth Quarter Over Quarter",
+        "EPS Surprise",
+        "Revenue Surprise",
+        "Performance (Week)",
+        "Performance (YTD)",
+        "Earnings Date",
+        "Relative Volume",
+        "Change",
+        "After-Hours Change"
+      ],
+      "source": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "cap_midover,fa_div_0.5to3,fa_divgrowth_3yo10,fa_eps3years_o5,fa_sales3years_o5,geo_usa,ta_rsi_os40",
+          "ft": "4"
+        }
+      },
+      "observation_date": "unknown",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Semiconductors",
+      "new_rows": 9,
+      "legacy_rows": 9,
+      "new_http": 200,
+      "legacy_http": 200,
+      "new_columns": [
+        "Ticker",
+        "Market Cap",
+        "Change",
+        "Volume"
+      ],
+      "source": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "ind_semiconductors,cap_smallover,sh_avgvol_o100,sh_price_o10,ta_perf2_4wup",
+          "c": "1,6,66,67",
+          "ft": "4"
+        }
+      },
+      "observation_date": "unknown",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true,
+      "parsed_cap_and_change_match_new_csv": true,
+      "change_equal": true,
+      "market_cap_pairs_checked": 9,
+      "market_cap_raw_values_equal": true,
+      "unit_note": "Both Elite CSV endpoints returned unsuffixed market cap in millions. The preliminary reviewer incorrectly applied the generic dollar parser to the legacy Elite endpoint; raw pairs are equal."
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Software - Application",
+      "new_rows": 60,
+      "legacy_rows": 60,
+      "new_http": 200,
+      "legacy_http": 200,
+      "new_columns": [
+        "Ticker",
+        "Market Cap",
+        "Change",
+        "Volume"
+      ],
+      "source": {
+        "endpoint": "https://elite.finviz.com/export/screener",
+        "params": {
+          "type": "stocks",
+          "v": "151",
+          "f": "ind_softwareapplication,cap_smallover,sh_avgvol_o100,sh_price_o10,ta_perf2_4wdown",
+          "c": "1,6,66,67",
+          "ft": "4"
+        }
+      },
+      "observation_date": "unknown",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true,
+      "parsed_cap_and_change_match_new_csv": true,
+      "change_equal": true,
+      "market_cap_pairs_checked": 60,
+      "market_cap_raw_values_equal": true,
+      "unit_note": "Both Elite CSV endpoints returned unsuffixed market cap in millions. The preliminary reviewer incorrectly applied the generic dollar parser to the legacy Elite endpoint; raw pairs are equal."
+    }
+  ]
+}

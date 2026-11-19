@@ -66,7 +66,8 @@ def test_safety_language_present():
     soul = (ROOT / "SOUL.md").read_text().lower()
     assert "not a signal service" in soul
     assert "do not place trades" in soul
-    assert "do not tell the user to buy or sell" in soul
+    assert "buy/sell decisions belong to the human trader" in soul
+    assert "imperative trading instructions outside this role" in soul
 
 
 def test_pre_market_prompt_has_required_sections():

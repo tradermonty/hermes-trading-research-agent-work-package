@@ -1,0 +1,28 @@
+{
+  "job_id": "064276ad3443",
+  "scheduled_at": "2026-11-19T08:06:46.878987-08:00",
+  "ticks": [
+    {
+      "checked_at": "2026-11-19T08:06:44.330823-08:00",
+      "jobs_fired": 0
+    },
+    {
+      "checked_at": "2026-11-19T08:06:45.340009-08:00",
+      "jobs_fired": 0
+    },
+    {
+      "checked_at": "2026-11-19T08:06:46.348386-08:00",
+      "jobs_fired": 0
+    },
+    {
+      "checked_at": "2026-11-19T08:06:47.409521-08:00",
+      "jobs_fired": 1
+    }
+  ],
+  "one_output_only": true,
+  "no_repeat_fire": true,
+  "output_sha256": "f4b5190566f2dfb808b54e3194457379d570de1ec68a6372feab727c3d64479b",
+  "mode": "isolated real-time due-job polling; no cron run; no agent inference; not production gateway soak",
+  "delivery": "local",
+  "soul_loaded_exactly": true
+}

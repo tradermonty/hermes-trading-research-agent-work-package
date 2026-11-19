@@ -193,6 +193,11 @@ def test_current_table_semantic_audit_and_expected_date(workflow):
     )
     text = text.replace("valid-empty", "valid_empty")
     audit_response(text, case, current_contract=True)
+    audit_response(
+        text.replace("Run cutoff", "run_cutoff").replace("run cutoff", "run_cutoff"),
+        case,
+        current_contract=True,
+    )
     # Free-text cells may contain escaped pipes without adding table columns.
     for column in (1, 6):
         for backslashes in (1, 2, 3, 4):
@@ -238,3 +243,75 @@ def test_generation_request_uses_current_date_cells_without_expected_labels():
     assert "Put full ISO observation/retrieval timestamps" in request
     assert "in Impact / next step" in request
     assert request.endswith(json.dumps(case, indent=2))
+
+
+@pytest.mark.parametrize("availability", ["unknown", "unavailable"])
+def test_macro_availability_under_nested_heading(availability):
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        f"Status: {availability}\nEconomic events cannot be assessed.\n"
+        "### Earnings calendar\nStatus: fresh; earnings coverage only.\n"
+        "## 3. Other section\n"
+    )
+    audit_calendar_scope(text, case)
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text.replace(f"Status: {availability}", "Status: fresh"), case)
+    with pytest.raises(AssertionError, match="absence of economic events"):
+        audit_calendar_scope(
+            text.replace("Economic events cannot be assessed.", "No scheduled high-impact events."),
+            case,
+        )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Do not conclude that no signals improved, no signals degraded, or nothing was invalidated.",
+        "No “no earnings reactions occurred” conclusion can be made.",
+    ],
+)
+def test_explicit_denial_of_zero_change_inference_is_allowed(text):
+    audit_unobserved_outcomes(text, {"workflow": "after-close-review"})
+    with pytest.raises(AssertionError):
+        audit_unobserved_outcomes(
+            "No earnings reactions occurred.", {"workflow": "after-close-review"}
+        )
+
+
+def test_real_scheduled_footer_only_disclosure_is_rejected():
+    case = json.loads((FIXTURES / "pre-market-routine__inputs.json").read_text())
+    text = (FIXTURES / "regressions/scheduled_footer_only.md").read_text()
+    with pytest.raises(AssertionError, match="missing inline disclosure"):
+        audit_response(text, case, current_contract=True)
+
+
+@pytest.mark.parametrize("workflow", ("pre-market-routine", "after-close-review"))
+@pytest.mark.parametrize("surface", ("bundle", "cron"))
+def test_operational_fresh_generation_and_exact_sources(workflow, surface):
+    evidence = ROOT / "docs/verification/2026-11-19-operational"
+    stem = f"{workflow}__{surface}"
+    text = (evidence / "generation" / f"{stem}.md").read_text()
+    metadata = json.loads((evidence / "generation" / f"{stem}.metadata.json").read_text())
+    assert hashlib.sha256(text.encode()).hexdigest() == metadata["response_sha256"]
+    for path, digest in metadata["source_sha256"].items():
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest
+    case = json.loads((FIXTURES / f"{workflow}__inputs.json").read_text())
+    audit_response(text, case, current_contract=True)
+
+
+@pytest.mark.parametrize(
+    "name,workflow",
+    [
+        ("after-close-scheduled", "after-close-review"),
+        ("pre-market-scheduled-retry", "pre-market-routine"),
+    ],
+)
+def test_real_scheduled_generated_responses(name, workflow):
+    evidence = ROOT / "docs/verification/2026-11-19-operational"
+    manifest = json.loads((evidence / "scheduled-output-manifest.json").read_text())
+    record = next(row for row in manifest if row["name"] == name)
+    text = (evidence / f"{name}.md").read_text()
+    assert hashlib.sha256(text.encode()).hexdigest() == record["published_response_sha256"]
+    case = json.loads((FIXTURES / f"{workflow}__inputs.json").read_text())
+    audit_response(text, case, current_contract=True)

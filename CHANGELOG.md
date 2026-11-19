@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Operational follow-up: preserve the human-owned buy/sell decision boundary while making SOUL load under Hermes v0.17 context scanning; require screen status/date inside affected sections; correct acceptance audits for nested macro headings, explicit negative claims and run_cutoff spelling. Fresh generation, isolated scheduled runs and pre-cutover provider evidence are recorded under `docs/verification/2026-11-19-operational.md`; production model compatibility remains unresolved.
+
 - Live Hermes rendering guidance now requires scalar date cells (`YYYY-MM-DD` or `unknown`), consistent holiday/weekend carry-forward labels, and an explicit distinction between unexecuted analyses and verified missing credentials. Supplied numerical facts must be copied exactly or omitted.
 - Provenance table parsing now keeps escaped pipes inside cells and preserves extra empty boundary columns for validation. Regression tests cover escaped delimiters and malformed leading/trailing delimiters (PR #2 review).
 
