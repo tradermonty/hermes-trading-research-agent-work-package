@@ -1,0 +1,26 @@
+[
+  {
+    "name": "pre-market-scheduled-initial",
+    "artifact_path": "/private/tmp/hermes-operational-evidence-20261119/pre-market-scheduled-rejected-inline.md",
+    "artifact_sha256": "10e2142515a86c818700bb9709b29831fe30a82bd95d28d31a211ac6c22d1c9a",
+    "published_response_sha256": "03cff350bbad78a87b055c4808a6f416d887e66b45df16a5d4d2a55af5881475",
+    "normalization": "Response substring after ## Response marker; trailing whitespace removed for publication only. Original artifact and response SHA256 retained; no prose edits.",
+    "original_response_sha256": "b6c8a1165ed2af10aa502ab585bb0a510ba6c1d730f9ed972f2ac51177826d25"
+  },
+  {
+    "name": "after-close-scheduled",
+    "artifact_path": "/private/tmp/hermes-operational-runtime-20261119/cron/output/c01d4dc4f399/2026-11-19_08-09-36.md",
+    "artifact_sha256": "f1f7e1b04214a92cc721d7854e06719b33b2a370133ba3caf1d4d3bec7884aa9",
+    "published_response_sha256": "3dab75f18a0831fe16d540527d06ac14e942020d2b8e012ebc892af0749d9b4a",
+    "normalization": "Response substring after ## Response marker; trailing whitespace removed for publication only. Original artifact and response SHA256 retained; no prose edits.",
+    "original_response_sha256": "85625323dbec121eee6e03e17e03a16f363361db27055aa94e73371dc8b94989"
+  },
+  {
+    "name": "pre-market-scheduled-retry",
+    "artifact_path": "/private/tmp/hermes-operational-runtime-20261119/cron/output/7f600d210c51/2026-11-19_08-12-14.md",
+    "artifact_sha256": "47f4cf9f995856677553a82495d8f527b4bb9c67b57a63a3c1840573e842edb8",
+    "published_response_sha256": "56111dbe6d1183e9c92e0c01db5e82f00a8d31c1d797703cbd07a6bcedbbd93c",
+    "normalization": "Response substring after ## Response marker; trailing whitespace removed for publication only. Original artifact and response SHA256 retained; no prose edits.",
+    "original_response_sha256": "df7ee6bbb3bde2f2412a823cc7c59c5acc888431115cd3f982579f22b04d87da"
+  }
+]

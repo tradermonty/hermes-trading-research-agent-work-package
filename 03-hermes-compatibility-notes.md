@@ -83,9 +83,20 @@ Workaround applied to `prompts/pre-market-routine.md` and `prompts/after-close-r
 
 - Rewrote `If required data/API keys are missing, ... do not fabricate data` as positive form (`When data or API keys are unavailable, mark the relevant section as degraded mode and cite the missing input`).
 - Removed direct `Do not tell the user to buy or sell` from cron prompts. The hard-constraint lives in `SOUL.md` and is reinforced by the QA harness (`tests/test_output_safety.py`).
-- Keep cron prompts neutral and outcome-oriented; let `SOUL.md` carry the prohibitions.
+- Keep cron prompts neutral and outcome-oriented; let `SOUL.md` carry the role boundary.
 
 If a future prompt edit triggers `deception_hide` again, rewrite the offending sentence in positive form before tightening the SOUL guardrail.
+
+#### Hermes v0.17: `SOUL.md` is scanned too
+
+Verified 2026-11-19 on Hermes v0.17.0 (`5db1430a`): the context scanner also runs over `SOUL.md` when the profile loads. The former rule `You do not tell the user to buy or sell.` matched `deception_hide`, and Hermes blocked SOUL.md, so the profile ran without its safety rules. In the earlier controlled captures the run continued with SOUL blocked, and the block appeared only as a context-filter report in stdout. Evidence: `docs/verification/2026-11-19-operational.md` ("SOUL and installation") and `tests/fixtures/input_provenance/generated/README.md`.
+
+`SOUL.md` is therefore **not** a safe place for arbitrary negative-form prohibitions. Rules for editing it:
+
+- State the boundary in positive form, assigning ownership instead of forbidding an act. The current rule is `Buy/sell decisions belong to the human trader; your output stays within research and review, with imperative trading instructions outside this role.`
+- Other short negations such as `You do not place trades.` passed the same v0.17 scan (zero findings), so not every negation is blocked. Each SOUL edit still needs a fresh scanner check.
+- After editing SOUL, confirm under the target Hermes version that the scanner reports zero findings and that `load_soul_md()` returns the exact file contents, as recorded in the 2026-11-19 runtime preflight. `tests/test_package_structure.py::test_safety_language_present` pins the current wording but cannot run the scanner.
+- Output-side enforcement (`tests/test_output_safety.py`) is unchanged and does not depend on the SOUL sentence's form.
 
 Related convention: prompt template variables use a Jinja-like `{{TIMEZONE}}` marker rather than `${TIMEZONE}`. The scanner has not flagged `$`-style env references that we know of, but the `{{...}}` form keeps the prompt body free of `$` syntax entirely, removing a future false-positive surface. See `cron/create_cron_jobs.py:_expand_prompt_template()`.
 

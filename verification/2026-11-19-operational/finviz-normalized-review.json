@@ -1,0 +1,37 @@
+{
+  "source_sha256": "218d148d5eb08729c20a1fbd9f4a5dd8a1eef35833f28e994989bdac0ea85749",
+  "cases": [
+    {
+      "skill": "value-dividend-screener",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "dividend-growth-pullback-screener",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Semiconductors",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true,
+      "parsed_cap_and_change_match_new_csv": true,
+      "change_equal": true,
+      "market_cap_pairs_checked": 9,
+      "market_cap_raw_values_equal": true,
+      "unit_note": "Both Elite CSV endpoints returned unsuffixed market cap in millions. The preliminary reviewer incorrectly applied the generic dollar parser to the legacy Elite endpoint; raw pairs are equal."
+    },
+    {
+      "skill": "theme-detector",
+      "industry": "Software - Application",
+      "ticker_sets_equal": true,
+      "patched_result_matches_csv": true,
+      "parsed_cap_and_change_match_new_csv": true,
+      "change_equal": true,
+      "market_cap_pairs_checked": 60,
+      "market_cap_raw_values_equal": true,
+      "unit_note": "Both Elite CSV endpoints returned unsuffixed market cap in millions. The preliminary reviewer incorrectly applied the generic dollar parser to the legacy Elite endpoint; raw pairs are equal."
+    }
+  ]
+}
