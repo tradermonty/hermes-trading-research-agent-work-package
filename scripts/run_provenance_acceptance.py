@@ -196,6 +196,51 @@ def audit_response(text: str, case: dict, *, current_contract: bool = False) -> 
     assert "human" in text.lower()
 
 
+def _economic_calendar_scope(main_prose: str) -> tuple[list[str], list[str]]:
+    """Return the text that must carry the economic-calendar disclosure.
+
+    Each "Macro calendar" section runs until the next heading at the same or
+    a higher level, so nested Economic/Earnings headings stay inside it. When
+    the section has child headings that name the economic calendar, only those
+    children count; otherwise the parent body and every non-earnings child
+    count. Status words from an Earnings child never satisfy the economic
+    check.
+
+    Returns ``(sections, scope)``: the full Macro calendar sections, used for
+    the absence-claim check, and the economic disclosure scope.
+    """
+    headings = list(re.finditer(r"(?m)^(#{1,4}) ([^\n]+)$", main_prose))
+    sections = []
+    scope = []
+    for index, heading in enumerate(headings):
+        if "macro calendar" not in heading.group(2).lower():
+            continue
+        level = len(heading.group(1))
+        children = []
+        end = len(main_prose)
+        for later in headings[index + 1 :]:
+            if len(later.group(1)) <= level:
+                end = later.start()
+                break
+            children.append(later)
+        sections.append(main_prose[heading.start() : end])
+        body_end = children[0].start() if children else end
+        parent_body = main_prose[heading.start() : body_end]
+        child_blocks = []
+        for child_index, child in enumerate(children):
+            child_end = (
+                children[child_index + 1].start() if child_index + 1 < len(children) else end
+            )
+            child_blocks.append((child.group(2).lower(), main_prose[child.start() : child_end]))
+        economic_children = [block for title, block in child_blocks if "economic" in title]
+        if economic_children:
+            scope.extend(economic_children)
+        else:
+            scope.append(parent_body)
+            scope.extend(block for title, block in child_blocks if "earnings" not in title)
+    return sections, scope
+
+
 def audit_calendar_scope(text: str, case: dict) -> None:
     prose = "\n".join(line for line in text.splitlines() if "|" not in line)
     main_prose = re.split(r"(?im)^#{1,4}[^\n]*data freshness", prose)[0]
@@ -204,28 +249,13 @@ def audit_calendar_scope(text: str, case: dict) -> None:
         and expected_status(item, case["run_cutoff"]) in ("fresh", "valid-empty")
         for item in case["inputs"]
     ):
-        # Keep nested Economic/Earnings headings within their parent section.
-        # Splitting at every heading would discard the availability disclosure.
-        macro = []
-        headings = list(re.finditer(r"(?m)^(#{1,4}) ([^\n]+)$", main_prose))
-        for index, heading in enumerate(headings):
-            if "macro calendar" not in heading.group(2).lower():
-                continue
-            end = next(
-                (
-                    later.start()
-                    for later in headings[index + 1 :]
-                    if len(later.group(1)) <= len(heading.group(1))
-                ),
-                len(main_prose),
-            )
-            macro.append(main_prose[heading.start() : end])
-        assert macro, "Missing economic-calendar availability disclosure"
-        economic = "\n".join(macro).lower()
+        sections, scope = _economic_calendar_scope(main_prose)
+        assert sections, "Missing economic-calendar availability disclosure"
+        economic = "\n".join(scope).lower()
         assert "economic" in economic and re.search(r"\b(unknown|unavailable)\b", economic), (
             "Missing economic-calendar availability disclosure"
         )
-        for line in economic.splitlines():
+        for line in "\n".join(sections).lower().splitlines():
             if re.search(
                 r"no scheduled high-impact events|high-impact events today:\s*(none|no events)",
                 line,
@@ -241,12 +271,18 @@ def audit_unobserved_outcomes(text: str, case: dict) -> None:
     if case.get("workflow") != "after-close-review":
         return
     pattern = r"no earnings reactions occurred|no signals improved|no signals degraded|nothing is invalidated"
+    # A line may mention a zero-change claim only to deny it. Match denial
+    # forms generically (any quoted claim, any of the verbs) rather than one
+    # captured sentence, so rewording by the model does not need auditor edits.
+    denial = (
+        r"unknown|not assessable|cannot"
+        r"|(do|must) not (assume|claim|infer|conclude)"
+        r"|must not be (read|interpreted|treated) as"
+        r"|\bno (such )?conclusion can be (made|drawn|reached)"
+        r"|\bno [“\"'][^”\"']+[”\"'] conclusion can be (made|drawn|reached)"
+    )
     for line in text.splitlines():
-        if re.search(pattern, line, re.IGNORECASE) and not re.search(
-            r"unknown|not assessable|cannot|do not (assume|claim|infer|conclude)|must not (assume|claim|infer)|must not be (read|interpreted|treated) as|no [“\"']no earnings reactions occurred[”\"'] conclusion can be made",
-            line,
-            re.IGNORECASE,
-        ):
+        if re.search(pattern, line, re.IGNORECASE) and not re.search(denial, line, re.IGNORECASE):
             raise AssertionError(
                 "Missing observations cannot prove zero reactions or signal changes"
             )

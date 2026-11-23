@@ -21,8 +21,11 @@ The runtime was a private disposable HERMES_HOME with inference credentials,
 empty MCP configuration, no configured hooks, and no executable tools. The
 initial stdout warning about the intentionally empty/unknown toolset is retained
 verbatim. The installed Hermes v0.17 context filter also reported that it blocked
-SOUL.md (`deception_hide`); that file was not changed or the filter bypassed.
-Consequently these captures demonstrate bundle/prompt rendering and provenance
+SOUL.md (`deception_hide`); that file was not changed for these captures, and
+the filter was not bypassed. SOUL.md was rewritten later, on 2026-11-19, so that
+it loads under v0.17. See `docs/verification/2026-11-19-operational.md` and the
+"Hermes v0.17: `SOUL.md` is scanned too" note in
+`docs/03-hermes-compatibility-notes.md`. Consequently these captures demonstrate bundle/prompt rendering and provenance
 classification, **not SOUL loading, full-profile acceptance, scheduler behavior,
 or the December 7 live migration**. The latter checks remain separate gates.
 

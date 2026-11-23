@@ -264,19 +264,63 @@ def test_macro_availability_under_nested_heading(availability):
         )
 
 
+def test_earnings_child_status_cannot_satisfy_economic_disclosure():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        "Status: fresh\nEconomic events listed below.\n"
+        "### Earnings calendar\nStatus: unknown; earnings coverage only.\n"
+        "## 3. Other section\n"
+    )
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text, case)
+
+
+def test_absence_claim_in_earnings_child_is_still_rejected():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        "Status: unavailable\nEconomic events cannot be assessed.\n"
+        "### Earnings calendar\nStatus: fresh\nNo scheduled high-impact events.\n"
+        "## 3. Other section\n"
+    )
+    with pytest.raises(AssertionError, match="absence of economic events"):
+        audit_calendar_scope(text, case)
+
+
+def test_macro_section_without_children_uses_parent_body():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = "## 2. Macro calendar\nEconomic calendar: unknown.\n## 3. Other section\n"
+    audit_calendar_scope(text, case)
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text.replace("unknown", "fresh"), case)
+
+
 @pytest.mark.parametrize(
     "text",
     [
         "Do not conclude that no signals improved, no signals degraded, or nothing was invalidated.",
         "No “no earnings reactions occurred” conclusion can be made.",
+        "No 'no signals improved' conclusion can be drawn.",
+        "No such conclusion can be reached: no earnings reactions occurred is unsupported.",
+        "You must not conclude that nothing is invalidated.",
     ],
 )
 def test_explicit_denial_of_zero_change_inference_is_allowed(text):
     audit_unobserved_outcomes(text, {"workflow": "after-close-review"})
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "No earnings reactions occurred.",
+        "A conclusion can be made: no earnings reactions occurred.",
+        "The conclusion can be drawn that no signals improved.",
+    ],
+)
+def test_zero_change_claim_without_denial_is_rejected(text):
     with pytest.raises(AssertionError):
-        audit_unobserved_outcomes(
-            "No earnings reactions occurred.", {"workflow": "after-close-review"}
-        )
+        audit_unobserved_outcomes(text, {"workflow": "after-close-review"})
 
 
 def test_real_scheduled_footer_only_disclosure_is_rejected():
