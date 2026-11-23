@@ -288,6 +288,30 @@ def test_absence_claim_in_earnings_child_is_still_rejected():
         audit_calendar_scope(text, case)
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        # Sub-headings inside the economic child stay inside that child.
+        "## Macro calendar\n### Economic calendar\n#### Status\nUnavailable.\n"
+        "#### This week\nNot fetched.\n## N\n",
+        # A parent-body disclosure still counts when an economic child exists.
+        "## Macro calendar\nEconomic calendar unavailable.\n"
+        "### Economic calendar\nNot fetched this run.\n## N\n",
+    ],
+)
+def test_economic_disclosure_nested_shapes_are_accepted(text):
+    audit_calendar_scope(text, {"workflow": "pre-market-routine", "inputs": []})
+
+
+def test_earnings_grandchild_status_cannot_satisfy_economic_disclosure():
+    text = (
+        "## Macro calendar\n### Economic calendar\nStatus: fresh\n"
+        "### Earnings calendar\n#### Status\nunknown\n## N\n"
+    )
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text, {"workflow": "pre-market-routine", "inputs": []})
+
+
 def test_macro_section_without_children_uses_parent_body():
     case = {"workflow": "pre-market-routine", "inputs": []}
     text = "## 2. Macro calendar\nEconomic calendar: unknown.\n## 3. Other section\n"
@@ -316,6 +340,9 @@ def test_explicit_denial_of_zero_change_inference_is_allowed(text):
         "No earnings reactions occurred.",
         "A conclusion can be made: no earnings reactions occurred.",
         "The conclusion can be drawn that no signals improved.",
+        # An unrelated "no conclusion" phrase must not mask the claim.
+        "No conclusion can be drawn about weekly trends, but no signals improved.",
+        "No signals improved. No conclusion can be drawn otherwise.",
     ],
 )
 def test_zero_change_claim_without_denial_is_rejected(text):

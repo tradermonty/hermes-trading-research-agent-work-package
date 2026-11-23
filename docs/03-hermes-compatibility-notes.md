@@ -89,7 +89,7 @@ If a future prompt edit triggers `deception_hide` again, rewrite the offending s
 
 #### Hermes v0.17: `SOUL.md` is scanned too
 
-Verified 2026-11-19 on Hermes v0.17.0 (`5db1430a`): the context scanner also runs over `SOUL.md` when the profile loads. The former rule `You do not tell the user to buy or sell.` matched `deception_hide`, and Hermes blocked SOUL.md, so the profile ran without its safety rules. The scan does not fail the run, so the only visible symptom is a scanner report in stdout. Evidence: `docs/verification/2026-11-19-operational.md` ("SOUL and installation").
+Verified 2026-11-19 on Hermes v0.17.0 (`5db1430a`): the context scanner also runs over `SOUL.md` when the profile loads. The former rule `You do not tell the user to buy or sell.` matched `deception_hide`, and Hermes blocked SOUL.md, so the profile ran without its safety rules. In the earlier controlled captures the run continued with SOUL blocked, and the block appeared only as a context-filter report in stdout. Evidence: `docs/verification/2026-11-19-operational.md` ("SOUL and installation") and `tests/fixtures/input_provenance/generated/README.md`.
 
 `SOUL.md` is therefore **not** a safe place for arbitrary negative-form prohibitions. Rules for editing it:
 

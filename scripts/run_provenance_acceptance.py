@@ -200,11 +200,13 @@ def _economic_calendar_scope(main_prose: str) -> tuple[list[str], list[str]]:
     """Return the text that must carry the economic-calendar disclosure.
 
     Each "Macro calendar" section runs until the next heading at the same or
-    a higher level, so nested Economic/Earnings headings stay inside it. When
-    the section has child headings that name the economic calendar, only those
-    children count; otherwise the parent body and every non-earnings child
-    count. Status words from an Earnings child never satisfy the economic
-    check.
+    a higher level, so nested Economic/Earnings headings stay inside it. The
+    section is divided into its parent body (text before the first child
+    heading) and its direct child blocks; a direct child block includes its
+    own deeper sub-headings. The parent body always counts. When a direct
+    child names the economic calendar, only such children are added;
+    otherwise every non-earnings child is added. Status words from an
+    Earnings child never satisfy the economic check.
 
     Returns ``(sections, scope)``: the full Macro calendar sections, used for
     the absence-claim check, and the economic disclosure scope.
@@ -216,16 +218,20 @@ def _economic_calendar_scope(main_prose: str) -> tuple[list[str], list[str]]:
         if "macro calendar" not in heading.group(2).lower():
             continue
         level = len(heading.group(1))
-        children = []
+        descendants = []
         end = len(main_prose)
         for later in headings[index + 1 :]:
             if len(later.group(1)) <= level:
                 end = later.start()
                 break
-            children.append(later)
+            descendants.append(later)
         sections.append(main_prose[heading.start() : end])
-        body_end = children[0].start() if children else end
-        parent_body = main_prose[heading.start() : body_end]
+        body_end = descendants[0].start() if descendants else end
+        scope.append(main_prose[heading.start() : body_end])
+        if not descendants:
+            continue
+        child_level = min(len(item.group(1)) for item in descendants)
+        children = [item for item in descendants if len(item.group(1)) == child_level]
         child_blocks = []
         for child_index, child in enumerate(children):
             child_end = (
@@ -236,7 +242,6 @@ def _economic_calendar_scope(main_prose: str) -> tuple[list[str], list[str]]:
         if economic_children:
             scope.extend(economic_children)
         else:
-            scope.append(parent_body)
             scope.extend(block for title, block in child_blocks if "earnings" not in title)
     return sections, scope
 
@@ -271,15 +276,17 @@ def audit_unobserved_outcomes(text: str, case: dict) -> None:
     if case.get("workflow") != "after-close-review":
         return
     pattern = r"no earnings reactions occurred|no signals improved|no signals degraded|nothing is invalidated"
-    # A line may mention a zero-change claim only to deny it. Match denial
-    # forms generically (any quoted claim, any of the verbs) rather than one
-    # captured sentence, so rewording by the model does not need auditor edits.
+    # A line may mention a zero-change claim only to deny it. The
+    # "no ... conclusion can be made" forms must name the claim itself, either
+    # quoted or immediately after the phrase; an unrelated "no conclusion can
+    # be drawn about X" elsewhere on the line must not mask the claim.
+    conclusion = r"conclusion can be (made|drawn|reached)"
     denial = (
         r"unknown|not assessable|cannot"
         r"|(do|must) not (assume|claim|infer|conclude)"
         r"|must not be (read|interpreted|treated) as"
-        r"|\bno (such )?conclusion can be (made|drawn|reached)"
-        r"|\bno [“\"'][^”\"']+[”\"'] conclusion can be (made|drawn|reached)"
+        rf"|\bno [“\"'](?:{pattern})[”\"'] {conclusion}"
+        rf"|\bno (such )?{conclusion}\s*(:|,|that)?\s*(?:{pattern})"
     )
     for line in text.splitlines():
         if re.search(pattern, line, re.IGNORECASE) and not re.search(denial, line, re.IGNORECASE):
