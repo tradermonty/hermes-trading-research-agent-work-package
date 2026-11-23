@@ -193,6 +193,11 @@ def test_current_table_semantic_audit_and_expected_date(workflow):
     )
     text = text.replace("valid-empty", "valid_empty")
     audit_response(text, case, current_contract=True)
+    audit_response(
+        text.replace("Run cutoff", "run_cutoff").replace("run cutoff", "run_cutoff"),
+        case,
+        current_contract=True,
+    )
     # Free-text cells may contain escaped pipes without adding table columns.
     for column in (1, 6):
         for backslashes in (1, 2, 3, 4):
@@ -238,3 +243,146 @@ def test_generation_request_uses_current_date_cells_without_expected_labels():
     assert "Put full ISO observation/retrieval timestamps" in request
     assert "in Impact / next step" in request
     assert request.endswith(json.dumps(case, indent=2))
+
+
+@pytest.mark.parametrize("availability", ["unknown", "unavailable"])
+def test_macro_availability_under_nested_heading(availability):
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        f"Status: {availability}\nEconomic events cannot be assessed.\n"
+        "### Earnings calendar\nStatus: fresh; earnings coverage only.\n"
+        "## 3. Other section\n"
+    )
+    audit_calendar_scope(text, case)
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text.replace(f"Status: {availability}", "Status: fresh"), case)
+    with pytest.raises(AssertionError, match="absence of economic events"):
+        audit_calendar_scope(
+            text.replace("Economic events cannot be assessed.", "No scheduled high-impact events."),
+            case,
+        )
+
+
+def test_earnings_child_status_cannot_satisfy_economic_disclosure():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        "Status: fresh\nEconomic events listed below.\n"
+        "### Earnings calendar\nStatus: unknown; earnings coverage only.\n"
+        "## 3. Other section\n"
+    )
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text, case)
+
+
+def test_absence_claim_in_earnings_child_is_still_rejected():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = (
+        "## 2. Macro calendar\n### Economic calendar\n"
+        "Status: unavailable\nEconomic events cannot be assessed.\n"
+        "### Earnings calendar\nStatus: fresh\nNo scheduled high-impact events.\n"
+        "## 3. Other section\n"
+    )
+    with pytest.raises(AssertionError, match="absence of economic events"):
+        audit_calendar_scope(text, case)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # Sub-headings inside the economic child stay inside that child.
+        "## Macro calendar\n### Economic calendar\n#### Status\nUnavailable.\n"
+        "#### This week\nNot fetched.\n## N\n",
+        # A parent-body disclosure still counts when an economic child exists.
+        "## Macro calendar\nEconomic calendar unavailable.\n"
+        "### Economic calendar\nNot fetched this run.\n## N\n",
+    ],
+)
+def test_economic_disclosure_nested_shapes_are_accepted(text):
+    audit_calendar_scope(text, {"workflow": "pre-market-routine", "inputs": []})
+
+
+def test_earnings_grandchild_status_cannot_satisfy_economic_disclosure():
+    text = (
+        "## Macro calendar\n### Economic calendar\nStatus: fresh\n"
+        "### Earnings calendar\n#### Status\nunknown\n## N\n"
+    )
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text, {"workflow": "pre-market-routine", "inputs": []})
+
+
+def test_macro_section_without_children_uses_parent_body():
+    case = {"workflow": "pre-market-routine", "inputs": []}
+    text = "## 2. Macro calendar\nEconomic calendar: unknown.\n## 3. Other section\n"
+    audit_calendar_scope(text, case)
+    with pytest.raises(AssertionError, match="economic-calendar availability"):
+        audit_calendar_scope(text.replace("unknown", "fresh"), case)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Do not conclude that no signals improved, no signals degraded, or nothing was invalidated.",
+        "No “no earnings reactions occurred” conclusion can be made.",
+        "No 'no signals improved' conclusion can be drawn.",
+        "No such conclusion can be reached: no earnings reactions occurred is unsupported.",
+        "You must not conclude that nothing is invalidated.",
+    ],
+)
+def test_explicit_denial_of_zero_change_inference_is_allowed(text):
+    audit_unobserved_outcomes(text, {"workflow": "after-close-review"})
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "No earnings reactions occurred.",
+        "A conclusion can be made: no earnings reactions occurred.",
+        "The conclusion can be drawn that no signals improved.",
+        # An unrelated "no conclusion" phrase must not mask the claim.
+        "No conclusion can be drawn about weekly trends, but no signals improved.",
+        "No signals improved. No conclusion can be drawn otherwise.",
+    ],
+)
+def test_zero_change_claim_without_denial_is_rejected(text):
+    with pytest.raises(AssertionError):
+        audit_unobserved_outcomes(text, {"workflow": "after-close-review"})
+
+
+def test_real_scheduled_footer_only_disclosure_is_rejected():
+    case = json.loads((FIXTURES / "pre-market-routine__inputs.json").read_text())
+    text = (FIXTURES / "regressions/scheduled_footer_only.md").read_text()
+    with pytest.raises(AssertionError, match="missing inline disclosure"):
+        audit_response(text, case, current_contract=True)
+
+
+@pytest.mark.parametrize("workflow", ("pre-market-routine", "after-close-review"))
+@pytest.mark.parametrize("surface", ("bundle", "cron"))
+def test_operational_fresh_generation_and_exact_sources(workflow, surface):
+    evidence = ROOT / "docs/verification/2026-11-19-operational"
+    stem = f"{workflow}__{surface}"
+    text = (evidence / "generation" / f"{stem}.md").read_text()
+    metadata = json.loads((evidence / "generation" / f"{stem}.metadata.json").read_text())
+    assert hashlib.sha256(text.encode()).hexdigest() == metadata["response_sha256"]
+    for path, digest in metadata["source_sha256"].items():
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest
+    case = json.loads((FIXTURES / f"{workflow}__inputs.json").read_text())
+    audit_response(text, case, current_contract=True)
+
+
+@pytest.mark.parametrize(
+    "name,workflow",
+    [
+        ("after-close-scheduled", "after-close-review"),
+        ("pre-market-scheduled-retry", "pre-market-routine"),
+    ],
+)
+def test_real_scheduled_generated_responses(name, workflow):
+    evidence = ROOT / "docs/verification/2026-11-19-operational"
+    manifest = json.loads((evidence / "scheduled-output-manifest.json").read_text())
+    record = next(row for row in manifest if row["name"] == name)
+    text = (evidence / f"{name}.md").read_text()
+    assert hashlib.sha256(text.encode()).hexdigest() == record["published_response_sha256"]
+    case = json.loads((FIXTURES / f"{workflow}__inputs.json").read_text())
+    audit_response(text, case, current_contract=True)
